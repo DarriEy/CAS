@@ -1,0 +1,296 @@
+# CAS Global Attribute Provider Inventory
+#
+# Each entry documents a geospatial attribute data source.
+# status: implemented | planned | research
+
+# ── TIER 1 — Implemented ────────────────────────────────────────────
+
+- slug: isric_soilgrids
+  name: ISRIC SoilGrids 2.0
+  category: soil
+  protocol: wcs
+  base_url: https://maps.isric.org/mapserv?map=/map/soilgrids.map
+  variables:
+    - name: clay
+      units: g/kg
+      depths: [0-5cm, 5-15cm, 15-30cm, 30-60cm, 60-100cm, 100-200cm]
+    - name: sand
+      units: g/kg
+    - name: silt
+      units: g/kg
+    - name: soc
+      units: dg/kg
+    - name: phh2o
+      units: pH*10
+    - name: bdod
+      units: cg/cm3
+    - name: cec
+      units: mmol(c)/kg
+    - name: nitrogen
+      units: cg/kg
+  resolution_m: 250
+  bbox: [-180, -56, 180, 84]
+  temporal_type: static
+  data_type: continuous
+  access: open
+  license: CC-BY-4.0
+  status: implemented
+  notes: WCS 2.0.1. CoverageId format "{variable}_{depth}_mean".
+
+- slug: copernicus_dem
+  name: Copernicus DEM GLO-30
+  category: elevation
+  protocol: stac_cog
+  stac_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  collection: cop-dem-glo-30
+  variables:
+    - name: elevation
+      units: m
+  resolution_m: 30
+  bbox: [-180, -90, 180, 90]
+  temporal_type: static
+  access: open
+  license: open
+  status: implemented
+  notes: Via Microsoft Planetary Computer STAC. Also GLO-90 variant.
+
+- slug: esa_worldcover
+  name: ESA WorldCover 10m
+  category: land_cover
+  protocol: stac_cog
+  stac_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  collection: esa-worldcover
+  variables:
+    - name: land_cover
+      units: class
+      data_type: categorical
+  resolution_m: 10
+  bbox: [-180, -60, 180, 84]
+  temporal_type: annual
+  temporal_range: [2020, 2021]
+  access: open
+  license: CC-BY-4.0
+  status: implemented
+
+# ── TIER 2 — Planned ────────────────────────────────────────────────
+
+- slug: usgs_3dep
+  name: USGS 3D Elevation Program
+  category: elevation
+  protocol: wcs
+  base_url: https://elevation.nationalmap.gov/arcgis/services/3DEPElevation/ImageServer/WCSServer
+  variables:
+    - name: elevation
+      units: m
+  resolution_m: 10
+  bbox: [-180, 17, -64, 72]
+  temporal_type: static
+  access: open
+  license: public_domain
+  status: planned
+  notes: US-only. 1m available in some areas.
+
+- slug: modis_ndvi
+  name: MODIS NDVI (MOD13A2)
+  category: vegetation
+  protocol: rest
+  base_url: https://appeears.earthdatacloud.nasa.gov/api
+  variables:
+    - name: ndvi
+      units: dimensionless
+    - name: evi
+      units: dimensionless
+  resolution_m: 1000
+  bbox: [-180, -90, 180, 90]
+  temporal_type: daily
+  access: api_key_required
+  license: open
+  status: planned
+  notes: Via NASA AppEEARS. 16-day composites.
+
+- slug: era5_land
+  name: ERA5-Land (Copernicus CDS)
+  category: climate
+  protocol: rest
+  base_url: https://cds.climate.copernicus.eu/api
+  variables:
+    - name: temperature_2m
+      units: K
+    - name: total_precipitation
+      units: m
+    - name: snowfall
+      units: m
+    - name: soil_temperature_level_1
+      units: K
+  resolution_m: 9000
+  bbox: [-180, -90, 180, 90]
+  temporal_type: hourly
+  access: api_key_required
+  license: copernicus
+  status: planned
+  notes: CDS API. Hourly fields from 1950-present.
+
+- slug: worldclim
+  name: WorldClim 2.1
+  category: climate
+  protocol: stac_cog
+  variables:
+    - name: bio1_annual_mean_temp
+      units: degC
+    - name: bio12_annual_precip
+      units: mm
+  resolution_m: 1000
+  bbox: [-180, -90, 180, 90]
+  temporal_type: climatology
+  access: open
+  license: CC-BY-SA-4.0
+  status: planned
+
+- slug: nlcd
+  name: USGS National Land Cover Database
+  category: land_cover
+  protocol: wcs
+  base_url: https://www.mrlc.gov/geoserver/wcs
+  variables:
+    - name: land_cover
+      units: class
+      data_type: categorical
+  resolution_m: 30
+  bbox: [-130, 22, -64, 52]
+  temporal_type: annual
+  access: open
+  license: public_domain
+  status: planned
+  notes: US-only. Classes differ from ESA WorldCover.
+
+- slug: merit_dem
+  name: MERIT DEM
+  category: elevation
+  protocol: s3_direct
+  variables:
+    - name: elevation
+      units: m
+  resolution_m: 90
+  bbox: [-180, -60, 180, 90]
+  temporal_type: static
+  access: open
+  license: CC-BY-NC-4.0
+  status: planned
+  notes: Hydrologically adjusted DEM. Removes noise, tree canopy bias.
+
+- slug: hydrosheds
+  name: HydroSHEDS
+  category: hydrology
+  protocol: rest
+  variables:
+    - name: flow_accumulation
+      units: cells
+    - name: flow_direction
+      units: encoded
+    - name: drainage_area
+      units: km2
+  resolution_m: 90
+  bbox: [-180, -60, 180, 90]
+  temporal_type: static
+  access: open
+  license: CC-BY-4.0
+  status: planned
+
+# ── TIER 3 — Research ────────────────────────────────────────────────
+
+- slug: openlandmap
+  name: OpenLandMap
+  category: soil
+  protocol: wcs
+  base_url: https://geoserver.opengeohub.org/landgiswcs
+  variables:
+    - name: organic_carbon
+      units: g/kg
+    - name: clay_content
+      units: percent
+    - name: bulk_density
+      units: kg/m3
+  resolution_m: 250
+  bbox: [-180, -62, 180, 87]
+  temporal_type: static
+  access: open
+  license: CC-BY-SA-4.0
+  status: research
+
+- slug: chirps
+  name: CHIRPS 2.0 Precipitation
+  category: climate
+  protocol: opendap
+  base_url: https://data.chc.ucsb.edu/products/CHIRPS-2.0
+  variables:
+    - name: precipitation
+      units: mm/day
+  resolution_m: 5000
+  bbox: [-180, -50, 180, 50]
+  temporal_type: daily
+  access: open
+  license: public_domain
+  status: research
+
+- slug: srtm
+  name: SRTM 30m
+  category: elevation
+  protocol: stac_cog
+  variables:
+    - name: elevation
+      units: m
+  resolution_m: 30
+  bbox: [-180, -60, 180, 60]
+  temporal_type: static
+  access: open
+  license: public_domain
+  status: research
+
+- slug: modis_land_cover
+  name: MODIS Land Cover (MCD12Q1)
+  category: land_cover
+  protocol: rest
+  variables:
+    - name: land_cover
+      units: class
+      data_type: categorical
+  resolution_m: 500
+  bbox: [-180, -90, 180, 90]
+  temporal_type: annual
+  access: open
+  license: open
+  status: research
+
+- slug: sentinel2_indices
+  name: Sentinel-2 Spectral Indices
+  category: vegetation
+  protocol: stac_cog
+  variables:
+    - name: ndvi
+      units: dimensionless
+    - name: ndwi
+      units: dimensionless
+    - name: evi
+      units: dimensionless
+  resolution_m: 10
+  bbox: [-180, -56, 180, 84]
+  temporal_type: daily
+  access: open
+  license: open
+  status: research
+
+- slug: glhymps
+  name: GLHYMPS (Global Hydrogeology)
+  category: geology
+  protocol: rest
+  variables:
+    - name: permeability
+      units: m2
+    - name: porosity
+      units: fraction
+  resolution_m: 1000
+  bbox: [-180, -90, 180, 90]
+  temporal_type: static
+  access: open
+  license: CC-BY-4.0
+  status: research

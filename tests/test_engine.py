@@ -1,0 +1,100 @@
+"""Tests for the extraction engine."""
+
+from __future__ import annotations
+
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
+from cas.core.models import (
+    AggregationMethod,
+    AttributeRequest,
+    AttributeResult,
+    QualityFlag,
+)
+from cas.extract.engine import extract
+
+
+@pytest.fixture
+def mock_result():
+    return AttributeResult(
+        dataset_id="test_provider:test_var",
+        variable="test_var",
+        value=42.0,
+        units="m",
+        aggregation=AggregationMethod.MEAN,
+        quality=QualityFlag.GOOD,
+        coverage_fraction=0.95,
+        pixel_count=100,
+        provider="test_provider",
+        elapsed_ms=50,
+    )
+
+
+def _make_mock_connector(mock_result):
+    """Create a mock connector class that works with `async with cls() as conn:`."""
+    mock_instance = AsyncMock()
+    mock_instance.extract = AsyncMock(return_value=mock_result)
+    mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
+    mock_instance.__aexit__ = AsyncMock(return_value=None)
+
+    mock_cls = MagicMock(return_value=mock_instance)
+    return mock_cls, mock_instance
+
+
+class TestExtractEngine:
+    @pytest.mark.asyncio
+    async def test_single_dataset_extraction(self, sample_geometry, mock_result):
+        mock_cls, _ = _make_mock_connector(mock_result)
+
+        with (
+            patch("cas.extract.engine.discover"),
+            patch("cas.extract.engine.get_connector", return_value=mock_cls),
+        ):
+            request = AttributeRequest(
+                geometry=sample_geometry,
+                dataset_ids=["test_provider:test_var"],
+            )
+            response = await extract(request)
+
+        assert len(response.results) == 1
+        assert response.results[0].value == 42.0
+        assert response.elapsed_ms >= 0
+        assert response.request_id
+
+    @pytest.mark.asyncio
+    async def test_multi_dataset_extraction(self, sample_geometry, mock_result):
+        mock_cls, _ = _make_mock_connector(mock_result)
+
+        with (
+            patch("cas.extract.engine.discover"),
+            patch("cas.extract.engine.get_connector", return_value=mock_cls),
+        ):
+            request = AttributeRequest(
+                geometry=sample_geometry,
+                dataset_ids=["test_provider:var_a", "test_provider:var_b"],
+            )
+            response = await extract(request)
+
+        assert len(response.results) == 2
+
+    @pytest.mark.asyncio
+    async def test_failed_extraction_produces_warning(self, sample_geometry):
+        mock_instance = AsyncMock()
+        mock_instance.extract = AsyncMock(side_effect=Exception("Provider down"))
+        mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
+        mock_instance.__aexit__ = AsyncMock(return_value=None)
+        mock_cls = MagicMock(return_value=mock_instance)
+
+        with (
+            patch("cas.extract.engine.discover"),
+            patch("cas.extract.engine.get_connector", return_value=mock_cls),
+        ):
+            request = AttributeRequest(
+                geometry=sample_geometry,
+                dataset_ids=["test_provider:bad_var"],
+            )
+            response = await extract(request)
+
+        assert len(response.results) == 0
+        assert len(response.warnings) > 0

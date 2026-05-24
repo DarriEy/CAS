@@ -1,0 +1,29 @@
+name: Provider Health Check
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -e ".[dev,stac]"
+
+      - name: Health check (Central US polygon)
+        run: cas health --polygon central_us
+        timeout-minutes: 10
+
+      - name: Health check (Alps polygon)
+        run: cas health --polygon alps
+        timeout-minutes: 10
