@@ -4464,3 +4464,161 @@ class TaiwanSoilConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=119.9, min_lat=21.9, max_lon=122.1, max_lat=25.3),
         license="Open (TARI)", citation="TARI/COA, Taiwan Soil Map",
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  MORE COUNTRY FILL-INS — second/third layers
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("turkey_soil")
+class TurkeySoilConnector(NationalWCSConnector):
+    slug = "turkey_soil"
+    display_name = "Turkey Soil Map (TAGEM)"
+    base_url = "https://cbs.tarimorman.gov.tr/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="turkey_soil",
+        display_name="Turkey Soil Groups (TAGEM/GTHB)",
+        wcs_url="https://cbs.tarimorman.gov.tr/geoserver/wms",
+        coverage_id="tagem:buyuk_toprak_gruplari",
+        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="Turkish great soil groups"),
+        resolution_m=250, category="soil",
+        bbox=BoundingBox(min_lon=26.0, min_lat=35.8, max_lon=44.8, max_lat=42.1),
+        license="Open (TAGEM)", citation="TAGEM, Turkey Soil Map",
+    )
+
+
+@register("turkey_lc")
+class TurkeyLCConnector(NationalWCSConnector):
+    slug = "turkey_lc"
+    display_name = "Turkey CORINE Land Cover"
+    base_url = "https://cbs.csb.gov.tr/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="turkey_lc",
+        display_name="Turkey CORINE Land Cover 2018",
+        wcs_url="https://cbs.csb.gov.tr/geoserver/wms",
+        coverage_id="csb:corine_2018",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Turkish land cover (CORINE nomenclature)"),
+        resolution_m=100, category="land_cover",
+        bbox=BoundingBox(min_lon=26.0, min_lat=35.8, max_lon=44.8, max_lat=42.1),
+        license="Open (CSB)", citation="CSB, Turkey CORINE Land Cover",
+    )
+
+
+@register("greece_lc")
+class GreeceLCConnector(NationalWCSConnector):
+    slug = "greece_lc"
+    display_name = "Greece CORINE Land Cover"
+    base_url = "https://gaia.igme.gr/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="greece_lc",
+        display_name="Greece CORINE Land Cover 2018",
+        wcs_url="https://gaia.igme.gr/geoserver/wms",
+        coverage_id="igme:corine_2018",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Greek land cover (CORINE nomenclature)"),
+        resolution_m=100, category="land_cover",
+        bbox=BoundingBox(min_lon=19.4, min_lat=34.8, max_lon=29.6, max_lat=41.8),
+        license="Open (IGME)", citation="IGME, Greece CORINE Land Cover",
+    )
+
+
+@register("bulgaria_soil")
+class BulgariaSoilConnector(NationalWCSConnector):
+    slug = "bulgaria_soil"
+    display_name = "Bulgaria Soil Map"
+    base_url = "https://inspire.cadastre.bg/arcgis/services/SO/Soil/MapServer/WMSServer"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="bulgaria_soil",
+        display_name="Bulgaria Soil Map (Cadastre INSPIRE)",
+        wcs_url="https://inspire.cadastre.bg/arcgis/services/SO/Soil/MapServer/WMSServer",
+        coverage_id="0",
+        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="Bulgarian soil classification"),
+        resolution_m=100, category="soil",
+        bbox=BoundingBox(min_lon=22.4, min_lat=41.2, max_lon=28.6, max_lat=44.2),
+        license="Open (Bulgaria)", citation="Cadastral Agency, Bulgaria INSPIRE Soil",
+    )
+
+
+@register("serbia_lc")
+class SerbiaLCConnector(NationalWCSConnector):
+    slug = "serbia_lc"
+    display_name = "Serbia CORINE Land Cover"
+    base_url = "https://geoliss.mre.gov.rs/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="serbia_lc",
+        display_name="Serbia CORINE Land Cover 2018 (GeoLISS)",
+        wcs_url="https://geoliss.mre.gov.rs/geoserver/wms",
+        coverage_id="geoliss:corine_2018",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Serbian land cover (CORINE nomenclature)"),
+        resolution_m=100, category="land_cover",
+        bbox=BoundingBox(min_lon=18.8, min_lat=42.2, max_lon=23.0, max_lat=46.2),
+        license="Open (GeoLISS)", citation="GeoLISS, Serbia CORINE 2018",
+    )
+
+
+@register("south_korea_soil")
+class SouthKoreaSoilConnector(NationalWCSConnector):
+    slug = "south_korea_soil"
+    display_name = "South Korea Soil Map (RDA)"
+    base_url = "https://soil.rda.go.kr/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="south_korea_soil",
+        display_name="South Korea Detailed Soil Map (RDA)",
+        wcs_url="https://soil.rda.go.kr/geoserver/wms",
+        coverage_id="rda:soil_detail",
+        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="South Korean detailed soil classification"),
+        resolution_m=25, category="soil",
+        bbox=BoundingBox(min_lon=124.6, min_lat=33.1, max_lon=131.9, max_lat=38.6),
+        license="Open (RDA)",
+        citation="Rural Development Administration, Korea Soil Map",
+    )
+
+
+@register("nz_soil")
+class NewZealandSoilConnector(NationalWCSConnector):
+    slug = "nz_soil"
+    display_name = "New Zealand Fundamental Soil Layers"
+    base_url = "https://data.lris.govt.nz/v1/wms/"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="nz_soil",
+        display_name="New Zealand Fundamental Soil Layers (LRIS)",
+        wcs_url="https://data.lris.govt.nz/v1/wms/",
+        coverage_id="fsl-new-zealand-soil-classification",
+        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="New Zealand soil classification (NZ Soil Classification)"),
+        resolution_m=100, category="soil",
+        bbox=BoundingBox(min_lon=166.0, min_lat=-47.5, max_lon=178.7, max_lat=-34.3),
+        license="CC-BY 4.0", citation="Landcare Research / LRIS, NZ Soil Classification",
+        auth_token_env="CAS_LRIS_API_KEY",
+    )
+
+
+@register("morocco_lc")
+class MoroccoLCConnector(NationalWCSConnector):
+    slug = "morocco_lc"
+    display_name = "Morocco Land Cover"
+    base_url = "https://gis.onhym.com/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="morocco_lc",
+        display_name="Morocco Land Cover (ONHYM/ORMVAT)",
+        wcs_url="https://gis.onhym.com/geoserver/wms",
+        coverage_id="onhym:occupation_sols",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Moroccan land cover/use classification"),
+        resolution_m=250, category="land_cover",
+        bbox=BoundingBox(min_lon=-13.2, min_lat=27.7, max_lon=-1.0, max_lat=35.9),
+        license="Open (ONHYM)", citation="ONHYM, Occupation des Sols du Maroc",
+    )
