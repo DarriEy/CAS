@@ -3426,3 +3426,373 @@ class ETOPO2022Connector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=-180, min_lat=-90, max_lon=180, max_lat=90),
         license="Open (NOAA)", citation="NOAA NCEI, ETOPO 2022 Global Relief Model",
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  SOUTH AMERICA
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("brazil_lc")
+class BrazilLCConnector(NationalWCSConnector):
+    slug = "brazil_lc"
+    display_name = "Brazil MapBiomas Land Cover 30m"
+    base_url = "https://storage.googleapis.com/mapbiomas-public/initiatives/brasil/collection_9"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="brazil_lc",
+        display_name="Brazil MapBiomas Land Cover 30m",
+        wcs_url="https://geoserver.mapbiomas.org/geoserver/ows",
+        coverage_id="mapbiomas:brazil_coverage_2022",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Brazilian land cover/use (MapBiomas Collection 9)"),
+        resolution_m=30, category="land_cover",
+        bbox=BoundingBox(min_lon=-74, min_lat=-34, max_lon=-34, max_lat=6),
+        license="CC-BY-SA-4.0", citation="MapBiomas Project, Collection 9",
+    )
+
+
+@register("brazil_biomes")
+class BrazilBiomesConnector(NationalWCSConnector):
+    slug = "brazil_biomes"
+    display_name = "Brazil Biomes (IBGE)"
+    base_url = "https://geoservicos.ibge.gov.br/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="brazil_biomes",
+        display_name="Brazil Biomes 1:5M (IBGE)",
+        wcs_url="https://geoservicos.ibge.gov.br/geoserver/wms",
+        coverage_id="CGEO:COM_BIOMAS_250",
+        variable=Variable(name="biome", units="class", data_type=DataType.CATEGORICAL,
+                          description="Brazilian biomes (Amazon, Cerrado, Caatinga, etc.)"),
+        resolution_m=250, category="land_cover",
+        bbox=BoundingBox(min_lon=-74, min_lat=-34, max_lon=-34, max_lat=6),
+        license="Open (IBGE)", citation="IBGE, Mapa de Biomas do Brasil",
+    )
+
+
+@register("brazil_geology")
+class BrazilGeologyConnector(NationalWCSConnector):
+    slug = "brazil_geology"
+    display_name = "Brazil Geological Map (CPRM)"
+    base_url = "https://geosgb.sgb.gov.br/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="brazil_geology",
+        display_name="Brazil Geological Map 1:1M (CPRM/SGB)",
+        wcs_url="https://geosgb.sgb.gov.br/geoserver/wms",
+        coverage_id="geologia:geologia_1m",
+        variable=Variable(name="geology", units="class", data_type=DataType.CATEGORICAL,
+                          description="Brazilian geological units 1:1,000,000"),
+        resolution_m=1000, category="geology",
+        bbox=BoundingBox(min_lon=-74, min_lat=-34, max_lon=-34, max_lat=6),
+        license="Open (CPRM)", citation="CPRM/SGB, Mapa Geológico do Brasil",
+    )
+
+
+@register("brazil_hydrogeo")
+class BrazilHydroGeoConnector(NationalWCSConnector):
+    slug = "brazil_hydrogeo"
+    display_name = "Brazil Hydrogeological Map (CPRM)"
+    base_url = "https://geosgb.sgb.gov.br/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="brazil_hydrogeo",
+        display_name="Brazil Hydrogeological Map (CPRM/SGB)",
+        wcs_url="https://geosgb.sgb.gov.br/geoserver/wms",
+        coverage_id="hidrogeologia:aquiferos",
+        variable=Variable(name="aquifer_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="Brazilian aquifer system classification"),
+        resolution_m=1000, category="hydrology",
+        bbox=BoundingBox(min_lon=-74, min_lat=-34, max_lon=-34, max_lat=6),
+        license="Open (CPRM)", citation="CPRM/SGB, Mapa Hidrogeológico do Brasil",
+    )
+
+
+@register("chile_lc")
+class ChileLCConnector(NationalWCSConnector):
+    slug = "chile_lc"
+    display_name = "Chile Land Cover (CONAF)"
+    base_url = "https://ide.conaf.cl/geoserver/ows"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="chile_lc",
+        display_name="Chile Catastro Bosque Nativo (CONAF)",
+        wcs_url="https://ide.conaf.cl/geoserver/ows",
+        coverage_id="catastro:bosque_nativo_2020",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Chilean native forest and land cover classification"),
+        resolution_m=30, category="land_cover",
+        bbox=BoundingBox(min_lon=-76, min_lat=-56, max_lon=-66, max_lat=-17),
+        license="Open (CONAF)", citation="CONAF, Catastro de Bosque Nativo",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  AFRICA
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("south_africa_lc")
+class SouthAfricaLCConnector(NationalWCSConnector):
+    slug = "south_africa_lc"
+    display_name = "South Africa National Land Cover 20m"
+    base_url = "https://gis.environment.gov.za/server/rest/services"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="south_africa_lc",
+        display_name="South Africa National Land Cover 2020 (DFFE)",
+        wcs_url="https://gis.environment.gov.za/server/services/SANLCChange/SA_NLC_2020/ImageServer/WCSServer",
+        coverage_id="1",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="South African national land cover (72 classes)"),
+        resolution_m=20, category="land_cover",
+        bbox=BoundingBox(min_lon=16.4, min_lat=-34.9, max_lon=32.9, max_lat=-22.1),
+        license="Open (DFFE)", citation="DFFE, South Africa National Land Cover 2020",
+    )
+
+
+@register("south_africa_geology")
+class SouthAfricaGeologyConnector(NationalWCSConnector):
+    slug = "south_africa_geology"
+    display_name = "South Africa Geology (CGS)"
+    base_url = "https://maps.geoscience.org.za/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="south_africa_geology",
+        display_name="South Africa 1:1M Geology (Council for Geoscience)",
+        wcs_url="https://maps.geoscience.org.za/geoserver/wms",
+        coverage_id="cgs:geology_1m",
+        variable=Variable(name="geology", units="class", data_type=DataType.CATEGORICAL,
+                          description="South African geological units"),
+        resolution_m=1000, category="geology",
+        bbox=BoundingBox(min_lon=16.4, min_lat=-34.9, max_lon=32.9, max_lat=-22.1),
+        license="Open (CGS)",
+        citation="Council for Geoscience, Geological Map of South Africa",
+    )
+
+
+@register("dea_africa_fc")
+class DEAAfricaFCConnector(NationalWCSConnector):
+    slug = "dea_africa_fc"
+    display_name = "DEA Africa Fractional Cover"
+    base_url = "https://ows.digitalearth.africa"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="dea_africa_fc",
+        display_name="Digital Earth Africa Fractional Cover 30m",
+        wcs_url="https://ows.digitalearth.africa/wcs",
+        coverage_id="fc_ls", protocol_version="2.0.1",
+        variable=Variable(name="fractional_cover", units="%", data_type=DataType.CONTINUOUS,
+                          valid_range=(0, 100),
+                          description="Vegetation fractional cover (bare, green, non-green)"),
+        resolution_m=30, category="vegetation",
+        bbox=BoundingBox(min_lon=-26, min_lat=-35, max_lon=58, max_lat=38),
+        license="CC-BY 4.0",
+        citation="Digital Earth Africa, Fractional Cover (Landsat)",
+    )
+
+
+@register("dea_africa_water")
+class DEAAfricaWaterConnector(NationalWCSConnector):
+    slug = "dea_africa_water"
+    display_name = "DEA Africa Water Observations"
+    base_url = "https://ows.digitalearth.africa"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="dea_africa_water",
+        display_name="Digital Earth Africa Water Observations (WOfS)",
+        wcs_url="https://ows.digitalearth.africa/wcs",
+        coverage_id="wofs_ls_summary_alltime", protocol_version="2.0.1",
+        variable=Variable(name="water_frequency", units="%", data_type=DataType.CONTINUOUS,
+                          valid_range=(0, 100),
+                          description="All-time water observation frequency (Landsat)"),
+        resolution_m=30, category="hydrology",
+        bbox=BoundingBox(min_lon=-26, min_lat=-35, max_lon=58, max_lat=38),
+        license="CC-BY 4.0",
+        citation="Digital Earth Africa, Water Observations from Space",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  ASIA — additional
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("india_soil")
+class IndiaSoilConnector(NationalWCSConnector):
+    slug = "india_soil"
+    display_name = "India Soil Map (NBSS&LUP)"
+    base_url = "https://bhuvan-vec2.nrsc.gov.in/bhuvan/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="india_soil",
+        display_name="India Soil Map (NBSS&LUP / Bhuvan)",
+        wcs_url="https://bhuvan-vec2.nrsc.gov.in/bhuvan/wms",
+        coverage_id="india_soil_nbss",
+        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="Indian soil classification"),
+        resolution_m=500, category="soil",
+        bbox=BoundingBox(min_lon=68.1, min_lat=6.7, max_lon=97.4, max_lat=37.1),
+        license="Open (ISRO/Bhuvan)", citation="NBSS&LUP / ISRO Bhuvan",
+    )
+
+
+@register("india_lulc")
+class IndiaLULCConnector(NationalWCSConnector):
+    slug = "india_lulc"
+    display_name = "India LULC (NRSC)"
+    base_url = "https://bhuvan-vec2.nrsc.gov.in/bhuvan/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="india_lulc",
+        display_name="India Land Use/Land Cover (NRSC/Bhuvan)",
+        wcs_url="https://bhuvan-vec2.nrsc.gov.in/bhuvan/wms",
+        coverage_id="india_lulc_50k",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Indian land use/land cover classification"),
+        resolution_m=50, category="land_cover",
+        bbox=BoundingBox(min_lon=68.1, min_lat=6.7, max_lon=97.4, max_lat=37.1),
+        license="Open (ISRO/Bhuvan)", citation="NRSC/ISRO, LULC 1:50k",
+    )
+
+
+@register("japan_lc")
+class JapanLCConnector(NationalWCSConnector):
+    slug = "japan_lc"
+    display_name = "Japan High-Res Land Use"
+    base_url = "https://nlftp.mlit.go.jp/ksj/gml/data/L03-a/L03-a-2021/L03-a-2021.geojson"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="japan_lc",
+        display_name="Japan Land Use 100m (MLIT NLNI)",
+        wcs_url="https://disaportal.gsi.go.jp/server/rest/services/denshikokudonweb/wms",
+        coverage_id="land_use_100m",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Japanese detailed land use classification"),
+        resolution_m=100, category="land_cover",
+        bbox=BoundingBox(min_lon=122.9, min_lat=24.0, max_lon=153.9, max_lat=45.6),
+        license="Open (MLIT)", citation="MLIT, National Land Numerical Information",
+    )
+
+
+@register("south_korea_lc")
+class SouthKoreaLCConnector(NationalWCSConnector):
+    slug = "south_korea_lc"
+    display_name = "South Korea Land Cover (ME)"
+    base_url = "https://egis.me.go.kr/api/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="south_korea_lc",
+        display_name="South Korea Land Cover (Ministry of Environment)",
+        wcs_url="https://egis.me.go.kr/api/wms",
+        coverage_id="landcover_lv2",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="South Korean land cover classification (level 2)"),
+        resolution_m=5, category="land_cover",
+        bbox=BoundingBox(min_lon=124.6, min_lat=33.1, max_lon=131.9, max_lat=38.6),
+        license="Open (EGIS)",
+        citation="Ministry of Environment, Korea Environmental Geographic Information",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  OCEANIA — additional
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("australia_soil_depth")
+class AustraliaSoilDepthConnector(NationalWCSConnector):
+    slug = "australia_soil_depth"
+    display_name = "Australia Soil Depth (SLGA)"
+    base_url = "https://www.asris.csiro.au/arcgis/services/TERN"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="australia_soil_depth",
+        display_name="Australia Soil Depth (SLGA/TERN)",
+        wcs_url="https://www.asris.csiro.au/arcgis/services/TERN/SLGA_Soil_Depth/MapServer/WCSServer",
+        coverage_id="1",
+        variable=Variable(name="soil_depth", units="m", data_type=DataType.CONTINUOUS,
+                          valid_range=(0, 20),
+                          description="Estimated soil depth (SLGA)"),
+        resolution_m=90, category="soil",
+        bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
+        license="CC-BY 4.0", citation="TERN/CSIRO, Soil and Landscape Grid of Australia",
+    )
+
+
+@register("nz_lc")
+class NewZealandLCConnector(NationalWCSConnector):
+    slug = "nz_lc"
+    display_name = "New Zealand LCDB v5.0"
+    base_url = "https://lris.scinfo.org.nz/services/wmts"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="nz_lc",
+        display_name="New Zealand Land Cover Database v5.0 (LRIS)",
+        wcs_url="https://data.lris.govt.nz/v1/wms/",
+        coverage_id="lcdb-v50-land-cover-database-version-50",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="New Zealand land cover (33 classes, 2018/19)"),
+        resolution_m=15, category="land_cover",
+        bbox=BoundingBox(min_lon=166.0, min_lat=-47.5, max_lon=178.7, max_lat=-34.3),
+        license="CC-BY 4.0", citation="LRIS/MfE, Land Cover Database v5.0",
+        auth_token_env="CAS_LRIS_API_KEY",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  EASTERN EUROPE — soil & land cover
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("poland_soil")
+class PolandSoilConnector(NationalWCSConnector):
+    slug = "poland_soil"
+    display_name = "Poland Soil Map (PIG)"
+    base_url = "https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/SoilMap"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="poland_soil",
+        display_name="Poland Soil Map 1:500k (PIG-PIB)",
+        wcs_url="https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/SoilMap",
+        coverage_id="SoilMap",
+        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="Polish soil classification 1:500,000"),
+        resolution_m=500, category="soil",
+        bbox=BoundingBox(min_lon=14.1, min_lat=49.0, max_lon=24.2, max_lat=54.9),
+        license="Open (Poland)", citation="PIG-PIB, Mapa Gleb Polski",
+    )
+
+
+@register("romania_lc")
+class RomaniaLCConnector(NationalWCSConnector):
+    slug = "romania_lc"
+    display_name = "Romania Land Cover (ANCPI)"
+    base_url = "https://geoportal.ancpi.ro/inspire/lc/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="romania_lc",
+        display_name="Romania CORINE Land Cover (ANCPI INSPIRE)",
+        wcs_url="https://geoportal.ancpi.ro/inspire/lc/wms",
+        coverage_id="LC.LandCoverSurface",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Romanian land cover (CORINE nomenclature)"),
+        resolution_m=100, category="land_cover",
+        bbox=BoundingBox(min_lon=20.3, min_lat=43.6, max_lon=29.7, max_lat=48.3),
+        license="Open (ANCPI)", citation="ANCPI, Romania INSPIRE Land Cover",
+    )
+
+
+@register("hungary_soil")
+class HungarySoilConnector(NationalWCSConnector):
+    slug = "hungary_soil"
+    display_name = "Hungary Soil Map (NÉBIH)"
+    base_url = "https://inspire.fomi.hu/ows/so/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="hungary_soil",
+        display_name="Hungary Soil Map (NÉBIH/Lechner INSPIRE)",
+        wcs_url="https://inspire.fomi.hu/ows/so/wms",
+        coverage_id="SO.SoilBody",
+        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="Hungarian soil classification (WRB)"),
+        resolution_m=100, category="soil",
+        bbox=BoundingBox(min_lon=16.1, min_lat=45.7, max_lon=22.9, max_lat=48.6),
+        license="Open (Hungary)", citation="NÉBIH, Hungarian Soil Map",
+    )
