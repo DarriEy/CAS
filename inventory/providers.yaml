@@ -1,296 +1,2732 @@
-# CAS Global Attribute Provider Inventory
-#
-# Each entry documents a geospatial attribute data source.
-# status: implemented | planned | research
+# CAS Provider Inventory — auto-generated from registered connectors
+# Total providers: 210
 
-# ── TIER 1 — Implemented ────────────────────────────────────────────
-
-- slug: isric_soilgrids
-  name: ISRIC SoilGrids 2.0
-  category: soil
-  protocol: wcs
-  base_url: https://maps.isric.org/mapserv?map=/map/soilgrids.map
-  variables:
-    - name: clay
-      units: g/kg
-      depths: [0-5cm, 5-15cm, 15-30cm, 30-60cm, 60-100cm, 100-200cm]
-    - name: sand
-      units: g/kg
-    - name: silt
-      units: g/kg
-    - name: soc
-      units: dg/kg
-    - name: phh2o
-      units: pH*10
-    - name: bdod
-      units: cg/cm3
-    - name: cec
-      units: mmol(c)/kg
-    - name: nitrogen
-      units: cg/kg
-  resolution_m: 250
-  bbox: [-180, -56, 180, 84]
+- slug: alos_dem
+  name: ALOS World 3D 30m
+  protocol: stac_cog
+  base_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  resolution_m: 30.0
+  bbox: [-180.0, -60.0, 180.0, 82.0]
   temporal_type: static
-  data_type: continuous
-  access: open
-  license: CC-BY-4.0
+  license: "JAXA ALOS Research and Application"
+  citation: "JAXA, ALOS World 3D - 30m (AW3D30)"
+  datasets: 1
+  variables: [elevation]
   status: implemented
-  notes: WCS 2.0.1. CoverageId format "{variable}_{depth}_mean".
+
+- slug: alos_fnf
+  name: ALOS Forest/Non-Forest 25m
+  protocol: stac_cog
+  base_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  resolution_m: 25.0
+  bbox: [-180.0, -56.0, 180.0, 85.0]
+  temporal_type: annual
+  license: "JAXA (free for research)"
+  citation: "JAXA, ALOS PALSAR Forest/Non-Forest"
+  datasets: 1
+  variables: [forest]
+  status: implemented
+
+- slug: arctic_dem
+  name: ArcticDEM 10m
+  protocol: stac_cog
+  base_url: https://stac.pgc.umn.edu/api/v1
+  resolution_m: 10.0
+  bbox: [-180.0, 50.0, 180.0, 84.0]
+  temporal_type: static
+  license: "Open (PGC)"
+  citation: "Porter et al., ArcticDEM, Polar Geospatial Center"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: argentina_lc
+  name: Argentina Land Cover (MapBiomas)
+  protocol: rest
+  base_url: https://storage.googleapis.com/mapbiomas-public/initiatives/argentina/collection_2/coverage
+  resolution_m: 30.0
+  bbox: [-74.0, -56.0, -53.0, -21.0]
+  temporal_type: static
+  license: "CC-BY-SA 4.0"
+  citation: "MapBiomas Argentina, Collection 2"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: argentina_soil
+  name: Argentina Soil Map (INTA)
+  protocol: wcs
+  base_url: http://geointa.inta.gov.ar/geoserver/wms
+  resolution_m: 500.0
+  bbox: [-74.0, -56.0, -53.0, -21.0]
+  temporal_type: static
+  license: "Open (INTA)"
+  citation: "INTA, GeoINTA Suelos"
+  datasets: 1
+  variables: [soil_type]
+  status: implemented
+
+- slug: australia_dea_lc
+  name: Australia DEA Land Cover 25m
+  protocol: wcs
+  base_url: https://ows.dea.ga.gov.au
+  resolution_m: 25.0
+  bbox: [112.0, -44.0, 154.0, -10.0]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "DEA, Geoscience Australia Land Cover"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: australia_dem
+  name: Australia SRTM 1s DEM 30m
+  protocol: wcs
+  base_url: https://services.ga.gov.au/gis/services/DEM_SRTM_1Second_2024/MapServer/WCSServer
+  resolution_m: 30.0
+  bbox: [112.0, -44.0, 154.0, -10.0]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "Geoscience Australia, SRTM-derived 1 Second DEM"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: australia_frac_cover
+  name: Australia Fractional Cover (DEA)
+  protocol: wcs
+  base_url: https://ows.dea.ga.gov.au
+  resolution_m: 25.0
+  bbox: [112.0, -44.0, 154.0, -10.0]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "DEA, Fractional Cover (Landsat)"
+  datasets: 1
+  variables: [fractional_cover]
+  status: implemented
+
+- slug: australia_mangrove
+  name: Australia Mangrove Cover (DEA)
+  protocol: wcs
+  base_url: https://ows.dea.ga.gov.au
+  resolution_m: 25.0
+  bbox: [112.0, -44.0, 154.0, -10.0]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "DEA, Mangrove Canopy Cover"
+  datasets: 1
+  variables: [mangrove_cover]
+  status: implemented
+
+- slug: australia_water_obs
+  name: Australia Water Observations (DEA)
+  protocol: wcs
+  base_url: https://ows.dea.ga.gov.au
+  resolution_m: 25.0
+  bbox: [112.0, -44.0, 154.0, -10.0]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "DEA, Water Observations from Space"
+  datasets: 1
+  variables: [water_frequency]
+  status: implemented
+
+- slug: austria_tirol_dem
+  name: Austria Tirol DEM 1m
+  protocol: wcs
+  base_url: https://gis.tirol.gv.at/arcgis/services/Service_Public/terrain/MapServer/WMSServer
+  resolution_m: 1.0
+  bbox: [10.1, 46.7, 12.8, 47.7]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "Land Tirol, Digitales Geländemodell"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: belgium_aquifer
+  name: Belgium Flanders Aquifer Layers (DOV)
+  protocol: wcs
+  base_url: https://www.dov.vlaanderen.be/geoserver/grondwater/wms
+  resolution_m: 100.0
+  bbox: [2.5, 50.7, 5.9, 51.5]
+  temporal_type: static
+  license: "Open (DOV)"
+  citation: "DOV, Watervoerende Lagen Vlaanderen"
+  datasets: 1
+  variables: [aquifer_layer]
+  status: implemented
+
+- slug: belgium_flanders_dem
+  name: Belgium Flanders DHMV 1m
+  protocol: wcs
+  base_url: https://geo.api.vlaanderen.be/DHMV/wms
+  resolution_m: 1.0
+  bbox: [2.5, 50.7, 5.9, 51.5]
+  temporal_type: static
+  license: "Gratis Open Data Vlaanderen"
+  citation: "Digitaal Hoogtemodel Vlaanderen II"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: belgium_groundwater
+  name: Belgium Flanders Groundwater (DOV)
+  protocol: wcs
+  base_url: https://www.dov.vlaanderen.be/geoserver/grondwater/wms
+  resolution_m: 50.0
+  bbox: [2.5, 50.7, 5.9, 51.5]
+  temporal_type: static
+  license: "Open (DOV)"
+  citation: "DOV, Beschermingszones Grondwater Vlaanderen"
+  datasets: 1
+  variables: [gw_protection]
+  status: implemented
+
+- slug: belgium_hydrostrat
+  name: Belgium Flanders Hydrostratigraphy (DOV)
+  protocol: wcs
+  base_url: https://www.dov.vlaanderen.be/geoserver/interpretaties/wms
+  resolution_m: 100.0
+  bbox: [2.5, 50.7, 5.9, 51.5]
+  temporal_type: static
+  license: "Open (DOV)"
+  citation: "DOV, Hydrogeologische Stratigrafie Vlaanderen"
+  datasets: 1
+  variables: [hydrostrat]
+  status: implemented
+
+- slug: belgium_lithology
+  name: Belgium Flanders Lithology (DOV)
+  protocol: wcs
+  base_url: https://www.dov.vlaanderen.be/geoserver/interpretaties/wms
+  resolution_m: 100.0
+  bbox: [2.5, 50.7, 5.9, 51.5]
+  temporal_type: static
+  license: "Open (DOV)"
+  citation: "DOV, Gecodeerde Lithologie Vlaanderen"
+  datasets: 1
+  variables: [lithology]
+  status: implemented
+
+- slug: belgium_soil
+  name: Belgium Flanders Soil (DOV)
+  protocol: wcs
+  base_url: https://www.dov.vlaanderen.be/geoserver/bodemkaart/bodemtypes/wms
+  resolution_m: 20.0
+  bbox: [2.5, 50.7, 5.9, 51.5]
+  temporal_type: static
+  license: "Open (DOV)"
+  citation: "DOV, Bodemkaart van België"
+  datasets: 1
+  variables: [soil_type]
+  status: implemented
+
+- slug: belgium_wallonia_dem
+  name: Belgium Wallonia MNT 1m
+  protocol: wcs
+  base_url: https://geoservices.wallonie.be/arcgis/services/RELIEF/WALLONIE_MNT_2021_2022/MapServer/WMSServer
+  resolution_m: 1.0
+  bbox: [2.8, 49.5, 6.4, 50.8]
+  temporal_type: static
+  license: "Open (Wallonia)"
+  citation: "SPW, Modèle Numérique de Terrain 2021-2022"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: biodiversity
+  name: Biodiversity Intactness (Global)
+  protocol: stac_cog
+  base_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  resolution_m: 100.0
+  bbox: [-180.0, -90.0, 180.0, 90.0]
+  temporal_type: annual
+  license: "CC-BY 4.0"
+  citation: "Impact Observatory, Biodiversity Intactness"
+  datasets: 1
+  variables: [biodiversity_intactness]
+  status: implemented
+
+- slug: brazil_soil
+  name: Brazil Soil Map (EMBRAPA)
+  protocol: wcs
+  base_url: https://geoinfo.dados.embrapa.br/geoserver/ows
+  resolution_m: 1000.0
+  bbox: [-74.0, -34.0, -34.0, 6.0]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "EMBRAPA, Mapa de Solos do Brasil"
+  datasets: 1
+  variables: [soil_type]
+  status: implemented
+
+- slug: canada_aafc_crops
+  name: Canada Annual Crop Inventory
+  protocol: wcs
+  base_url: https://agriculture.canada.ca/imagery-images/services/annual_crop_inventory/2024/ImageServer/WCSServer
+  resolution_m: 30.0
+  bbox: [-141.0, 41.7, -52.6, 83.1]
+  temporal_type: static
+  license: "Open Government Licence - Canada"
+  citation: "AAFC, Annual Crop Inventory"
+  datasets: 1
+  variables: [cropland]
+  status: implemented
+
+- slug: canada_fgp_lc
+  name: Canada Land Cover 2015 (NRCan FGP)
+  protocol: wcs
+  base_url: https://geoappext.nrcan.gc.ca/arcgis/services/FGP/canada_landcover_2015_en/MapServer/WMSServer
+  resolution_m: 30.0
+  bbox: [-141.0, 41.7, -52.6, 83.1]
+  temporal_type: static
+  license: "Open Government Licence - Canada"
+  citation: "NRCan, Canada Land Cover 2015"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: canada_hrdem
+  name: Canada HRDEM 1-2m
+  protocol: wcs
+  base_url: https://datacube.services.geo.ca/ows/elevation
+  resolution_m: 2.0
+  bbox: [-141.0, 41.7, -52.6, 83.1]
+  temporal_type: static
+  license: "Open Government Licence - Canada"
+  citation: "NRCan, High Resolution DEM"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: canopy_height
+  name: ETH Canopy Height 10m
+  protocol: rest
+  base_url: https://share.phys.ethz.ch/~pf/nlangdata/ETH_GlobalCanopyHeight_10m_2020_version1/3deg_cogs
+  resolution_m: 10.0
+  bbox: [-180.0, -56.0, 180.0, 72.0]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "Lang et al. 2023, ETH Global Canopy Height"
+  datasets: 1
+  variables: [canopy_height]
+  status: implemented
+
+- slug: chile_soil
+  name: Chile Soil Map (CIREN)
+  protocol: wcs
+  base_url: https://esri.ciren.cl/server/rest/services/IDEMINAGRI/SUELOS_AGROLOGICOS/MapServer/WMSServer
+  resolution_m: 100.0
+  bbox: [-76.0, -56.0, -66.0, -17.0]
+  temporal_type: static
+  license: "Open (CIREN)"
+  citation: "CIREN / MINAGRI, Suelos Agrológicos de Chile"
+  datasets: 1
+  variables: [soil_type]
+  status: implemented
+
+- slug: chloris_biomass
+  name: Chloris Biomass (Global)
+  protocol: stac_cog
+  base_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  resolution_m: 4000.0
+  bbox: [-180.0, -60.0, 180.0, 90.0]
+  temporal_type: annual
+  license: "CC-BY 4.0"
+  citation: "Chloris Global Biomass 2003-2019"
+  datasets: 2
+  variables: [biomass, biomass_change]
+  status: implemented
+
+- slug: colombia_lc
+  name: Colombia Land Cover (IDEAM)
+  protocol: wcs
+  base_url: https://visualizador.ideam.gov.co/gisserver/services/Estado_Cobertura_Tierra/MapServer/WMSServer
+  resolution_m: 100.0
+  bbox: [-82.0, -5.0, -67.0, 13.0]
+  temporal_type: static
+  license: "Open (IDEAM)"
+  citation: "IDEAM, Coberturas de la Tierra"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: cop_dem_90
+  name: Copernicus DEM GLO-90
+  protocol: stac_cog
+  base_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  resolution_m: 90.0
+  bbox: [-180.0, -90.0, 180.0, 90.0]
+  temporal_type: static
+  license: "Open"
+  citation: "Copernicus DEM GLO-90, European Space Agency"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
 
 - slug: copernicus_dem
   name: Copernicus DEM GLO-30
-  category: elevation
   protocol: stac_cog
-  stac_url: https://planetarycomputer.microsoft.com/api/stac/v1
-  collection: cop-dem-glo-30
-  variables:
-    - name: elevation
-      units: m
-  resolution_m: 30
-  bbox: [-180, -90, 180, 90]
+  base_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  resolution_m: 30.0
+  bbox: [-180.0, -90.0, 180.0, 90.0]
   temporal_type: static
-  access: open
-  license: open
+  license: "Open"
+  citation: "Copernicus DEM GLO-30, European Space Agency"
+  datasets: 1
+  variables: [elevation]
   status: implemented
-  notes: Via Microsoft Planetary Computer STAC. Also GLO-90 variant.
+
+- slug: corine_lc
+  name: CORINE Land Cover (Europe)
+  protocol: stac_cog
+  base_url: https://stac.dataspace.copernicus.eu/v1
+  resolution_m: 100.0
+  bbox: [-32.0, 27.0, 45.0, 72.0]
+  temporal_type: annual
+  license: "Copernicus (free)"
+  citation: "Copernicus Land Monitoring Service, CORINE Land Cover"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: czech_dem
+  name: Czech Republic DMR5G 5m
+  protocol: wcs
+  base_url: https://ags.cuzk.cz/arcgis2/services/dmr5g/ImageServer/WMSServer
+  resolution_m: 5.0
+  bbox: [12.1, 48.6, 18.9, 51.1]
+  temporal_type: static
+  license: "Open (CUZK)"
+  citation: "CUZK, Digitální model reliéfu 5. generace"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: czech_dem_rest
+  name: Czech Republic DMR5G 5m (REST)
+  protocol: rest
+  base_url: https://ags.cuzk.cz/arcgis2/rest/services/dmr5g/ImageServer
+  resolution_m: 5.0
+  bbox: [12.1, 48.6, 18.9, 51.1]
+  temporal_type: static
+  license: "Open (CUZK)"
+  citation: "CUZK, Digitální model reliéfu 5. generace"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: dea_africa_dem
+  name: DEA Africa SRTM Derivatives
+  protocol: wcs
+  base_url: https://ows.digitalearth.africa
+  resolution_m: 30.0
+  bbox: [-26.0, -35.0, 58.0, 38.0]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "Digital Earth Africa, SRTM-derived slope/MRVBF"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: dea_africa_lc
+  name: DEA Africa Land Cover
+  protocol: wcs
+  base_url: https://ows.digitalearth.africa
+  resolution_m: 10.0
+  bbox: [-26.0, -35.0, 58.0, 38.0]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "Digital Earth Africa / ESA WorldCover"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: deltares_floods
+  name: Deltares Global Flood Maps
+  protocol: stac_cog
+  base_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  resolution_m: 1000.0
+  bbox: [-180.0, -90.0, 180.0, 90.0]
+  temporal_type: static
+  license: "Deltares (free)"
+  citation: "Deltares, Global Hydrological Model"
+  datasets: 1
+  variables: [flood_depth]
+  status: implemented
+
+- slug: deltares_water
+  name: Deltares Global Water Availability
+  protocol: stac_cog
+  base_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  resolution_m: 1000.0
+  bbox: [-180.0, -90.0, 180.0, 90.0]
+  temporal_type: static
+  license: "Deltares (free)"
+  citation: "Deltares, Global Hydrological Model"
+  datasets: 1
+  variables: [water_availability]
+  status: implemented
+
+- slug: denmark_dem
+  name: Denmark DHM 0.4m
+  protocol: wcs
+  base_url: https://api.dataforsyningen.dk/dhm_wcs_DAF
+  resolution_m: 0.4
+  bbox: [8.0, 54.5, 15.2, 57.8]
+  temporal_type: static
+  license: "Open (Denmark)"
+  citation: "SDFI, Danmarks Højdemodel"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: denmark_geology
+  name: Denmark Groundwater (GEUS)
+  protocol: wcs
+  base_url: https://data.geus.dk/geusmap/ows/25832.jsp
+  resolution_m: 200.0
+  bbox: [8.0, 54.5, 15.2, 57.8]
+  temporal_type: static
+  license: "Open (GEUS)"
+  citation: "GEUS, Grundvandskortlægning"
+  datasets: 1
+  variables: [groundwater]
+  status: implemented
+
+- slug: denmark_nitrate
+  name: Denmark Groundwater Nitrate (GEUS)
+  protocol: wcs
+  base_url: https://data.geus.dk/geusmap/ows/25832.jsp
+  resolution_m: 5000.0
+  bbox: [8.0, 54.5, 15.2, 57.8]
+  temporal_type: static
+  license: "Open (GEUS)"
+  citation: "GEUS, Grundvand Nitrat"
+  datasets: 1
+  variables: [nitrate]
+  status: implemented
+
+- slug: denmark_soil
+  name: Denmark Soil Map (GEUS)
+  protocol: wcs
+  base_url: https://data.geus.dk/geusmap/ows/25832.jsp
+  resolution_m: 200.0
+  bbox: [8.0, 54.5, 15.2, 57.8]
+  temporal_type: static
+  license: "Open (GEUS)"
+  citation: "GEUS, Jordartskort over Danmark 1:200.000"
+  datasets: 1
+  variables: [soil_type]
+  status: implemented
+
+- slug: denmark_terrain
+  name: Denmark DHM Terrain (SDFI)
+  protocol: wcs
+  base_url: https://api.dataforsyningen.dk/dhm_DAF
+  resolution_m: 0.4
+  bbox: [8.0, 54.5, 15.2, 57.8]
+  temporal_type: static
+  license: "Open (Denmark)"
+  citation: "SDFI, Danmarks Højdemodel Terrain"
+  datasets: 1
+  variables: [terrain_shade]
+  status: implemented
+
+- slug: denmark_water_supply
+  name: Denmark Water Supply Areas (GEUS)
+  protocol: wcs
+  base_url: https://data.geus.dk/geusmap/ows/25832.jsp
+  resolution_m: 1000.0
+  bbox: [8.0, 54.5, 15.2, 57.8]
+  temporal_type: static
+  license: "Open (GEUS)"
+  citation: "GEUS, Vandforsyningsområder"
+  datasets: 1
+  variables: [water_supply]
+  status: implemented
+
+- slug: depth_to_bedrock
+  name: Depth to Bedrock (SoilGrids)
+  protocol: rest
+  base_url: https://rest.isric.org
+  resolution_m: 250.0
+  bbox: [-180.0, -56.0, 180.0, 84.0]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "Shangguan et al. 2017 / ISRIC SoilGrids"
+  datasets: 1
+  variables: [depth_to_bedrock]
+  status: implemented
+
+- slug: dynamic_world
+  name: Dynamic World 10m (Google)
+  protocol: rest
+  base_url: https://earthengine.googleapis.com
+  resolution_m: 10.0
+  bbox: [-180.0, -90.0, 180.0, 90.0]
+  temporal_type: daily
+  license: "CC-BY-4.0"
+  citation: "Brown et al. 2022, Dynamic World"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: eea_forest_type
+  name: Europe Forest Type 10m (HRL)
+  protocol: rest
+  base_url: https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic
+  resolution_m: 10.0
+  bbox: [-32.0, 27.0, 45.0, 72.0]
+  temporal_type: annual
+  license: "Copernicus (free)"
+  citation: "Copernicus Land Monitoring Service, HRL"
+  datasets: 1
+  variables: [forest_type]
+  status: implemented
+
+- slug: eea_grassland
+  name: Europe Grassland 10m (HRL)
+  protocol: rest
+  base_url: https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic
+  resolution_m: 10.0
+  bbox: [-32.0, 27.0, 45.0, 72.0]
+  temporal_type: annual
+  license: "Copernicus (free)"
+  citation: "Copernicus Land Monitoring Service, HRL"
+  datasets: 1
+  variables: [grassland]
+  status: implemented
+
+- slug: eea_imperv_density
+  name: Europe Imperviousness Density 10m (HRL)
+  protocol: rest
+  base_url: https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic
+  resolution_m: 10.0
+  bbox: [-32.0, 27.0, 45.0, 72.0]
+  temporal_type: annual
+  license: "Copernicus (free)"
+  citation: "Copernicus Land Monitoring Service, HRL"
+  datasets: 1
+  variables: [imperv_density]
+  status: implemented
+
+- slug: eea_imperviousness
+  name: Europe Imperviousness 10m (HRL)
+  protocol: rest
+  base_url: https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic
+  resolution_m: 10.0
+  bbox: [-32.0, 27.0, 45.0, 72.0]
+  temporal_type: annual
+  license: "Copernicus (free)"
+  citation: "Copernicus Land Monitoring Service, HRL"
+  datasets: 1
+  variables: [imperviousness]
+  status: implemented
+
+- slug: eea_leaf_type
+  name: Europe Dominant Leaf Type 10m (HRL)
+  protocol: rest
+  base_url: https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic
+  resolution_m: 10.0
+  bbox: [-32.0, 27.0, 45.0, 72.0]
+  temporal_type: annual
+  license: "Copernicus (free)"
+  citation: "Copernicus Land Monitoring Service, HRL"
+  datasets: 1
+  variables: [leaf_type]
+  status: implemented
+
+- slug: eea_leaf_type_change
+  name: Europe Leaf Type Change 2015-2018 (HRL)
+  protocol: rest
+  base_url: https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic
+  resolution_m: 10.0
+  bbox: [-32.0, 27.0, 45.0, 72.0]
+  temporal_type: annual
+  license: "Copernicus (free)"
+  citation: "Copernicus Land Monitoring Service, HRL"
+  datasets: 1
+  variables: [leaf_type_change]
+  status: implemented
+
+- slug: eea_small_woody
+  name: Europe Small Woody Features 100m (HRL)
+  protocol: rest
+  base_url: https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic
+  resolution_m: 10.0
+  bbox: [-32.0, 27.0, 45.0, 72.0]
+  temporal_type: annual
+  license: "Copernicus (free)"
+  citation: "Copernicus Land Monitoring Service, HRL"
+  datasets: 1
+  variables: [small_woody_density]
+  status: implemented
+
+- slug: eea_tree_cover
+  name: Europe Tree Cover Density 10m (HRL)
+  protocol: rest
+  base_url: https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic
+  resolution_m: 10.0
+  bbox: [-32.0, 27.0, 45.0, 72.0]
+  temporal_type: annual
+  license: "Copernicus (free)"
+  citation: "Copernicus Land Monitoring Service, HRL"
+  datasets: 1
+  variables: [tree_cover_density]
+  status: implemented
+
+- slug: eea_tree_cover_change
+  name: Europe Tree Cover Change 2015-2018 (HRL)
+  protocol: rest
+  base_url: https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic
+  resolution_m: 10.0
+  bbox: [-32.0, 27.0, 45.0, 72.0]
+  temporal_type: annual
+  license: "Copernicus (free)"
+  citation: "Copernicus Land Monitoring Service, HRL"
+  datasets: 1
+  variables: [tree_cover_change]
+  status: implemented
+
+- slug: eea_water_wetness
+  name: Europe Water & Wetness 10m (HRL)
+  protocol: rest
+  base_url: https://image.discomap.eea.europa.eu/arcgis/rest/services/GioLandPublic
+  resolution_m: 10.0
+  bbox: [-32.0, 27.0, 45.0, 72.0]
+  temporal_type: annual
+  license: "Copernicus (free)"
+  citation: "Copernicus Land Monitoring Service, HRL"
+  datasets: 1
+  variables: [water_wetness]
+  status: implemented
+
+- slug: esa_cci_lc
+  name: ESA CCI Land Cover 300m
+  protocol: stac_cog
+  base_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  resolution_m: 300.0
+  bbox: [-180.0, -90.0, 180.0, 90.0]
+  temporal_type: annual
+  license: "ESA CCI (free)"
+  citation: "ESA Climate Change Initiative Land Cover, v2.1.1"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
 
 - slug: esa_worldcover
   name: ESA WorldCover 10m
-  category: land_cover
   protocol: stac_cog
-  stac_url: https://planetarycomputer.microsoft.com/api/stac/v1
-  collection: esa-worldcover
-  variables:
-    - name: land_cover
-      units: class
-      data_type: categorical
-  resolution_m: 10
-  bbox: [-180, -60, 180, 84]
+  base_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  resolution_m: 10.0
+  bbox: [-180.0, -60.0, 180.0, 84.0]
   temporal_type: annual
-  temporal_range: [2020, 2021]
-  access: open
-  license: CC-BY-4.0
+  license: "CC-BY-4.0"
+  citation: "ESA WorldCover 2021"
+  datasets: 1
+  variables: [land_cover]
   status: implemented
 
-# ── TIER 2 — Planned ────────────────────────────────────────────────
-
-- slug: usgs_3dep
-  name: USGS 3D Elevation Program
-  category: elevation
-  protocol: wcs
-  base_url: https://elevation.nationalmap.gov/arcgis/services/3DEPElevation/ImageServer/WCSServer
-  variables:
-    - name: elevation
-      units: m
-  resolution_m: 10
-  bbox: [-180, 17, -64, 72]
-  temporal_type: static
-  access: open
-  license: public_domain
-  status: planned
-  notes: US-only. 1m available in some areas.
-
-- slug: modis_ndvi
-  name: MODIS NDVI (MOD13A2)
-  category: vegetation
+- slug: esri_lulc
+  name: Esri 10m LULC
   protocol: rest
-  base_url: https://appeears.earthdatacloud.nasa.gov/api
-  variables:
-    - name: ndvi
-      units: dimensionless
-    - name: evi
-      units: dimensionless
-  resolution_m: 1000
-  bbox: [-180, -90, 180, 90]
-  temporal_type: daily
-  access: api_key_required
-  license: open
-  status: planned
-  notes: Via NASA AppEEARS. 16-day composites.
-
-- slug: era5_land
-  name: ERA5-Land (Copernicus CDS)
-  category: climate
-  protocol: rest
-  base_url: https://cds.climate.copernicus.eu/api
-  variables:
-    - name: temperature_2m
-      units: K
-    - name: total_precipitation
-      units: m
-    - name: snowfall
-      units: m
-    - name: soil_temperature_level_1
-      units: K
-  resolution_m: 9000
-  bbox: [-180, -90, 180, 90]
-  temporal_type: hourly
-  access: api_key_required
-  license: copernicus
-  status: planned
-  notes: CDS API. Hourly fields from 1950-present.
-
-- slug: worldclim
-  name: WorldClim 2.1
-  category: climate
-  protocol: stac_cog
-  variables:
-    - name: bio1_annual_mean_temp
-      units: degC
-    - name: bio12_annual_precip
-      units: mm
-  resolution_m: 1000
-  bbox: [-180, -90, 180, 90]
-  temporal_type: climatology
-  access: open
-  license: CC-BY-SA-4.0
-  status: planned
-
-- slug: nlcd
-  name: USGS National Land Cover Database
-  category: land_cover
-  protocol: wcs
-  base_url: https://www.mrlc.gov/geoserver/wcs
-  variables:
-    - name: land_cover
-      units: class
-      data_type: categorical
-  resolution_m: 30
-  bbox: [-130, 22, -64, 52]
+  base_url: https://ic.imagery1.arcgis.com/arcgis/rest/services/Sentinel2_10m_LandCover/ImageServer
+  resolution_m: 10.0
+  bbox: [-180.0, -90.0, 180.0, 90.0]
   temporal_type: annual
-  access: open
-  license: public_domain
-  status: planned
-  notes: US-only. Classes differ from ESA WorldCover.
+  license: "CC-BY 4.0"
+  citation: "Impact Observatory / Esri, Sentinel-2 10m LULC"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: estonia_dem
+  name: Estonia DEM 1m
+  protocol: wcs
+  base_url: https://kaart.maaamet.ee/wms/fotokaart
+  resolution_m: 1.0
+  bbox: [21.8, 57.5, 28.2, 59.7]
+  temporal_type: static
+  license: "Estonian Open Data License"
+  citation: "Maa-amet, Estonian Land Board"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: estonia_geology
+  name: Estonia Geology (Maa-amet)
+  protocol: wcs
+  base_url: https://kaart.maaamet.ee/wms/geoloogia
+  resolution_m: 50.0
+  bbox: [21.8, 57.5, 28.2, 59.7]
+  temporal_type: static
+  license: "Estonian Open Data"
+  citation: "Maa-amet, Geological Map of Estonia"
+  datasets: 1
+  variables: [geology]
+  status: implemented
+
+- slug: estonia_lc
+  name: Estonia Land Cover (Maa-amet)
+  protocol: wcs
+  base_url: https://kaart.maaamet.ee/wms/alus-geo
+  resolution_m: 10.0
+  bbox: [21.8, 57.5, 28.2, 59.7]
+  temporal_type: static
+  license: "Estonian Open Data"
+  citation: "Maa-amet, Estonian Land Board Base Map"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: fabdem
+  name: FABDEM 30m
+  protocol: rest
+  base_url: https://data.bris.ac.uk/datasets/s5hqmjcdj8yo2ibzi9b4ew3sn
+  resolution_m: 30.0
+  bbox: [-180.0, -90.0, 180.0, 90.0]
+  temporal_type: static
+  license: "CC-BY-NC-SA 4.0 (commercial: contact fabdem@fathom.global)"
+  citation: "Hawker et al. 2022, FABDEM V1-2"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: fia_forest
+  name: USFS FIA Forest Inventory (US)
+  protocol: stac_cog
+  base_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  resolution_m: 30.0
+  bbox: [-180.0, 17.0, -64.0, 72.0]
+  temporal_type: static
+  license: "Public Domain"
+  citation: "USFS Forest Inventory and Analysis"
+  datasets: 1
+  variables: [forest_group]
+  status: implemented
+
+- slug: finland_catchments
+  name: Finland Drainage Basins (SYKE)
+  protocol: wcs
+  base_url: https://paikkatiedot.ymparisto.fi/geoserver/inspire_hy/wms
+  resolution_m: 50.0
+  bbox: [19.1, 59.5, 31.6, 70.1]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "SYKE, Finnish Drainage Basins"
+  datasets: 1
+  variables: [drainage_basin]
+  status: implemented
+
+- slug: finland_dem
+  name: Finland DEM 2m
+  protocol: wcs
+  base_url: https://avoin-karttakuva.maanmittauslaitos.fi/ortokuvat-ja-korkeusmallit/wcs/v2
+  resolution_m: 2.0
+  bbox: [19.1, 59.5, 31.6, 70.1]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "Maanmittauslaitos, Elevation Model 2m"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: finland_forest_height
+  name: Finland Forest Height (LUKE)
+  protocol: wcs
+  base_url: https://kartta.luke.fi/geoserver/MVMI/wms
+  resolution_m: 16.0
+  bbox: [19.1, 59.5, 31.6, 70.1]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "LUKE, Multi-Source National Forest Inventory (MVMI)"
+  datasets: 1
+  variables: [tree_height]
+  status: implemented
+
+- slug: finland_lc
+  name: Finland CORINE Land Cover (SYKE)
+  protocol: wcs
+  base_url: https://paikkatiedot.ymparisto.fi/geoserver/inspire_lc/wms
+  resolution_m: 20.0
+  bbox: [19.1, 59.5, 31.6, 70.1]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "SYKE, CORINE Land Cover Finland 2018"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: finland_site_type
+  name: Finland Forest Site Type (LUKE)
+  protocol: wcs
+  base_url: https://kartta.luke.fi/geoserver/MVMI/wms
+  resolution_m: 16.0
+  bbox: [19.1, 59.5, 31.6, 70.1]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "LUKE, Multi-Source National Forest Inventory (MVMI)"
+  datasets: 1
+  variables: [site_type]
+  status: implemented
+
+- slug: finland_soil
+  name: Finland Soil Map (GTK)
+  protocol: wcs
+  base_url: https://gtkdata.gtk.fi/arcgis/services/Rajapinnat/GTK_Maapera_WMS/MapServer/WMSServer
+  resolution_m: 20.0
+  bbox: [19.1, 59.5, 31.6, 70.1]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "GTK, Geological Survey of Finland"
+  datasets: 1
+  variables: [soil_type]
+  status: implemented
+
+- slug: france_dem
+  name: France RGE ALTI 1m (IGN)
+  protocol: rest
+  base_url: https://data.geopf.fr
+  resolution_m: 1.0
+  bbox: [-5.2, 41.3, 9.6, 51.1]
+  temporal_type: static
+  license: "Open Licence (Etalab)"
+  citation: "IGN, RGE ALTI (Geoplateforme)"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: france_geology
+  name: France Geological Map (BRGM)
+  protocol: wcs
+  base_url: https://geoservices.brgm.fr/geologie
+  resolution_m: 1000.0
+  bbox: [-5.2, 41.3, 9.6, 51.1]
+  temporal_type: static
+  license: "Open (BRGM)"
+  citation: "BRGM, Carte Géologique de la France"
+  datasets: 1
+  variables: [geology]
+  status: implemented
+
+- slug: france_lc
+  name: France OCS GE Land Cover
+  protocol: wcs
+  base_url: https://data.geopf.fr/wms-r/wms
+  resolution_m: 10.0
+  bbox: [-5.2, 41.3, 9.6, 51.1]
+  temporal_type: static
+  license: "Open Licence (Etalab)"
+  citation: "IGN, OCS GE (Geoplateforme)"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: france_lithology
+  name: France Lithology (BRGM)
+  protocol: wcs
+  base_url: https://geoservices.brgm.fr/geologie
+  resolution_m: 1000.0
+  bbox: [-5.2, 41.3, 9.6, 51.1]
+  temporal_type: static
+  license: "Open (BRGM)"
+  citation: "BRGM, Lithologie Simplifiée"
+  datasets: 1
+  variables: [lithology]
+  status: implemented
+
+- slug: france_soil
+  name: France Soil Map (INRAE)
+  protocol: wcs
+  base_url: https://agroenvgeo.data.inra.fr/geoserver/gissol_rmqs/wms
+  resolution_m: 1000.0
+  bbox: [-5.2, 41.3, 9.6, 51.1]
+  temporal_type: static
+  license: "Open (INRAE)"
+  citation: "INRAE / GIS Sol, RMQS"
+  datasets: 1
+  variables: [soil_properties]
+  status: implemented
+
+- slug: gebco
+  name: GEBCO Bathymetry 500m
+  protocol: wcs
+  base_url: https://wms.gebco.net/mapserv
+  resolution_m: 500.0
+  bbox: [-180.0, -90.0, 180.0, 90.0]
+  temporal_type: static
+  license: "Open (GEBCO)"
+  citation: "GEBCO Compilation Group 2024, GEBCO 2024 Grid"
+  datasets: 1
+  variables: [bathymetry]
+  status: implemented
+
+- slug: germany_air_capacity
+  name: Germany Air Capacity in Root Zone (BGR)
+  protocol: wcs
+  base_url: https://services.bgr.de/arcgis/rest/services/boden/lkwe1000/MapServer/WMSServer
+  resolution_m: 1000.0
+  bbox: [5.9, 47.3, 15.0, 55.1]
+  temporal_type: static
+  license: "BGR Terms of Use"
+  citation: "BGR, Luftkapazität im effektiven Wurzelraum"
+  datasets: 1
+  variables: [air_capacity]
+  status: implemented
+
+- slug: germany_bb_dem
+  name: Germany Brandenburg DGM 1m
+  protocol: wcs
+  base_url: https://isk.geobasis-bb.de/ows/dgm_wcs
+  resolution_m: 1.0
+  bbox: [11.3, 51.4, 14.8, 53.6]
+  temporal_type: static
+  license: "DL-DE/Zero"
+  citation: "LGB Brandenburg, Digitales Geländemodell 1m"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: germany_cropland_oc
+  name: Germany Cropland Organic Carbon (BGR)
+  protocol: wcs
+  base_url: https://services.bgr.de/arcgis/rest/services/boden/oaacker1000/MapServer/WMSServer
+  resolution_m: 1000.0
+  bbox: [5.9, 47.3, 15.0, 55.1]
+  temporal_type: static
+  license: "BGR Terms of Use"
+  citation: "BGR, Organische Substanz in Ackerböden"
+  datasets: 1
+  variables: [organic_carbon]
+  status: implemented
+
+- slug: germany_dgm200
+  name: Germany DGM200 200m
+  protocol: wcs
+  base_url: https://sgx.geodatenzentrum.de/wcs_dgm200_inspire
+  resolution_m: 200.0
+  bbox: [5.9, 47.3, 15.0, 55.1]
+  temporal_type: static
+  license: "GeoNutzV (GeoBasis-DE / BKG)"
+  citation: "BKG, Digitales Geländemodell 200"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: germany_erosion_water
+  name: Germany Water Erosion Risk (BGR)
+  protocol: wcs
+  base_url: https://services.bgr.de/arcgis/rest/services/boden/pegwasser1000/MapServer/WMSServer
+  resolution_m: 1000.0
+  bbox: [5.9, 47.3, 15.0, 55.1]
+  temporal_type: static
+  license: "BGR Terms of Use"
+  citation: "BGR, Potentielle Erosionsgefährdung durch Wasser"
+  datasets: 1
+  variables: [erosion_water]
+  status: implemented
+
+- slug: germany_field_capacity
+  name: Germany Field Capacity (BGR)
+  protocol: wcs
+  base_url: https://services.bgr.de/arcgis/rest/services/boden/nfkwe1000/MapServer/WMSServer
+  resolution_m: 1000.0
+  bbox: [5.9, 47.3, 15.0, 55.1]
+  temporal_type: static
+  license: "BGR Terms of Use"
+  citation: "BGR, Nutzbare Feldkapazität im effektiven Wurzelraum"
+  datasets: 1
+  variables: [field_capacity]
+  status: implemented
+
+- slug: germany_gw_recharge
+  name: Germany GW Recharge (BGR)
+  protocol: wcs
+  base_url: https://services.bgr.de/arcgis/rest/services/boden/gws1000/MapServer/WMSServer
+  resolution_m: 1000.0
+  bbox: [5.9, 47.3, 15.0, 55.1]
+  temporal_type: static
+  license: "BGR Terms of Use"
+  citation: "BGR, Grundwasserneubildung (GWN)"
+  datasets: 1
+  variables: [gw_recharge]
+  status: implemented
+
+- slug: germany_hamburg_dem
+  name: Germany Hamburg DGM 1m
+  protocol: wcs
+  base_url: https://geodienste.hamburg.de/HH_WMS_DGM1
+  resolution_m: 1.0
+  bbox: [9.7, 53.4, 10.3, 53.7]
+  temporal_type: static
+  license: "DL-DE/BY-2.0"
+  citation: "LGV Hamburg, Digitales Geländemodell 1m"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: germany_hessen_dem
+  name: Germany Hessen DGM
+  protocol: wcs
+  base_url: https://www.gds-srv.hessen.de/cgi-bin/lika-services/ogc-free-maps.ows
+  resolution_m: 1.0
+  bbox: [7.8, 49.4, 10.3, 51.7]
+  temporal_type: static
+  license: "DL-DE/Zero"
+  citation: "HVBG, Digitales Geländemodell Hessen"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: germany_humus
+  name: Germany Humus Content (BGR)
+  protocol: wcs
+  base_url: https://services.bgr.de/arcgis/rest/services/boden/humus1000ob/MapServer/WMSServer
+  resolution_m: 1000.0
+  bbox: [5.9, 47.3, 15.0, 55.1]
+  temporal_type: static
+  license: "BGR Terms of Use"
+  citation: "BGR, Humusgehalt der Oberböden"
+  datasets: 1
+  variables: [humus]
+  status: implemented
+
+- slug: germany_lc
+  name: Germany LBM-DE Land Cover
+  protocol: wcs
+  base_url: https://sgx.geodatenzentrum.de/wms_lbm_de
+  resolution_m: 5.0
+  bbox: [5.9, 47.3, 15.0, 55.1]
+  temporal_type: static
+  license: "GeoNutzV"
+  citation: "BKG, Landbedeckungsmodell Deutschland 2021"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: germany_mv_dem
+  name: Germany Mecklenburg-Vorpommern DGM 1m
+  protocol: wcs
+  base_url: https://www.geodaten-mv.de/dienste/dgm_wcs
+  resolution_m: 1.0
+  bbox: [10.6, 53.1, 14.4, 54.7]
+  temporal_type: static
+  license: "DL-DE/Zero"
+  citation: "LAiV M-V, Digitales Geländemodell Mecklenburg-Vorpommern"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: germany_nrw_dgm1
+  name: Germany NRW DGM 1m
+  protocol: wcs
+  base_url: https://www.wcs.nrw.de/geobasis/wcs_nw_dgm
+  resolution_m: 1.0
+  bbox: [5.9, 50.3, 9.5, 52.6]
+  temporal_type: static
+  license: "DL-DE/Zero"
+  citation: "Geobasis NRW, Digitales Geländemodell 1m"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: germany_sachsen_anhalt_dem
+  name: Germany Sachsen-Anhalt DGM1 1m
+  protocol: wcs
+  base_url: https://www.geodatenportal.sachsen-anhalt.de/wss/service/ST_LVermGeo_DGM1_WCS_OpenData/guest
+  resolution_m: 1.0
+  bbox: [10.6, 50.9, 13.2, 53.1]
+  temporal_type: static
+  license: "DL-DE/Zero"
+  citation: "LVermGeo Sachsen-Anhalt, Digitales Geländemodell 1m"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: germany_soil
+  name: Germany Soil Map (BGR)
+  protocol: wcs
+  base_url: https://services.bgr.de/wms/boden/buek200/
+  resolution_m: 200.0
+  bbox: [5.9, 47.3, 15.0, 55.1]
+  temporal_type: static
+  license: "BGR Terms of Use"
+  citation: "BGR, Bodenübersichtskarte 1:200.000"
+  datasets: 1
+  variables: [soil_type]
+  status: implemented
+
+- slug: germany_soil_quality
+  name: Germany Soil Quality Rating (BGR)
+  protocol: wcs
+  base_url: https://services.bgr.de/arcgis/rest/services/boden/sqr1000/MapServer/WMSServer
+  resolution_m: 1000.0
+  bbox: [5.9, 47.3, 15.0, 55.1]
+  temporal_type: static
+  license: "BGR Terms of Use"
+  citation: "BGR, Müncheberger Soil Quality Rating"
+  datasets: 1
+  variables: [soil_quality]
+  status: implemented
+
+- slug: germany_soil_retention
+  name: Germany Soil Water Retention (BGR)
+  protocol: wcs
+  base_url: https://services.bgr.de/arcgis/rest/services/boden/swr1000/MapServer/WMSServer
+  resolution_m: 1000.0
+  bbox: [5.9, 47.3, 15.0, 55.1]
+  temporal_type: static
+  license: "BGR Terms of Use"
+  citation: "BGR, Standortgerechter Wasserrückhalt"
+  datasets: 1
+  variables: [soil_water_retention]
+  status: implemented
+
+- slug: germany_soil_texture
+  name: Germany Soil Physical Groups (BGR)
+  protocol: wcs
+  base_url: https://services.bgr.de/arcgis/rest/services/boden/physgru1000/MapServer/WMSServer
+  resolution_m: 1000.0
+  bbox: [5.9, 47.3, 15.0, 55.1]
+  temporal_type: static
+  license: "BGR Terms of Use"
+  citation: "BGR, Physikalische Bodengruppen"
+  datasets: 1
+  variables: [soil_texture_group]
+  status: implemented
+
+- slug: germany_soil_water
+  name: Germany Soil Water Balance (BGR)
+  protocol: wcs
+  base_url: https://services.bgr.de/arcgis/rest/services/boden/bodenwasserhaushalt/MapServer/WMSServer
+  resolution_m: 1000.0
+  bbox: [5.9, 47.3, 15.0, 55.1]
+  temporal_type: static
+  license: "BGR Terms of Use"
+  citation: "BGR, Bodenwasserhaushalt"
+  datasets: 1
+  variables: [soil_water_balance]
+  status: implemented
+
+- slug: germany_thuringia_dem
+  name: Germany Thüringen DGM 2m
+  protocol: wcs
+  base_url: https://www.geoproxy.geoportal-th.de/geoproxy/services/DGM
+  resolution_m: 2.0
+  bbox: [9.9, 50.2, 12.7, 51.7]
+  temporal_type: static
+  license: "DL-DE/BY-2.0"
+  citation: "TLVermGeo, Digitales Geländemodell Thüringen"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: germany_wind_erosion
+  name: Germany Wind Erosion Risk (BGR)
+  protocol: wcs
+  base_url: https://services.bgr.de/arcgis/rest/services/boden/pegwind1000/MapServer/WMSServer
+  resolution_m: 1000.0
+  bbox: [5.9, 47.3, 15.0, 55.1]
+  temporal_type: static
+  license: "BGR Terms of Use"
+  citation: "BGR, Potentielle Erosionsgefährdung durch Wind"
+  datasets: 1
+  variables: [erosion_wind]
+  status: implemented
+
+- slug: glhymps
+  name: GLHYMPS 2.0 (Hydrogeology)
+  protocol: rest
+  base_url: https://borealisdata.ca
+  resolution_m: 10000.0
+  bbox: [-180.0, -90.0, 180.0, 90.0]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "Gleeson et al. 2014 / Huscroft et al. 2018, GLHYMPS"
+  datasets: 2
+  variables: [permeability, porosity]
+  status: implemented
+
+- slug: gnatsgo
+  name: gNATSGO Rasters (US)
+  protocol: stac_cog
+  base_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  resolution_m: 30.0
+  bbox: [-180.0, 17.0, -64.0, 72.0]
+  temporal_type: static
+  license: "Public Domain"
+  citation: "USDA-NRCS, Gridded National Soil Survey Geographic Database"
+  datasets: 9
+  variables: [aws0_5, aws0_20, aws0_30, aws5_20, soc0_5, soc0_20, soc0_30, tk0_5a, tk0_5s]
+  status: implemented
+
+- slug: hgb_biomass
+  name: HGB Global Biomass
+  protocol: stac_cog
+  base_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  resolution_m: 300.0
+  bbox: [-180.0, -61.0, 180.0, 84.0]
+  temporal_type: static
+  license: "NASA (open)"
+  citation: "Spawn et al. 2020, Harmonized Global Biomass"
+  datasets: 2
+  variables: [aboveground_biomass, belowground_biomass]
+  status: implemented
+
+- slug: indonesia_dem
+  name: Indonesia DEMNAS 8m
+  protocol: wcs
+  base_url: https://geoservices.big.go.id/raster/rest/services/DEMNAS/DEM_Indonesia/ImageServer
+  resolution_m: 8.0
+  bbox: [95.0, -11.0, 141.0, 6.0]
+  temporal_type: static
+  license: "Open (BIG)"
+  citation: "Badan Informasi Geospasial, DEMNAS"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: ireland_aquifer
+  name: Ireland Aquifer Map (GSI/EPA)
+  protocol: wcs
+  base_url: https://gis.epa.ie/geoserver/EPA/wms
+  resolution_m: 250.0
+  bbox: [-10.5, 51.4, -6.0, 55.4]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "GSI / EPA, Bedrock Aquifer Map of Ireland"
+  datasets: 1
+  variables: [aquifer]
+  status: implemented
+
+- slug: ireland_bedrock
+  name: Ireland Bedrock Geology (GSI/EPA)
+  protocol: wcs
+  base_url: https://gis.epa.ie/geoserver/EPA/wms
+  resolution_m: 1000.0
+  bbox: [-10.5, 51.4, -6.0, 55.4]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "GSI / EPA, Bedrock Geology Map of Ireland"
+  datasets: 1
+  variables: [bedrock_geology]
+  status: implemented
+
+- slug: ireland_catchments
+  name: Ireland Catchments (EPA)
+  protocol: wcs
+  base_url: https://gis.epa.ie/geoserver/EPA/wms
+  resolution_m: 100.0
+  bbox: [-10.5, 51.4, -6.0, 55.4]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "EPA, Irish Hydrological Catchments"
+  datasets: 1
+  variables: [catchment]
+  status: implemented
+
+- slug: ireland_corine
+  name: Ireland CORINE Land Cover (EPA)
+  protocol: wcs
+  base_url: https://gis.epa.ie/geoserver/EPA/wms
+  resolution_m: 100.0
+  bbox: [-10.5, 51.4, -6.0, 55.4]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "EPA, CORINE Land Cover Ireland"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: ireland_flood
+  name: Ireland Flood Extents (EPA)
+  protocol: wcs
+  base_url: https://gis.epa.ie/geoserver/EPA/wms
+  resolution_m: 50.0
+  bbox: [-10.5, 51.4, -6.0, 55.4]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "EPA, Coastal Flood Extents"
+  datasets: 1
+  variables: [flood_extent]
+  status: implemented
+
+- slug: ireland_gravel_aquifer
+  name: Ireland Sand & Gravel Aquifer (GSI/EPA)
+  protocol: wcs
+  base_url: https://gis.epa.ie/geoserver/EPA/wms
+  resolution_m: 250.0
+  bbox: [-10.5, 51.4, -6.0, 55.4]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "GSI / EPA, Sand & Gravel Aquifer Map of Ireland"
+  datasets: 1
+  variables: [gravel_aquifer]
+  status: implemented
+
+- slug: ireland_groundwater
+  name: Ireland Groundwater Bodies (EPA)
+  protocol: wcs
+  base_url: https://gis.epa.ie/geoserver/EPA/wms
+  resolution_m: 250.0
+  bbox: [-10.5, 51.4, -6.0, 55.4]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "EPA, WFD Groundwater Bodies"
+  datasets: 1
+  variables: [groundwater_body]
+  status: implemented
+
+- slug: ireland_gw_vulnerability
+  name: Ireland GW Vulnerability (GSI/EPA)
+  protocol: wcs
+  base_url: https://gis.epa.ie/geoserver/EPA/wms
+  resolution_m: 250.0
+  bbox: [-10.5, 51.4, -6.0, 55.4]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "GSI / EPA, Groundwater Vulnerability Map of Ireland"
+  datasets: 1
+  variables: [gw_vulnerability]
+  status: implemented
+
+- slug: ireland_lakes
+  name: Ireland WFD Lakes (EPA)
+  protocol: wcs
+  base_url: https://gis.epa.ie/geoserver/EPA/wms
+  resolution_m: 50.0
+  bbox: [-10.5, 51.4, -6.0, 55.4]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "EPA, WFD Lake Water Bodies"
+  datasets: 1
+  variables: [lake_body]
+  status: implemented
+
+- slug: ireland_peatland
+  name: Ireland Peatland/Bog Boundaries (BNM)
+  protocol: wcs
+  base_url: https://gis.epa.ie/geoserver/EPA/wms
+  resolution_m: 100.0
+  bbox: [-10.5, 51.4, -6.0, 55.4]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "Bord na Móna / EPA, Bog Boundaries"
+  datasets: 1
+  variables: [peatland]
+  status: implemented
+
+- slug: ireland_soil
+  name: Ireland Soil Map (Teagasc)
+  protocol: wcs
+  base_url: https://gis.epa.ie/geoserver/wms
+  resolution_m: 250.0
+  bbox: [-10.5, 51.4, -6.0, 55.4]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "Teagasc / EPA, Irish Soil Information System"
+  datasets: 1
+  variables: [soil_type]
+  status: implemented
+
+- slug: ireland_soil_wetdry
+  name: Ireland Soil Wet/Dry (EPA)
+  protocol: wcs
+  base_url: https://gis.epa.ie/geoserver/EPA/wms
+  resolution_m: 250.0
+  bbox: [-10.5, 51.4, -6.0, 55.4]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "EPA / Teagasc, Soil Drainage Classification"
+  datasets: 1
+  variables: [soil_drainage]
+  status: implemented
+
+- slug: ireland_subsoil
+  name: Ireland Subsoil Map (GSI/EPA)
+  protocol: wcs
+  base_url: https://gis.epa.ie/geoserver/EPA/wms
+  resolution_m: 250.0
+  bbox: [-10.5, 51.4, -6.0, 55.4]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "GSI / EPA, Subsoil Map of Ireland"
+  datasets: 1
+  variables: [subsoil]
+  status: implemented
+
+- slug: isdasoil
+  name: iSDAsoil (Africa)
+  protocol: s3_direct
+  base_url: https://isdasoil.s3.amazonaws.com
+  resolution_m: 30.0
+  bbox: [-26.0, -35.0, 58.0, 38.0]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "Hengl et al. 2021, iSDAsoil"
+  datasets: 18
+  variables: [clay, clay, sand, sand, silt, silt, soc, soc, ph, ph, bd, bd, cec, cec, n_total,]
+  status: implemented
+
+- slug: islands_dem
+  name: IslandsDEM 10m (Iceland)
+  protocol: wcs
+  base_url: https://gis.lmi.is/geoserver/wcs
+  resolution_m: 10.0
+  bbox: [-24.6, 63.2, -13.1, 66.6]
+  temporal_type: static
+  license: "Open (LMI)"
+  citation: "Landmælingar Íslands, IslandsDEM v1.0"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: isric_soilgrids
+  name: ISRIC SoilGrids 2.0
+  protocol: rest
+  base_url: https://rest.isric.org
+  resolution_m: 250.0
+  bbox: [-180.0, -56.0, 180.0, 84.0]
+  temporal_type: static
+  license: "CC-BY-4.0"
+  citation: "Poggio et al. 2021, SoilGrids 2.0"
+  datasets: 78
+  variables: [clay, clay, clay, clay, clay, clay, sand, sand, sand, sand, sand, sand, silt, si]
+  status: implemented
+
+- slug: italy_aspect
+  name: Italy Aspect (TINITALY)
+  protocol: wcs
+  base_url: http://tinitaly.pi.ingv.it/TINItaly_1_1/wcs
+  resolution_m: 10.0
+  bbox: [6.6, 36.6, 18.6, 47.1]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "Tarquini et al. 2023, TINITALY/1.1 aspect"
+  datasets: 1
+  variables: [aspect]
+  status: implemented
+
+- slug: italy_hillshade
+  name: Italy Hillshade (TINITALY)
+  protocol: wcs
+  base_url: http://tinitaly.pi.ingv.it/TINItaly_1_1/wcs
+  resolution_m: 10.0
+  bbox: [6.6, 36.6, 18.6, 47.1]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "Tarquini et al. 2023, TINITALY/1.1 hillshade"
+  datasets: 1
+  variables: [hillshade]
+  status: implemented
+
+- slug: italy_skyview
+  name: Italy Sky-View Factor (TINITALY)
+  protocol: wcs
+  base_url: http://tinitaly.pi.ingv.it/TINItaly_1_1/wcs
+  resolution_m: 10.0
+  bbox: [6.6, 36.6, 18.6, 47.1]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "Tarquini et al. 2023, TINITALY/1.1 SVF"
+  datasets: 1
+  variables: [sky_view_factor]
+  status: implemented
+
+- slug: italy_slope
+  name: Italy Slope (TINITALY)
+  protocol: wcs
+  base_url: http://tinitaly.pi.ingv.it/TINItaly_1_1/wcs
+  resolution_m: 10.0
+  bbox: [6.6, 36.6, 18.6, 47.1]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "Tarquini et al. 2023, TINITALY/1.1 slope"
+  datasets: 1
+  variables: [slope]
+  status: implemented
+
+- slug: italy_tinitaly
+  name: Italy TINITALY 10m
+  protocol: wcs
+  base_url: http://tinitaly.pi.ingv.it/TINItaly_1_1/wcs
+  resolution_m: 10.0
+  bbox: [6.6, 36.6, 18.6, 47.1]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "Tarquini et al. 2023, TINITALY/1.1"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: japan_gsi
+  name: Japan GSI DEM 5-10m
+  protocol: rest
+  base_url: https://cyberjapandata.gsi.go.jp
+  resolution_m: 5.0
+  bbox: [122.0, 24.0, 154.0, 46.0]
+  temporal_type: static
+  license: "Open (GSI)"
+  citation: "Geospatial Information Authority of Japan"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: jrc_gsw
+  name: JRC Global Surface Water
+  protocol: rest
+  base_url: https://storage.googleapis.com/global-surface-water/downloads2021
+  resolution_m: 30.0
+  bbox: [-180.0, -56.0, 180.0, 78.0]
+  temporal_type: static
+  license: "EC JRC (free)"
+  citation: "Pekel et al. 2016, JRC Global Surface Water"
+  datasets: 5
+  variables: [occurrence, change, seasonality, recurrence, extent]
+  status: implemented
+
+- slug: lithuania_dem
+  name: Lithuania DEM (INSPIRE)
+  protocol: wcs
+  base_url: https://www.geoportal.lt/inspire-services/rest/services/INSPIRE/Elevation/MapServer/WMSServer
+  resolution_m: 10.0
+  bbox: [20.9, 53.9, 26.8, 56.5]
+  temporal_type: static
+  license: "Open (Lithuania)"
+  citation: "GIS-Centras, Lithuania INSPIRE Elevation"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: luxembourg_dem
+  name: Luxembourg DTM 1m
+  protocol: wcs
+  base_url: https://wms.inspire.geoportail.lu/geoserver/el/wms
+  resolution_m: 1.0
+  bbox: [5.7, 49.4, 6.5, 50.2]
+  temporal_type: static
+  license: "Open (Luxembourg)"
+  citation: "ACT, Modèle Numérique de Terrain"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
 
 - slug: merit_dem
-  name: MERIT DEM
-  category: elevation
-  protocol: s3_direct
-  variables:
-    - name: elevation
-      units: m
-  resolution_m: 90
-  bbox: [-180, -60, 180, 90]
-  temporal_type: static
-  access: open
-  license: CC-BY-NC-4.0
-  status: planned
-  notes: Hydrologically adjusted DEM. Removes noise, tree canopy bias.
-
-- slug: hydrosheds
-  name: HydroSHEDS
-  category: hydrology
+  name: MERIT DEM 90m
   protocol: rest
-  variables:
-    - name: flow_accumulation
-      units: cells
-    - name: flow_direction
-      units: encoded
-    - name: drainage_area
-      units: km2
-  resolution_m: 90
-  bbox: [-180, -60, 180, 90]
+  base_url: http://hydro.iis.u-tokyo.ac.jp/~yamadai/MERIT_DEM/distribute/v1.0.3
+  resolution_m: 90.0
+  bbox: [-180.0, -60.0, 180.0, 90.0]
   temporal_type: static
-  access: open
-  license: CC-BY-4.0
-  status: planned
+  license: "CC-BY-NC 4.0"
+  citation: "Yamazaki et al. 2017, MERIT DEM"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
 
-# ── TIER 3 — Research ────────────────────────────────────────────────
+- slug: merit_hydro
+  name: MERIT Hydro 90m
+  protocol: rest
+  base_url: http://hydro.iis.u-tokyo.ac.jp/~yamadai/MERIT_Hydro/distribute/v1.0.1
+  resolution_m: 90.0
+  bbox: [-180.0, -60.0, 180.0, 90.0]
+  temporal_type: static
+  license: "CC-BY-NC 4.0 / ODbL 1.0"
+  citation: "Yamazaki et al. 2019, MERIT Hydro"
+  datasets: 4
+  variables: [flow_direction, flow_accumulation, elevation_adjusted, river_width]
+  status: implemented
+
+- slug: mexico_conabio_lc
+  name: Mexico CONABIO Land Use
+  protocol: wcs
+  base_url: http://geoportal.conabio.gob.mx/cgi-bin/mapserv
+  resolution_m: 250.0
+  bbox: [-118.0, 14.0, -86.0, 33.0]
+  temporal_type: static
+  license: "Open (CONABIO)"
+  citation: "CONABIO / INEGI, Uso de Suelo y Vegetación"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: mexico_lc
+  name: Mexico Land Cover (INEGI)
+  protocol: wcs
+  base_url: https://gaia.inegi.org.mx/NLB/tunnel/wms/wms61
+  resolution_m: 250.0
+  bbox: [-118.0, 14.0, -86.0, 33.0]
+  temporal_type: static
+  license: "Open (INEGI)"
+  citation: "INEGI, Uso de Suelo y Vegetación"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: mexico_soil
+  name: Mexico Soil Map (INEGI)
+  protocol: wcs
+  base_url: https://gaia.inegi.org.mx/NLB/tunnel/wms/wms61
+  resolution_m: 250.0
+  bbox: [-118.0, 14.0, -86.0, 33.0]
+  temporal_type: static
+  license: "Open (INEGI)"
+  citation: "INEGI, Carta Edafológica"
+  datasets: 1
+  variables: [soil_type]
+  status: implemented
+
+- slug: modis_lc
+  name: MODIS MCD12Q1 500m
+  protocol: rest
+  base_url: https://appeears.earthdatacloud.nasa.gov/api
+  resolution_m: 500.0
+  bbox: [-180.0, -90.0, 180.0, 90.0]
+  temporal_type: annual
+  license: "Open (NASA)"
+  citation: "Friedl et al., MODIS MCD12Q1 v6.1"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: modis_snow
+  name: MODIS Snow Cover 500m
+  protocol: stac_cog
+  base_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  resolution_m: 500.0
+  bbox: [-180.0, -90.0, 180.0, 90.0]
+  temporal_type: daily
+  license: "NASA (open)"
+  citation: "Hall & Riggs, MODIS/Terra Snow Cover 8-Day (MOD10A2 v061)"
+  datasets: 1
+  variables: [snow_cover]
+  status: implemented
+
+- slug: ms_buildings
+  name: MS Building Footprints (Global)
+  protocol: stac_cog
+  base_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  resolution_m: 1.0
+  bbox: [-180.0, -90.0, 180.0, 90.0]
+  temporal_type: static
+  license: "ODbL"
+  citation: "Microsoft, Global ML Building Footprints"
+  datasets: 1
+  variables: [building_footprints]
+  status: implemented
+
+- slug: mtbs
+  name: MTBS Burn Severity (US)
+  protocol: stac_cog
+  base_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  resolution_m: 30.0
+  bbox: [-167.0, 17.0, -64.0, 72.0]
+  temporal_type: annual
+  license: "Public Domain"
+  citation: "USGS/USFS, Monitoring Trends in Burn Severity"
+  datasets: 1
+  variables: [burn_severity]
+  status: implemented
+
+- slug: nasadem
+  name: NASADEM 30m (SRTM)
+  protocol: stac_cog
+  base_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  resolution_m: 30.0
+  bbox: [-180.0, -56.0, 180.0, 60.0]
+  temporal_type: static
+  license: "Public Domain"
+  citation: "NASA JPL, NASADEM HGT v001"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: netherlands_ahn
+  name: Netherlands AHN4 0.5m
+  protocol: wcs
+  base_url: https://service.pdok.nl/rws/ahn/wcs/v1_0
+  resolution_m: 0.5
+  bbox: [3.3, 50.7, 7.3, 53.6]
+  temporal_type: static
+  license: "CC-0 (Netherlands)"
+  citation: "Rijkswaterstaat, Actueel Hoogtebestand Nederland 4"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: netherlands_crops
+  name: Netherlands Crop Parcels (PDOK)
+  protocol: wcs
+  base_url: https://service.pdok.nl/rvo/brpgewaspercelen/wms/v1_0
+  resolution_m: 5.0
+  bbox: [3.3, 50.7, 7.3, 53.6]
+  temporal_type: static
+  license: "CC-0"
+  citation: "RVO, BRP Gewaspercelen via PDOK"
+  datasets: 1
+  variables: [crop_type]
+  status: implemented
+
+- slug: netherlands_dsm
+  name: Netherlands AHN4 DSM 0.5m
+  protocol: wcs
+  base_url: https://service.pdok.nl/rws/ahn/wcs/v1_0
+  resolution_m: 0.5
+  bbox: [3.3, 50.7, 7.3, 53.6]
+  temporal_type: static
+  license: "CC-0"
+  citation: "Rijkswaterstaat, AHN4 Digital Surface Model"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: netherlands_lc
+  name: Netherlands BRT Land Cover
+  protocol: wcs
+  base_url: https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0
+  resolution_m: 10.0
+  bbox: [3.3, 50.7, 7.3, 53.6]
+  temporal_type: static
+  license: "CC-0"
+  citation: "Kadaster, BRT/TOP10NL via PDOK"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: netherlands_natura2000
+  name: Netherlands Natura 2000 (PDOK)
+  protocol: wcs
+  base_url: https://service.pdok.nl/rvo/natura2000/wms/v1_0
+  resolution_m: 10.0
+  bbox: [3.3, 50.7, 7.3, 53.6]
+  temporal_type: static
+  license: "CC-0"
+  citation: "RVO, Natura 2000 via PDOK"
+  datasets: 1
+  variables: [protected_area]
+  status: implemented
+
+- slug: netherlands_soil
+  name: Netherlands Soil Map (BRO)
+  protocol: wcs
+  base_url: https://service.pdok.nl/bzk/bro-bodemkaart/wms/v1_0
+  resolution_m: 50.0
+  bbox: [3.3, 50.7, 7.3, 53.6]
+  temporal_type: static
+  license: "CC-0"
+  citation: "BRO, Bodemkaart van Nederland 1:50.000"
+  datasets: 1
+  variables: [soil_type]
+  status: implemented
+
+- slug: nlcd
+  name: NLCD (US)
+  protocol: wcs
+  base_url: https://dmsdata.cr.usgs.gov/geoserver
+  resolution_m: 30.0
+  bbox: [-130.0, 22.0, -64.0, 52.0]
+  temporal_type: annual
+  license: "Public Domain"
+  citation: "USGS MRLC, National Land Cover Database"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: nlcd_change_index
+  name: NLCD Land Cover Change Index (US)
+  protocol: wcs
+  base_url: https://www.mrlc.gov/geoserver/mrlc_display/wms
+  resolution_m: 30.0
+  bbox: [-130.0, 22.0, -64.0, 52.0]
+  temporal_type: static
+  license: "Public Domain"
+  citation: "USGS MRLC, NLCD Land Cover Change Index 2001-2021"
+  datasets: 1
+  variables: [lc_change_index]
+  status: implemented
+
+- slug: nlcd_impervious
+  name: NLCD Imperviousness (US)
+  protocol: wcs
+  base_url: https://www.mrlc.gov/geoserver/mrlc_display/wms
+  resolution_m: 30.0
+  bbox: [-130.0, 22.0, -64.0, 52.0]
+  temporal_type: annual
+  license: "Public Domain"
+  citation: "USGS MRLC, NLCD Impervious Surface"
+  datasets: 1
+  variables: [imperviousness]
+  status: implemented
+
+- slug: norway_ar5
+  name: Norway AR5 Land Cover
+  protocol: wcs
+  base_url: https://wms.nibio.no/cgi-bin/ar5
+  resolution_m: 5.0
+  bbox: [4.5, 57.9, 31.2, 71.2]
+  temporal_type: static
+  license: "CC-BY 4.0 (NLOD)"
+  citation: "NIBIO, AR5 Arealressurskart"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: norway_avalanche
+  name: Norway Snow Avalanche Zones (NVE)
+  protocol: wcs
+  base_url: https://gis3.nve.no/map/rest/services/SnoskredAktsomhet/MapServer/WMSServer
+  resolution_m: 25.0
+  bbox: [4.5, 57.9, 31.2, 71.2]
+  temporal_type: static
+  license: "NLOD (Norway)"
+  citation: "NVE, Snøskred Aktsomhet"
+  datasets: 1
+  variables: [avalanche_risk]
+  status: implemented
+
+- slug: norway_dem
+  name: Norway DTM 1m
+  protocol: wcs
+  base_url: https://wcs.geonorge.no/skwms1/wcs.hoyde-dtm-nhm-25833
+  resolution_m: 1.0
+  bbox: [4.5, 57.9, 31.2, 71.2]
+  temporal_type: static
+  license: "CC-0 (Norway Open Data)"
+  citation: "Kartverket, National Detailed Height Model"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: norway_forest
+  name: Norway Forest Resources SR16 (NIBIO)
+  protocol: wcs
+  base_url: https://wms.nibio.no/cgi-bin/sr16
+  resolution_m: 16.0
+  bbox: [4.5, 57.9, 31.2, 71.2]
+  temporal_type: static
+  license: "NLOD (Norway)"
+  citation: "NIBIO, SR16 Forest Resource Map"
+  datasets: 1
+  variables: [tree_height]
+  status: implemented
+
+- slug: norway_geology
+  name: Norway Surficial Geology (NGU)
+  protocol: wcs
+  base_url: https://geo.ngu.no/mapserver/LosmasserWMS2
+  resolution_m: 50.0
+  bbox: [4.5, 57.9, 31.2, 71.2]
+  temporal_type: static
+  license: "CC-BY 4.0 (NLOD)"
+  citation: "NGU, Løsmassekart (Surficial Geology Map of Norway)"
+  datasets: 1
+  variables: [surficial_geology]
+  status: implemented
+
+- slug: norway_landslide
+  name: Norway Landslide Hazard (NVE)
+  protocol: wcs
+  base_url: https://gis3.nve.no/map/rest/services/Skredfaresoner3/MapServer/WMSServer
+  resolution_m: 25.0
+  bbox: [4.5, 57.9, 31.2, 71.2]
+  temporal_type: static
+  license: "NLOD (Norway)"
+  citation: "NVE, Skredfaresoner"
+  datasets: 1
+  variables: [landslide_hazard]
+  status: implemented
+
+- slug: norway_soil
+  name: Norway Soil Map (NIBIO)
+  protocol: wcs
+  base_url: https://wms.nibio.no/cgi-bin/jordkart
+  resolution_m: 5.0
+  bbox: [4.5, 57.9, 31.2, 71.2]
+  temporal_type: static
+  license: "NLOD (Norway)"
+  citation: "NIBIO, Jordkart (Soil Map of Norway)"
+  datasets: 1
+  variables: [soil_type]
+  status: implemented
+
+- slug: norway_tree_species
+  name: Norway Tree Species SR16 (NIBIO)
+  protocol: wcs
+  base_url: https://wms.nibio.no/cgi-bin/sr16
+  resolution_m: 16.0
+  bbox: [4.5, 57.9, 31.2, 71.2]
+  temporal_type: static
+  license: "NLOD (Norway)"
+  citation: "NIBIO, SR16 Forest Resource Map"
+  datasets: 1
+  variables: [tree_species]
+  status: implemented
+
+- slug: norway_tree_volume
+  name: Norway Timber Volume SR16 (NIBIO)
+  protocol: wcs
+  base_url: https://wms.nibio.no/cgi-bin/sr16
+  resolution_m: 16.0
+  bbox: [4.5, 57.9, 31.2, 71.2]
+  temporal_type: static
+  license: "NLOD (Norway)"
+  citation: "NIBIO, SR16 Forest Resource Map"
+  datasets: 1
+  variables: [timber_volume]
+  status: implemented
+
+- slug: norway_vegetation
+  name: Norway Vegetation Map (NIBIO)
+  protocol: wcs
+  base_url: https://wms.nibio.no/cgi-bin/vegetasjon
+  resolution_m: 25.0
+  bbox: [4.5, 57.9, 31.2, 71.2]
+  temporal_type: static
+  license: "NLOD (Norway)"
+  citation: "NIBIO, Vegetasjonskartet"
+  datasets: 1
+  variables: [vegetation_type]
+  status: implemented
+
+- slug: nrcan_lc
+  name: NRCan Land Cover (Canada)
+  protocol: stac_cog
+  base_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  resolution_m: 30.0
+  bbox: [-141.0, 41.7, -52.6, 83.1]
+  temporal_type: annual
+  license: "Open Government Licence - Canada"
+  citation: "Natural Resources Canada, Land Cover of Canada"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
 
 - slug: openlandmap
   name: OpenLandMap
-  category: soil
   protocol: wcs
-  base_url: https://geoserver.opengeohub.org/landgiswcs
-  variables:
-    - name: organic_carbon
-      units: g/kg
-    - name: clay_content
-      units: percent
-    - name: bulk_density
-      units: kg/m3
-  resolution_m: 250
-  bbox: [-180, -62, 180, 87]
+  base_url: https://geoserver.opengeohub.org/landgisgeoserver/ows
+  resolution_m: 250.0
+  bbox: [-180.0, -62.0, 180.0, 87.0]
   temporal_type: static
-  access: open
-  license: CC-BY-SA-4.0
-  status: research
+  license: "CC-BY-SA 4.0"
+  citation: "Hengl et al., OpenLandMap / OpenGeoHub"
+  datasets: 7
+  variables: [clay, sand, bd, soc, ph, texture, wc_33kpa]
+  status: implemented
 
-- slug: chirps
-  name: CHIRPS 2.0 Precipitation
-  category: climate
-  protocol: opendap
-  base_url: https://data.chc.ucsb.edu/products/CHIRPS-2.0
-  variables:
-    - name: precipitation
-      units: mm/day
-  resolution_m: 5000
-  bbox: [-180, -50, 180, 50]
-  temporal_type: daily
-  access: open
-  license: public_domain
-  status: research
-
-- slug: srtm
-  name: SRTM 30m
-  category: elevation
-  protocol: stac_cog
-  variables:
-    - name: elevation
-      units: m
-  resolution_m: 30
-  bbox: [-180, -60, 180, 60]
-  temporal_type: static
-  access: open
-  license: public_domain
-  status: research
-
-- slug: modis_land_cover
-  name: MODIS Land Cover (MCD12Q1)
-  category: land_cover
+- slug: opentopography
+  name: OpenTopography
   protocol: rest
-  variables:
-    - name: land_cover
-      units: class
-      data_type: categorical
-  resolution_m: 500
-  bbox: [-180, -90, 180, 90]
+  base_url: https://portal.opentopography.org/API
+  resolution_m: 30.0
+  bbox: [-180.0, -56.0, 180.0, 60.0]
+  temporal_type: static
+  license: "Varies by dataset"
+  citation: "OpenTopography Facility"
+  datasets: 7
+  variables: [elevation, elevation, elevation, elevation, elevation, elevation, elevation]
+  status: implemented
+
+- slug: permafrost
+  name: Global Permafrost (Zurich)
+  protocol: wcs
+  base_url: https://geoserver.geo.uzh.ch/cryogis/wms
+  resolution_m: 1000.0
+  bbox: [-180.0, -90.0, 180.0, 90.0]
+  temporal_type: static
+  license: "Open"
+  citation: "Obu et al. 2019, Global Permafrost Zonation Index"
+  datasets: 1
+  variables: [permafrost_index]
+  status: implemented
+
+- slug: peru_lc
+  name: Peru Land Cover (MINAM)
+  protocol: wcs
+  base_url: https://geoservidorperu.minam.gob.pe/arcgis/services/ServicioTematico/MapServer/WMSServer
+  resolution_m: 250.0
+  bbox: [-82.0, -19.0, -68.0, 1.0]
+  temporal_type: static
+  license: "Open (MINAM)"
+  citation: "MINAM, Mapa Nacional de Cobertura Vegetal"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: poland_nmt
+  name: Poland NMT 1m
+  protocol: wcs
+  base_url: https://mapy.geoportal.gov.pl/wss/service/PZGIK/NMT/GRID1/WCS/DigitalTerrainModel
+  resolution_m: 1.0
+  bbox: [14.1, 49.0, 24.2, 54.9]
+  temporal_type: static
+  license: "Open (Poland)"
+  citation: "GUGiK, Numeryczny Model Terenu"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: polaris
+  name: POLARIS 30m (US)
+  protocol: rest
+  base_url: http://hydrology.cee.duke.edu/POLARIS/PROPERTIES/v1.0
+  resolution_m: 30.0
+  bbox: [-125.0, 24.0, -67.0, 50.0]
+  temporal_type: static
+  license: "CC-BY-NC 4.0"
+  citation: "Chaney et al. 2019, POLARIS soil properties"
+  datasets: 78
+  variables: [clay, clay, clay, clay, clay, clay, sand, sand, sand, sand, sand, sand, silt, si]
+  status: implemented
+
+- slug: portugal_lc
+  name: Portugal COS Land Cover
+  protocol: wcs
+  base_url: https://geo2.dgterritorio.gov.pt/geoserver/maf/wms
+  resolution_m: 100.0
+  bbox: [-9.5, 36.9, -6.2, 42.2]
+  temporal_type: static
+  license: "Open (DGT)"
+  citation: "DGT, Carta de Uso e Ocupação do Solo"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: ramsar_wetlands
+  name: Ramsar Wetland Sites (Global)
+  protocol: wcs
+  base_url: https://rsis.ramsar.org/geoserver/wms
+  resolution_m: 1000.0
+  bbox: [-180.0, -90.0, 180.0, 90.0]
+  temporal_type: static
+  license: "Open (Ramsar Convention)"
+  citation: "Ramsar Convention Secretariat, Ramsar Sites Information Service"
+  datasets: 1
+  variables: [ramsar_site]
+  status: implemented
+
+- slug: scotland_lc
+  name: Scotland Land Cover (NatureScot)
+  protocol: wcs
+  base_url: https://ogc.nature.scot/geoserver/habitatsandspecies/wms
+  resolution_m: 10.0
+  bbox: [-8.6, 54.6, -0.7, 60.9]
+  temporal_type: static
+  license: "OGL v3"
+  citation: "NatureScot / Space Intelligence, Scotland Land Cover Map"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: slga
+  name: SLGA (Australia)
+  protocol: wcs
+  base_url: https://www.asris.csiro.au/ArcGIS/services/TERN
+  resolution_m: 90.0
+  bbox: [112.0, -44.0, 154.0, -10.0]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "CSIRO / TERN, Soil and Landscape Grid of Australia"
+  datasets: 11
+  variables: [clay, sand, silt, soc, bd, ph, awc, ecec, n_total, p_total, depth]
+  status: implemented
+
+- slug: slovenia_dem
+  name: Slovenia DEM 1m
+  protocol: wcs
+  base_url: https://ipi.eprostor.gov.si/wms-si-gurs-dts/wms
+  resolution_m: 1.0
+  bbox: [13.4, 45.4, 16.6, 46.9]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "GURS, Digitalni Model Višin"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: spain_clay_minerals
+  name: Spain Clay Minerals 1:1M (IGME)
+  protocol: wcs
+  base_url: https://mapas.igme.es/gis/services/Cartografia_Tematica/IGME_Arcillas_1M/MapServer/WMSServer
+  resolution_m: 1000.0
+  bbox: [-18.2, 27.6, 4.4, 43.8]
+  temporal_type: static
+  license: "Open (IGME)"
+  citation: "IGME, Mapa de Rocas y Minerales Industriales - Arcillas"
+  datasets: 1
+  variables: [clay_minerals]
+  status: implemented
+
+- slug: spain_hydro
+  name: Spain Hydrography (IDEE)
+  protocol: wcs
+  base_url: https://servicios.idee.es/wms-inspire/hidrografia
+  resolution_m: 25.0
+  bbox: [-18.2, 27.6, 4.4, 43.8]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "IGN/IDEE, INSPIRE Hydrography"
+  datasets: 1
+  variables: [water_bodies]
+  status: implemented
+
+- slug: spain_hydrogeology
+  name: Spain Hydrogeology (IGME)
+  protocol: wcs
+  base_url: https://mapas.igme.es/gis/services/Cartografia_Tematica/IGME_Hidrogeologico_1M/MapServer/WMSServer
+  resolution_m: 1000.0
+  bbox: [-18.2, 27.6, 4.4, 43.8]
+  temporal_type: static
+  license: "Open (IGME)"
+  citation: "IGME, Mapa Hidrogeológico de España 1:1.000.000"
+  datasets: 1
+  variables: [hydrogeology]
+  status: implemented
+
+- slug: spain_land_use
+  name: Spain Land Use INSPIRE (IDEE)
+  protocol: wcs
+  base_url: https://servicios.idee.es/wms-inspire/ocupacion-suelo
+  resolution_m: 25.0
+  bbox: [-18.2, 27.6, 4.4, 43.8]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "IGN/IDEE, INSPIRE Land Use"
+  datasets: 1
+  variables: [land_use]
+  status: implemented
+
+- slug: spain_lithology
+  name: Spain Lithology 1:1M (IGME)
+  protocol: wcs
+  base_url: https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geologico_1M/MapServer/WMSServer
+  resolution_m: 1000.0
+  bbox: [-18.2, 27.6, 4.4, 43.8]
+  temporal_type: static
+  license: "Open (IGME)"
+  citation: "IGME, Mapa Geológico de España 1:1.000.000"
+  datasets: 1
+  variables: [lithology]
+  status: implemented
+
+- slug: spain_mdt
+  name: Spain MDT 5m
+  protocol: wcs
+  base_url: https://servicios.idee.es/wcs-inspire/mdt
+  resolution_m: 5.0
+  bbox: [-18.2, 27.6, 4.4, 43.8]
+  temporal_type: static
+  license: "CC-BY 4.0"
+  citation: "IGN/CNIG, Modelo Digital del Terreno"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: spain_quaternary
+  name: Spain Quaternary Geology (IGME)
+  protocol: wcs
+  base_url: https://mapas.igme.es/gis/services/Cartografia_Tematica/IGME_Cuaternario_1M/MapServer/WMSServer
+  resolution_m: 1000.0
+  bbox: [-18.2, 27.6, 4.4, 43.8]
+  temporal_type: static
+  license: "Open (IGME)"
+  citation: "IGME, Mapa Geológico del Cuaternario 1:1M"
+  datasets: 1
+  variables: [quaternary]
+  status: implemented
+
+- slug: ssurgo
+  name: SSURGO/gNATSGO (US)
+  protocol: rest
+  base_url: https://SDMDataAccess.sc.egov.usda.gov
+  resolution_m: 30.0
+  bbox: [-180.0, 17.0, -64.0, 72.0]
+  temporal_type: static
+  license: "Public Domain"
+  citation: "USDA-NRCS, Soil Survey Geographic Database (SSURGO)"
+  datasets: 9
+  variables: [clay, sand, silt, om, ph, bd, ksat, awc, cec]
+  status: implemented
+
+- slug: ssurgo_hsg
+  name: SSURGO Hydrologic Soil Group (US)
+  protocol: rest
+  base_url: https://SDMDataAccess.sc.egov.usda.gov
+  resolution_m: 30.0
+  bbox: [-180.0, 17.0, -64.0, 72.0]
+  temporal_type: static
+  license: "Public Domain"
+  citation: "USDA-NRCS, SSURGO Hydrologic Soil Group"
+  datasets: 1
+  variables: [hydrologic_soil_group]
+  status: implemented
+
+- slug: sweden_lc
+  name: Sweden NMD 10m Land Cover
+  protocol: wcs
+  base_url: https://geodata.naturvardsverket.se/inspire/lc-nmd/wms
+  resolution_m: 10.0
+  bbox: [11.0, 55.3, 24.2, 69.1]
+  temporal_type: static
+  license: "Open (Sweden)"
+  citation: "Naturvårdsverket, Nationella Marktäckedata"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: sweden_soil
+  name: Sweden Soil Map (SGU)
+  protocol: wcs
+  base_url: https://resource.sgu.se/service/wms/130/jordarter-25-100-tusen
+  resolution_m: 25.0
+  bbox: [11.0, 55.3, 24.2, 69.1]
+  temporal_type: static
+  license: "Open (SGU)"
+  citation: "SGU, Geological Survey of Sweden"
+  datasets: 1
+  variables: [soil_type]
+  status: implemented
+
+- slug: swiss_dem
+  name: Switzerland swissALTI3D 0.5m
+  protocol: stac_cog
+  base_url: https://data.geo.admin.ch/api/stac/v1
+  resolution_m: 0.5
+  bbox: [5.9, 45.8, 10.5, 47.8]
+  temporal_type: static
+  license: "Open (swisstopo)"
+  citation: "swisstopo, swissALTI3D"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: swiss_erosion_flow
+  name: Switzerland Erosion Flow Paths
+  protocol: wcs
+  base_url: https://wms.geo.admin.ch
+  resolution_m: 25.0
+  bbox: [5.9, 45.8, 10.5, 47.8]
+  temporal_type: static
+  license: "Open (geo.admin.ch)"
+  citation: "BLW, Erosion Fliesswegkarte"
+  datasets: 1
+  variables: [erosion_flow]
+  status: implemented
+
+- slug: swiss_glacier
+  name: Switzerland Glacier Extent (swisstopo)
+  protocol: wcs
+  base_url: https://wms.geo.admin.ch
+  resolution_m: 25.0
+  bbox: [5.9, 45.8, 10.5, 47.8]
+  temporal_type: static
+  license: "Open (geo.admin.ch)"
+  citation: "swisstopo, Gletscherausdehnung"
+  datasets: 1
+  variables: [glacier_extent]
+  status: implemented
+
+- slug: swiss_groundwater
+  name: Switzerland Groundwater Bodies
+  protocol: wcs
+  base_url: https://wms.geo.admin.ch
+  resolution_m: 100.0
+  bbox: [5.9, 45.8, 10.5, 47.8]
+  temporal_type: static
+  license: "Open (geo.admin.ch)"
+  citation: "BAFU, Grundwasserkörper"
+  datasets: 1
+  variables: [groundwater_body]
+  status: implemented
+
+- slug: swiss_lakes
+  name: Switzerland Lakes (BAFU)
+  protocol: wcs
+  base_url: https://wms.geo.admin.ch
+  resolution_m: 25.0
+  bbox: [5.9, 45.8, 10.5, 47.8]
+  temporal_type: static
+  license: "Open (geo.admin.ch)"
+  citation: "BAFU, vec25 Seen"
+  datasets: 1
+  variables: [lakes]
+  status: implemented
+
+- slug: swiss_organic_soils
+  name: Switzerland Organic Soils
+  protocol: stac_cog
+  base_url: https://data.geo.admin.ch/api/stac/v1
+  resolution_m: 25.0
+  bbox: [5.9, 45.8, 10.5, 47.8]
+  temporal_type: static
+  license: "Open (Agroscope)"
+  citation: "Agroscope, Organic Soils of Switzerland"
+  datasets: 1
+  variables: [organic_soil]
+  status: implemented
+
+- slug: swiss_permafrost
+  name: Switzerland Permafrost (BAFU)
+  protocol: wcs
+  base_url: https://wms.geo.admin.ch
+  resolution_m: 25.0
+  bbox: [5.9, 45.8, 10.5, 47.8]
+  temporal_type: static
+  license: "Open (geo.admin.ch)"
+  citation: "BAFU, Permafrost"
+  datasets: 1
+  variables: [permafrost]
+  status: implemented
+
+- slug: swiss_rivers
+  name: Switzerland River Network (swisstopo)
+  protocol: wcs
+  base_url: https://wms.geo.admin.ch
+  resolution_m: 10.0
+  bbox: [5.9, 45.8, 10.5, 47.8]
+  temporal_type: static
+  license: "Open (geo.admin.ch)"
+  citation: "swisstopo, swissTLM3D Gewässernetz"
+  datasets: 1
+  variables: [river_network]
+  status: implemented
+
+- slug: swiss_slope_30
+  name: Switzerland Slope >30° (swisstopo)
+  protocol: wcs
+  base_url: https://wms.geo.admin.ch
+  resolution_m: 10.0
+  bbox: [5.9, 45.8, 10.5, 47.8]
+  temporal_type: static
+  license: "Open (geo.admin.ch)"
+  citation: "swisstopo, Hangneigung über 30°"
+  datasets: 1
+  variables: [steep_slope]
+  status: implemented
+
+- slug: swiss_soil_depth
+  name: Switzerland Soil Depth
+  protocol: wcs
+  base_url: https://wms.geo.admin.ch
+  resolution_m: 25.0
+  bbox: [5.9, 45.8, 10.5, 47.8]
+  temporal_type: static
+  license: "Open (geo.admin.ch)"
+  citation: "BLW, Bodeneignung Gründigkeit"
+  datasets: 1
+  variables: [soil_depth]
+  status: implemented
+
+- slug: swiss_soil_erosion
+  name: Switzerland Soil Erosion Risk
+  protocol: stac_cog
+  base_url: https://data.geo.admin.ch/api/stac/v1
+  resolution_m: 25.0
+  bbox: [5.9, 45.8, 10.5, 47.8]
+  temporal_type: static
+  license: "Open (swisstopo)"
+  citation: "BAFU, Soil Erosion Risk Maps"
+  datasets: 1
+  variables: [soil_erosion]
+  status: implemented
+
+- slug: swiss_stream_order
+  name: Switzerland Stream Order (BAFU)
+  protocol: wcs
+  base_url: https://wms.geo.admin.ch
+  resolution_m: 25.0
+  bbox: [5.9, 45.8, 10.5, 47.8]
+  temporal_type: static
+  license: "Open (geo.admin.ch)"
+  citation: "BAFU, Flussordnungszahlen nach Strahler"
+  datasets: 1
+  variables: [stream_order]
+  status: implemented
+
+- slug: swiss_surface_runoff
+  name: Switzerland Surface Runoff Hazard
+  protocol: wcs
+  base_url: https://wms.geo.admin.ch
+  resolution_m: 25.0
+  bbox: [5.9, 45.8, 10.5, 47.8]
+  temporal_type: static
+  license: "Open (geo.admin.ch)"
+  citation: "BAFU, Gefährdungskarte Oberflächenabfluss"
+  datasets: 1
+  variables: [surface_runoff_hazard]
+  status: implemented
+
+- slug: swiss_water_connect
+  name: Switzerland Water Body Connectivity (BLW)
+  protocol: wcs
+  base_url: https://wms.geo.admin.ch
+  resolution_m: 25.0
+  bbox: [5.9, 45.8, 10.5, 47.8]
+  temporal_type: static
+  license: "Open (geo.admin.ch)"
+  citation: "BLW, Gewässeranschlusskarte"
+  datasets: 1
+  variables: [water_connectivity]
+  status: implemented
+
+- slug: taiwan_dem
+  name: Taiwan DEM 20m
+  protocol: wcs
+  base_url: https://wms.nlsc.gov.tw/wms
+  resolution_m: 20.0
+  bbox: [119.9, 21.9, 122.1, 25.3]
+  temporal_type: static
+  license: "Open (NLSC)"
+  citation: "NLSC, National Land Surveying and Mapping Center"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: tandem_x
+  name: TanDEM-X 90m (DLR)
+  protocol: wcs
+  base_url: https://geoservice.dlr.de/eoc/elevation/wcs
+  resolution_m: 90.0
+  bbox: [-180.0, -90.0, 180.0, 90.0]
+  temporal_type: static
+  license: "DLR (free for scientific use)"
+  citation: "DLR, TanDEM-X 90m DEM"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: uk_agri_land_class
+  name: UK Agricultural Land Classification (EA)
+  protocol: wcs
+  base_url: https://environment.data.gov.uk/spatialdata/agricultural-land-classification-provisional-england/wms
+  resolution_m: 50.0
+  bbox: [-6.5, 49.8, 2.0, 55.9]
+  temporal_type: static
+  license: "OGL v3"
+  citation: "Natural England, Agricultural Land Classification"
+  datasets: 1
+  variables: [agri_land_class]
+  status: implemented
+
+- slug: uk_bgs_geology
+  name: UK Bedrock Geology (BGS)
+  protocol: wcs
+  base_url: https://map.bgs.ac.uk/arcgis/services/BGS_Detailed_Geology/MapServer/WMSServer
+  resolution_m: 50.0
+  bbox: [-8.6, 49.8, 2.0, 60.9]
+  temporal_type: static
+  license: "OGL v3"
+  citation: "British Geological Survey, DiGMapGB-50"
+  datasets: 1
+  variables: [bedrock]
+  status: implemented
+
+- slug: uk_drinking_water
+  name: UK Drinking Water Protected Areas (EA)
+  protocol: wcs
+  base_url: https://environment.data.gov.uk/spatialdata/drinking-water-protected-areas-surface-water/wms
+  resolution_m: 50.0
+  bbox: [-6.5, 49.8, 2.0, 55.9]
+  temporal_type: static
+  license: "OGL v3"
+  citation: "Environment Agency, Drinking Water Protected Areas"
+  datasets: 1
+  variables: [drinking_water]
+  status: implemented
+
+- slug: uk_flood_defences
+  name: UK Flood Defences (EA)
+  protocol: wcs
+  base_url: https://environment.data.gov.uk/spatialdata/spatial-flood-defences-including-standardised-attributes/wms
+  resolution_m: 10.0
+  bbox: [-6.5, 49.8, 2.0, 55.9]
+  temporal_type: static
+  license: "OGL v3"
+  citation: "Environment Agency, Spatial Flood Defences"
+  datasets: 1
+  variables: [flood_defence]
+  status: implemented
+
+- slug: uk_groundwater_bodies
+  name: UK WFD Groundwater Bodies (EA)
+  protocol: wcs
+  base_url: https://environment.data.gov.uk/spatialdata/wfd-groundwater-bodies-cycle-2/wms
+  resolution_m: 100.0
+  bbox: [-6.5, 49.8, 2.0, 55.9]
+  temporal_type: static
+  license: "OGL v3"
+  citation: "Environment Agency, WFD Groundwater Bodies Cycle 2"
+  datasets: 1
+  variables: [groundwater_body]
+  status: implemented
+
+- slug: uk_historic_flood
+  name: UK Historic Flood Map (EA)
+  protocol: wcs
+  base_url: https://environment.data.gov.uk/spatialdata/historic-flood-map/wms
+  resolution_m: 50.0
+  bbox: [-6.5, 49.8, 2.0, 55.9]
+  temporal_type: static
+  license: "OGL v3"
+  citation: "Environment Agency, Historic Flood Map"
+  datasets: 1
+  variables: [historic_flood]
+  status: implemented
+
+- slug: uk_lidar
+  name: UK LiDAR DTM 1m
+  protocol: wcs
+  base_url: https://environment.data.gov.uk/spatialdata/lidar-composite-digital-terrain-model-dtm-1m/wcs
+  resolution_m: 1.0
+  bbox: [-6.5, 49.8, 2.0, 55.9]
+  temporal_type: static
+  license: "Open Government Licence v3"
+  citation: "Environment Agency, LiDAR Composite DTM"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: uk_soilscapes
+  name: UK Soilscapes (Cranfield)
+  protocol: wcs
+  base_url: https://www.landis.org.uk/arcgis/rest/services/UKSoilObservatory/Soilscapes_Cranfield/MapServer/WMSServer
+  resolution_m: 100.0
+  bbox: [-8.6, 49.8, 2.0, 60.9]
+  temporal_type: static
+  license: "Open (LandIS)"
+  citation: "Cranfield University, Soilscapes"
+  datasets: 1
+  variables: [soil_type]
+  status: implemented
+
+- slug: uk_source_protection
+  name: UK Source Protection Zones (EA)
+  protocol: wcs
+  base_url: https://environment.data.gov.uk/spatialdata/source-protection-zones-merged/wms
+  resolution_m: 50.0
+  bbox: [-6.5, 49.8, 2.0, 55.9]
+  temporal_type: static
+  license: "OGL v3"
+  citation: "Environment Agency, Source Protection Zones"
+  datasets: 1
+  variables: [spz]
+  status: implemented
+
+- slug: uk_wfd_catchments
+  name: UK WFD River Catchments (EA)
+  protocol: wcs
+  base_url: https://environment.data.gov.uk/spatialdata/wfd-river-waterbody-catchments/wms
+  resolution_m: 50.0
+  bbox: [-6.5, 49.8, 2.0, 55.9]
+  temporal_type: static
+  license: "OGL v3"
+  citation: "Environment Agency, WFD River Waterbody Catchments"
+  datasets: 1
+  variables: [catchment]
+  status: implemented
+
+- slug: usda_cdl
+  name: USDA CDL (Cropland)
+  protocol: rest
+  base_url: https://nassgeodata.gmu.edu/axis2/services/CDLService
+  resolution_m: 30.0
+  bbox: [-130.0, 22.0, -64.0, 52.0]
   temporal_type: annual
-  access: open
-  license: open
-  status: research
+  license: "Public Domain"
+  citation: "USDA NASS, Cropland Data Layer"
+  datasets: 1
+  variables: [cropland]
+  status: implemented
 
-- slug: sentinel2_indices
-  name: Sentinel-2 Spectral Indices
-  category: vegetation
+- slug: usgs_3dep
+  name: USGS 3DEP 10m
   protocol: stac_cog
-  variables:
-    - name: ndvi
-      units: dimensionless
-    - name: ndwi
-      units: dimensionless
-    - name: evi
-      units: dimensionless
-  resolution_m: 10
-  bbox: [-180, -56, 180, 84]
-  temporal_type: daily
-  access: open
-  license: open
-  status: research
-
-- slug: glhymps
-  name: GLHYMPS (Global Hydrogeology)
-  category: geology
-  protocol: rest
-  variables:
-    - name: permeability
-      units: m2
-    - name: porosity
-      units: fraction
-  resolution_m: 1000
-  bbox: [-180, -90, 180, 90]
+  base_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  resolution_m: 10.0
+  bbox: [-180.0, 17.0, -64.0, 72.0]
   temporal_type: static
-  access: open
-  license: CC-BY-4.0
-  status: research
+  license: "Public Domain"
+  citation: "USGS 3D Elevation Program"
+  datasets: 1
+  variables: [elevation]
+  status: implemented
+
+- slug: usgs_gap
+  name: USGS Gap Ecosystems (US)
+  protocol: stac_cog
+  base_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  resolution_m: 30.0
+  bbox: [-130.0, 22.0, -64.0, 52.0]
+  temporal_type: static
+  license: "Public Domain"
+  citation: "USGS GAP/LANDFIRE National Terrestrial Ecosystems"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: usgs_geology
+  name: USGS State Geologic Map (US)
+  protocol: wcs
+  base_url: https://mrdata.usgs.gov/services/sgmc
+  resolution_m: 250.0
+  bbox: [-180.0, 17.0, -64.0, 72.0]
+  temporal_type: static
+  license: "Public Domain"
+  citation: "USGS, State Geologic Map Compilation (SGMC)"
+  datasets: 1
+  variables: [geology]
+  status: implemented
+
+- slug: usgs_karst
+  name: USGS Karst Map (US)
+  protocol: wcs
+  base_url: https://mrdata.usgs.gov/services/kb
+  resolution_m: 1000.0
+  bbox: [-180.0, 17.0, -64.0, 72.0]
+  temporal_type: static
+  license: "Public Domain"
+  citation: "USGS, Karst Map of the US"
+  datasets: 1
+  variables: [karst]
+  status: implemented
+
+- slug: usgs_lcmap
+  name: USGS LCMAP 30m (US)
+  protocol: stac_cog
+  base_url: https://planetarycomputer.microsoft.com/api/stac/v1
+  resolution_m: 30.0
+  bbox: [-130.0, 22.0, -64.0, 52.0]
+  temporal_type: annual
+  license: "Public Domain"
+  citation: "USGS EROS, LCMAP Collection 1.3"
+  datasets: 1
+  variables: [land_cover]
+  status: implemented
+
+- slug: usgs_nhd
+  name: USGS National Hydrography (NHD)
+  protocol: wcs
+  base_url: https://hydro.nationalmap.gov/arcgis/services/nhd/MapServer/WMSServer
+  resolution_m: 10.0
+  bbox: [-180.0, 17.0, -64.0, 72.0]
+  temporal_type: static
+  license: "Public Domain"
+  citation: "USGS, National Hydrography Dataset"
+  datasets: 1
+  variables: [hydrography]
+  status: implemented
+
+- slug: usgs_wbd
+  name: USGS Watershed Boundaries (WBD)
+  protocol: wcs
+  base_url: https://hydro.nationalmap.gov/arcgis/services/wbd/MapServer/WMSServer
+  resolution_m: 30.0
+  bbox: [-180.0, 17.0, -64.0, 72.0]
+  temporal_type: static
+  license: "Public Domain"
+  citation: "USGS, Watershed Boundary Dataset"
+  datasets: 1
+  variables: [watershed]
+  status: implemented
