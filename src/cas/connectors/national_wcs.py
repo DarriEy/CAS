@@ -4047,3 +4047,207 @@ class EthiopiaLCConnector(NationalWCSConnector):
         license="CC-BY 4.0",
         citation="ESA WorldCover via Digital Earth Africa",
     )
+
+
+@register("nigeria_lc")
+class NigeriaLCConnector(NationalWCSConnector):
+    slug = "nigeria_lc"
+    display_name = "Nigeria Land Cover (NASRDA)"
+    base_url = "https://ows.digitalearth.africa"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="nigeria_lc",
+        display_name="Nigeria ESA WorldCover (via DEA Africa)",
+        wcs_url="https://ows.digitalearth.africa/wcs",
+        coverage_id="esa_worldcover_2021", protocol_version="2.0.1",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Nigerian land cover (ESA WorldCover via DEA Africa)"),
+        resolution_m=10, category="land_cover",
+        bbox=BoundingBox(min_lon=2.7, min_lat=4.3, max_lon=14.7, max_lat=13.9),
+        license="CC-BY 4.0", citation="ESA WorldCover via Digital Earth Africa",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  CENTRAL AMERICA & CARIBBEAN
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("costa_rica_lc")
+class CostaRicaLCConnector(NationalWCSConnector):
+    slug = "costa_rica_lc"
+    display_name = "Costa Rica Land Cover (SINAC)"
+    base_url = "https://geos1.sirefor.go.cr/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="costa_rica_lc",
+        display_name="Costa Rica Land Cover (SINAC/FONAFIFO)",
+        wcs_url="https://geos1.sirefor.go.cr/geoserver/wms",
+        coverage_id="cobertura:cobertura_2021",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Costa Rican land cover classification"),
+        resolution_m=10, category="land_cover",
+        bbox=BoundingBox(min_lon=-85.9, min_lat=8.0, max_lon=-82.6, max_lat=11.2),
+        license="Open (SINAC)",
+        citation="SINAC/FONAFIFO, Cobertura de la Tierra Costa Rica",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  ADDITIONAL ASIA
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("vietnam_lc")
+class VietnamLCConnector(NationalWCSConnector):
+    slug = "vietnam_lc"
+    display_name = "Vietnam Land Cover"
+    base_url = "https://geoservices.un-spider.org/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="vietnam_lc",
+        display_name="Vietnam Land Cover (UN-SPIDER/FAO)",
+        wcs_url="https://geoservices.un-spider.org/geoserver/wms",
+        coverage_id="vietnam:land_cover",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Vietnamese land cover classification"),
+        resolution_m=30, category="land_cover",
+        bbox=BoundingBox(min_lon=102.1, min_lat=8.6, max_lon=109.5, max_lat=23.4),
+        license="Open (UN-SPIDER)", citation="UN-SPIDER/FAO, Vietnam Land Cover",
+    )
+
+
+@register("malaysia_lc")
+class MalaysiaLCConnector(NationalWCSConnector):
+    slug = "malaysia_lc"
+    display_name = "Malaysia Land Cover (FRIM)"
+    base_url = "https://geoportal.data.gov.my/server/rest/services"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="malaysia_lc",
+        display_name="Malaysia Land Use/Cover (MyGDI)",
+        wcs_url="https://geoportal.data.gov.my/server/services/LandCover/MapServer/WCSServer",
+        coverage_id="1",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Malaysian land use/cover classification"),
+        resolution_m=30, category="land_cover",
+        bbox=BoundingBox(min_lon=99.6, min_lat=0.9, max_lon=119.3, max_lat=7.4),
+        license="Open (MyGDI)", citation="MyGDI, Malaysia Land Cover",
+    )
+
+
+@register("nepal_lc")
+class NepalLCConnector(NationalWCSConnector):
+    slug = "nepal_lc"
+    display_name = "Nepal Land Cover (ICIMOD)"
+    base_url = "https://rds.icimod.org/api/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="nepal_lc",
+        display_name="Nepal Land Cover 2019 (ICIMOD)",
+        wcs_url="https://rds.icimod.org/api/wms",
+        coverage_id="nepal_lulc_2019",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Nepal land cover classification (ICIMOD)"),
+        resolution_m=30, category="land_cover",
+        bbox=BoundingBox(min_lon=80.1, min_lat=26.4, max_lon=88.2, max_lat=30.4),
+        license="Open (ICIMOD)", citation="ICIMOD, Nepal Land Cover 2019",
+    )
+
+
+@register("pakistan_soil")
+class PakistanSoilConnector(NationalWCSConnector):
+    slug = "pakistan_soil"
+    display_name = "Pakistan Soil Map"
+    base_url = "https://soils.openlandmap.org/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="pakistan_soil",
+        display_name="Pakistan Soil Map (FAO/iSDA via OpenLandMap)",
+        wcs_url="https://soils.openlandmap.org/geoserver/wms",
+        coverage_id="openlandmap:pakistan_soils",
+        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="Pakistani soil classification"),
+        resolution_m=250, category="soil",
+        bbox=BoundingBox(min_lon=60.9, min_lat=23.7, max_lon=77.8, max_lat=37.1),
+        license="CC-BY 4.0", citation="FAO/iSDA via OpenLandMap",
+    )
+
+
+@register("bangladesh_lc")
+class BangladeshLCConnector(NationalWCSConnector):
+    slug = "bangladesh_lc"
+    display_name = "Bangladesh Land Cover (SPARRSO)"
+    base_url = "https://geoserver.rfrfbd.org/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="bangladesh_lc",
+        display_name="Bangladesh Land Cover (SPARRSO/RFRFBD)",
+        wcs_url="https://geoserver.rfrfbd.org/geoserver/wms",
+        coverage_id="rfrfbd:landcover_bd",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Bangladesh land cover classification"),
+        resolution_m=30, category="land_cover",
+        bbox=BoundingBox(min_lon=88.0, min_lat=20.7, max_lon=92.7, max_lat=26.6),
+        license="Open (SPARRSO)", citation="SPARRSO, Bangladesh Land Cover",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  ICELAND — additional layers
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("iceland_lc")
+class IcelandLCConnector(NationalWCSConnector):
+    slug = "iceland_lc"
+    display_name = "Iceland Land Cover (NLSI)"
+    base_url = "https://gis.lmi.is/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="iceland_lc",
+        display_name="Iceland Land Cover (Nytjaland/NLSI)",
+        wcs_url="https://gis.lmi.is/geoserver/wms",
+        coverage_id="IS_50V:Nytjaland",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Icelandic land use/cover classification"),
+        resolution_m=50, category="land_cover",
+        bbox=BoundingBox(min_lon=-24.5, min_lat=63.3, max_lon=-13.5, max_lat=66.5),
+        license="Open (LMI)", citation="NLSI/LMI, Nytjaland",
+    )
+
+
+@register("iceland_geology")
+class IcelandGeologyConnector(NationalWCSConnector):
+    slug = "iceland_geology"
+    display_name = "Iceland Geological Map (ISOR)"
+    base_url = "https://gis.lmi.is/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="iceland_geology",
+        display_name="Iceland Geological Map 1:600k (ISOR/NLSI)",
+        wcs_url="https://gis.lmi.is/geoserver/wms",
+        coverage_id="IS_50V:Jardfraedikort",
+        variable=Variable(name="geology", units="class", data_type=DataType.CATEGORICAL,
+                          description="Icelandic geological units (volcanic, sedimentary)"),
+        resolution_m=500, category="geology",
+        bbox=BoundingBox(min_lon=-24.5, min_lat=63.3, max_lon=-13.5, max_lat=66.5),
+        license="Open (LMI)", citation="ISOR/NLSI, Geological Map of Iceland",
+    )
+
+
+@register("iceland_soil")
+class IcelandSoilConnector(NationalWCSConnector):
+    slug = "iceland_soil"
+    display_name = "Iceland Soil Erosion (AUI)"
+    base_url = "https://gis.lmi.is/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="iceland_soil",
+        display_name="Iceland Soil Erosion Map (AUI/NLSI)",
+        wcs_url="https://gis.lmi.is/geoserver/wms",
+        coverage_id="IS_50V:Jardvegsrof",
+        variable=Variable(name="soil_erosion", units="class", data_type=DataType.CATEGORICAL,
+                          description="Icelandic soil erosion severity classification"),
+        resolution_m=50, category="soil",
+        bbox=BoundingBox(min_lon=-24.5, min_lat=63.3, max_lon=-13.5, max_lat=66.5),
+        license="Open (LMI)",
+        citation="AUI/NLSI, Jardvegsrof (Soil Erosion Map of Iceland)",
+    )
