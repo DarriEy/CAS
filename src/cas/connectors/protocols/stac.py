@@ -50,9 +50,10 @@ class STACMixin:
         cog_url: str,
         bbox: tuple[float, float, float, float],
         geometry: Geometry | None = None,
-    ) -> tuple[np.ndarray, object, float | None]:
-        """Read a spatial window from a COG, returning (array, transform, nodata).
+    ) -> tuple[np.ndarray, object, float | None, object]:
+        """Read a spatial window from a COG.
 
+        Returns (array, transform, nodata, src_crs).
         Handles CRS reprojection when the COG is not in EPSG:4326.
         """
         import rasterio
@@ -69,7 +70,7 @@ class STACMixin:
             arr = src.read(1, window=window)
             transform = src.window_transform(window)
             nodata = src.nodata
-        return arr, transform, nodata
+        return arr, transform, nodata, src_crs
 
     @staticmethod
     def _select_best_item(items: list[dict], preference: str = "first") -> dict:

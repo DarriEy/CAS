@@ -121,7 +121,7 @@ class EsriLULCConnector(STACMixin, BaseConnector):
                         cog_href = planetary_computer.sign(cog_href)
                     except ImportError:
                         pass
-                    raster_data, transform, nodata = await self._read_cog_window(
+                    raster_data, transform, nodata, src_crs = await self._read_cog_window(
                         cog_url=cog_href, bbox=bbox, geometry=geometry,
                     )
                     provenance = f"PC STAC fallback: {PC_COLLECTION}/{item.get('id', '')}"
@@ -142,7 +142,7 @@ class EsriLULCConnector(STACMixin, BaseConnector):
             )
 
         geom_dict = geometry.model_dump()
-        mask = rasterize_geometry(geom_dict, raster_data.shape, transform)
+        mask = rasterize_geometry(geom_dict, raster_data.shape, transform, src_crs)
 
         value, coverage, pixel_count = compute_zonal_stats(
             raster_data=raster_data, mask=mask, nodata=nodata,
@@ -186,5 +186,5 @@ class EsriLULCConnector(STACMixin, BaseConnector):
 
             tiff_resp = await client.get(href)
             tiff_resp.raise_for_status()
-            raster_data, transform, nodata = parse_geotiff(tiff_resp.content)
+            raster_data, transform, nodata, src_crs = parse_geotiff(tiff_resp.content)
             return raster_data, transform, nodata, "Esri ImageServer exportImage"

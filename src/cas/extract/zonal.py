@@ -87,12 +87,25 @@ def rasterize_geometry(
     geometry_dict: dict,
     shape: tuple[int, int],
     transform: object,
+    src_crs: object | None = None,
 ) -> np.ndarray:
-    """Create a boolean mask from a GeoJSON geometry on the raster grid."""
+    """Create a boolean mask from a GeoJSON geometry on the raster grid.
+
+    If src_crs is provided and differs from EPSG:4326, the geometry
+    is reprojected to the raster's native CRS before masking.
+    """
     from rasterio.features import geometry_mask
     from shapely.geometry import shape as shapely_shape
 
     geom = shapely_shape(geometry_dict)
+
+    if src_crs and str(src_crs) != "EPSG:4326":
+        from pyproj import Transformer
+        from shapely.ops import transform as shapely_transform
+
+        transformer = Transformer.from_crs("EPSG:4326", str(src_crs), always_xy=True)
+        geom = shapely_transform(transformer.transform, geom)
+
     mask = ~geometry_mask(
         [geom],
         out_shape=shape,
@@ -102,12 +115,13 @@ def rasterize_geometry(
     return mask  # type: ignore[no-any-return]
 
 
-def parse_geotiff(data: bytes) -> tuple[np.ndarray, object, float | None]:
-    """Parse GeoTIFF bytes into (numpy_array, transform, nodata)."""
+def parse_geotiff(data: bytes) -> tuple[np.ndarray, object, float | None, object]:
+    """Parse GeoTIFF bytes into (numpy_array, transform, nodata, crs)."""
     from rasterio.io import MemoryFile
 
     with MemoryFile(data) as memfile, memfile.open() as src:
         arr = src.read(1)
         transform = src.transform
         nodata = src.nodata
-    return arr, transform, nodata
+        crs = src.crs
+    return arr, transform, nodata, crs

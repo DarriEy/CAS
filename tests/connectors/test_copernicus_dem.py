@@ -68,7 +68,7 @@ class TestCopernicusDEMConnector:
                 CopernicusDEMConnector,
                 "_read_cog_window",
                 new_callable=AsyncMock,
-                return_value=(mock_raster, mock_transform, -9999.0),
+                return_value=(mock_raster, mock_transform, -9999.0, "EPSG:4326"),
             ),
         ):
             async with CopernicusDEMConnector() as conn:

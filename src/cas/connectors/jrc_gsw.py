@@ -116,7 +116,7 @@ class JRCGlobalSurfaceWaterConnector(STACMixin, BaseConnector):
         try:
             tile_url = _build_gcs_tile_url(layer_name, bbox)
             raster_bytes = await self._get_bytes(tile_url)
-            raster_data, transform, nodata = parse_geotiff(raster_bytes)
+            raster_data, transform, nodata, src_crs = parse_geotiff(raster_bytes)
             provenance = f"JRC GCS tile: {layer_name}"
             logger.debug("jrc_gsw_provider_hit", layer=layer_name, source="gcs")
         except Exception as gcs_err:
@@ -138,7 +138,7 @@ class JRCGlobalSurfaceWaterConnector(STACMixin, BaseConnector):
                         cog_href = planetary_computer.sign(cog_href)
                     except ImportError:
                         pass
-                    raster_data, transform, nodata = await self._read_cog_window(
+                    raster_data, transform, nodata, src_crs = await self._read_cog_window(
                         cog_url=cog_href, bbox=bbox, geometry=geometry,
                     )
                     provenance = f"PC STAC fallback: {PC_COLLECTION}/{item.get('id', '')}"
@@ -160,7 +160,7 @@ class JRCGlobalSurfaceWaterConnector(STACMixin, BaseConnector):
             )
 
         geom_dict = geometry.model_dump()
-        mask = rasterize_geometry(geom_dict, raster_data.shape, transform)
+        mask = rasterize_geometry(geom_dict, raster_data.shape, transform, src_crs)
 
         agg = AggregationMethod.DISTRIBUTION if var_meta.data_type == DataType.CATEGORICAL else AggregationMethod.MEAN
         value, coverage, pixel_count = compute_zonal_stats(

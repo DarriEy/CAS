@@ -116,14 +116,14 @@ class ALOSForestConnector(STACMixin, BaseConnector):
             pass
 
         try:
-            raster_data, transform, nodata = await self._read_cog_window(
+            raster_data, transform, nodata, src_crs = await self._read_cog_window(
                 cog_url=cog_href, bbox=bbox, geometry=geometry,
             )
         except Exception as e:
             raise DataFormatError(self.slug, f"COG read failed: {e}") from e
 
         geom_dict = geometry.model_dump()
-        mask = rasterize_geometry(geom_dict, raster_data.shape, transform)
+        mask = rasterize_geometry(geom_dict, raster_data.shape, transform, src_crs)
 
         value, coverage, pixel_count = compute_zonal_stats(
             raster_data=raster_data, mask=mask, nodata=nodata,

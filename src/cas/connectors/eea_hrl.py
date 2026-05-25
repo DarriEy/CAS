@@ -113,12 +113,12 @@ class EEAImageServerConnector(BaseConnector):
         except Exception as e:
             raise DataFormatError(self.slug, f"ImageServer request failed: {e}") from e
 
-        raster_data, transform, nodata = parse_geotiff(raster_bytes)
+        raster_data, transform, nodata, src_crs = parse_geotiff(raster_bytes)
         if nodata is None:
             nodata = 255.0
 
         geom_dict = geometry.model_dump()
-        mask = rasterize_geometry(geom_dict, raster_data.shape, transform)
+        mask = rasterize_geometry(geom_dict, raster_data.shape, transform, src_crs)
 
         is_cat = self._variable.data_type == DataType.CATEGORICAL
         agg = AggregationMethod.DISTRIBUTION if is_cat else AggregationMethod.MEAN

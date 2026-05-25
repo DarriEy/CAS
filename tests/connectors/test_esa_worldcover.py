@@ -69,7 +69,7 @@ class TestESAWorldCoverConnector:
                 ESAWorldCoverConnector,
                 "_read_cog_window",
                 new_callable=AsyncMock,
-                return_value=(mock_raster, mock_transform, 0.0),
+                return_value=(mock_raster, mock_transform, 0.0, "EPSG:4326"),
             ),
         ):
             async with ESAWorldCoverConnector() as conn:

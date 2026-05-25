@@ -154,12 +154,12 @@ class NationalWCSConnector(BaseConnector):
         except Exception as e:
             raise DataFormatError(cfg.slug, f"WCS request failed: {e}") from e
 
-        raster_data, transform, nodata = parse_geotiff(raster_bytes)
+        raster_data, transform, nodata, src_crs = parse_geotiff(raster_bytes)
         if cfg.nodata_value is not None:
             nodata = cfg.nodata_value
 
         geom_dict = geometry.model_dump()
-        mask = rasterize_geometry(geom_dict, raster_data.shape, transform)
+        mask = rasterize_geometry(geom_dict, raster_data.shape, transform, src_crs)
 
         is_categorical = cfg.variable.data_type == DataType.CATEGORICAL
         agg = AggregationMethod.DISTRIBUTION if is_categorical else AggregationMethod.MEAN
@@ -883,6 +883,25 @@ class IrelandCORINEConnector(NationalWCSConnector):
     )
 
 
+@register("ireland_lakes")
+class IrelandLakesConnector(NationalWCSConnector):
+    slug = "ireland_lakes"
+    display_name = "Ireland WFD Lakes (EPA)"
+    base_url = "https://gis.epa.ie/geoserver/EPA/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="ireland_lakes",
+        display_name="Ireland WFD Lake Water Bodies (EPA)",
+        wcs_url="https://gis.epa.ie/geoserver/EPA/wms",
+        coverage_id="WFD_LAKESEGMENT",
+        variable=Variable(name="lake_body", units="class", data_type=DataType.CATEGORICAL,
+                          description="Irish WFD lake water body delineation"),
+        resolution_m=50, category="hydrology",
+        bbox=BoundingBox(min_lon=-10.5, min_lat=51.4, max_lon=-6.0, max_lat=55.4),
+        license="CC-BY 4.0", citation="EPA, WFD Lake Water Bodies",
+    )
+
+
 # ═══════════════════════════════════════════════════════════════════════
 #  GERMANY — wind erosion + air capacity
 # ═══════════════════════════════════════════════════════════════════════
@@ -1061,6 +1080,85 @@ class BelgiumSoilConnector(NationalWCSConnector):
         resolution_m=20, category="soil",
         bbox=BoundingBox(min_lon=2.5, min_lat=50.7, max_lon=5.9, max_lat=51.5),
         license="Open (DOV)", citation="DOV, Bodemkaart van België",
+    )
+
+
+@register("belgium_groundwater")
+class BelgiumGroundwaterConnector(NationalWCSConnector):
+    slug = "belgium_groundwater"
+    display_name = "Belgium Flanders Groundwater (DOV)"
+    base_url = "https://www.dov.vlaanderen.be/geoserver/grondwater/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="belgium_groundwater",
+        display_name="Flanders (Belgium) Groundwater Protection Zones (DOV)",
+        wcs_url="https://www.dov.vlaanderen.be/geoserver/grondwater/wms",
+        coverage_id="beschermingszones_2014",
+        variable=Variable(name="gw_protection", units="class", data_type=DataType.CATEGORICAL,
+                          description="Flanders groundwater protection zones"),
+        resolution_m=50, category="hydrology",
+        bbox=BoundingBox(min_lon=2.5, min_lat=50.7, max_lon=5.9, max_lat=51.5),
+        license="Open (DOV)",
+        citation="DOV, Beschermingszones Grondwater Vlaanderen",
+    )
+
+
+@register("belgium_aquifer")
+class BelgiumAquiferConnector(NationalWCSConnector):
+    slug = "belgium_aquifer"
+    display_name = "Belgium Flanders Aquifer Layers (DOV)"
+    base_url = "https://www.dov.vlaanderen.be/geoserver/grondwater/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="belgium_aquifer",
+        display_name="Flanders (Belgium) Aquifer Layers (DOV)",
+        wcs_url="https://www.dov.vlaanderen.be/geoserver/grondwater/wms",
+        coverage_id="geothermie_watervoerende_lagen",
+        variable=Variable(name="aquifer_layer", units="class", data_type=DataType.CATEGORICAL,
+                          description="Flanders water-bearing geological layers"),
+        resolution_m=100, category="geology",
+        bbox=BoundingBox(min_lon=2.5, min_lat=50.7, max_lon=5.9, max_lat=51.5),
+        license="Open (DOV)",
+        citation="DOV, Watervoerende Lagen Vlaanderen",
+    )
+
+
+@register("belgium_hydrostrat")
+class BelgiumHydrostratConnector(NationalWCSConnector):
+    slug = "belgium_hydrostrat"
+    display_name = "Belgium Flanders Hydrostratigraphy (DOV)"
+    base_url = "https://www.dov.vlaanderen.be/geoserver/interpretaties/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="belgium_hydrostrat",
+        display_name="Flanders (Belgium) Hydrogeological Stratigraphy (DOV)",
+        wcs_url="https://www.dov.vlaanderen.be/geoserver/interpretaties/wms",
+        coverage_id="hydrogeologische_stratigrafie",
+        variable=Variable(name="hydrostrat", units="class", data_type=DataType.CATEGORICAL,
+                          description="Flanders hydrogeological stratigraphic interpretation"),
+        resolution_m=100, category="geology",
+        bbox=BoundingBox(min_lon=2.5, min_lat=50.7, max_lon=5.9, max_lat=51.5),
+        license="Open (DOV)",
+        citation="DOV, Hydrogeologische Stratigrafie Vlaanderen",
+    )
+
+
+@register("belgium_lithology")
+class BelgiumLithologyConnector(NationalWCSConnector):
+    slug = "belgium_lithology"
+    display_name = "Belgium Flanders Lithology (DOV)"
+    base_url = "https://www.dov.vlaanderen.be/geoserver/interpretaties/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="belgium_lithology",
+        display_name="Flanders (Belgium) Coded Lithology (DOV)",
+        wcs_url="https://www.dov.vlaanderen.be/geoserver/interpretaties/wms",
+        coverage_id="gecodeerde_lithologie",
+        variable=Variable(name="lithology", units="class", data_type=DataType.CATEGORICAL,
+                          description="Flanders coded lithological interpretation"),
+        resolution_m=100, category="geology",
+        bbox=BoundingBox(min_lon=2.5, min_lat=50.7, max_lon=5.9, max_lat=51.5),
+        license="Open (DOV)", citation="DOV, Gecodeerde Lithologie Vlaanderen",
     )
 
 
@@ -2325,6 +2423,46 @@ class SwissLakesConnector(NationalWCSConnector):
         resolution_m=25, category="hydrology",
         bbox=BoundingBox(min_lon=5.9, min_lat=45.8, max_lon=10.5, max_lat=47.8),
         license="Open (geo.admin.ch)", citation="BAFU, vec25 Seen",
+    )
+
+
+@register("swiss_rivers")
+class SwissRiversConnector(NationalWCSConnector):
+    slug = "swiss_rivers"
+    display_name = "Switzerland River Network (swisstopo)"
+    base_url = "https://wms.geo.admin.ch"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="swiss_rivers",
+        display_name="Switzerland River/Stream Network (swissTLM3D)",
+        wcs_url="https://wms.geo.admin.ch",
+        coverage_id="ch.swisstopo.swisstlm3d-gewaessernetz",
+        variable=Variable(name="river_network", units="class", data_type=DataType.CATEGORICAL,
+                          description="Swiss river and stream network (swissTLM3D)"),
+        resolution_m=10, category="hydrology",
+        bbox=BoundingBox(min_lon=5.9, min_lat=45.8, max_lon=10.5, max_lat=47.8),
+        license="Open (geo.admin.ch)",
+        citation="swisstopo, swissTLM3D Gewässernetz",
+    )
+
+
+@register("swiss_water_connect")
+class SwissWaterConnectConnector(NationalWCSConnector):
+    slug = "swiss_water_connect"
+    display_name = "Switzerland Water Body Connectivity (BLW)"
+    base_url = "https://wms.geo.admin.ch"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="swiss_water_connect",
+        display_name="Switzerland Water Body Connectivity Map (BLW)",
+        wcs_url="https://wms.geo.admin.ch",
+        coverage_id="ch.blw.gewaesseranschlusskarte",
+        variable=Variable(name="water_connectivity", units="class", data_type=DataType.CATEGORICAL,
+                          description="Agricultural parcel connectivity to water bodies"),
+        resolution_m=25, category="hydrology",
+        bbox=BoundingBox(min_lon=5.9, min_lat=45.8, max_lon=10.5, max_lat=47.8),
+        license="Open (geo.admin.ch)",
+        citation="BLW, Gewässeranschlusskarte",
     )
 
 

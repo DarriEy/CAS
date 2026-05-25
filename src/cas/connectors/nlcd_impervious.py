@@ -109,13 +109,13 @@ class NLCDImperviousConnector(BaseConnector):
         except Exception as e:
             raise DataFormatError(self.slug, f"WMS request failed: {e}") from e
 
-        raster_data, transform, nodata = parse_geotiff(raster_bytes)
+        raster_data, transform, nodata, src_crs = parse_geotiff(raster_bytes)
         # NLCD uses 127 or 255 as nodata for imperviousness
         if nodata is None:
             nodata = 255.0
 
         geom_dict = geometry.model_dump()
-        mask = rasterize_geometry(geom_dict, raster_data.shape, transform)
+        mask = rasterize_geometry(geom_dict, raster_data.shape, transform, src_crs)
 
         value, coverage, pixel_count = compute_zonal_stats(
             raster_data=raster_data, mask=mask, nodata=nodata,
