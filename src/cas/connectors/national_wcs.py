@@ -4622,3 +4622,272 @@ class MoroccoLCConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=-13.2, min_lat=27.7, max_lon=-1.0, max_lat=35.9),
         license="Open (ONHYM)", citation="ONHYM, Occupation des Sols du Maroc",
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  US — additional datasets
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("us_statsgo")
+class USSTATSGOConnector(NationalWCSConnector):
+    slug = "us_statsgo"
+    display_name = "US STATSGO2 Soil 1km"
+    base_url = "https://sdmdataaccess.sc.egov.usda.gov"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="us_statsgo",
+        display_name="US STATSGO2 General Soil Map (USDA/NRCS)",
+        wcs_url="https://SDMDataAccess.sc.egov.usda.gov/Spatial/SDMWGS84Geographic.wfs",
+        coverage_id="MapunitPoly",
+        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="US general soil map 1:250k (STATSGO2)"),
+        resolution_m=1000, category="soil",
+        bbox=BoundingBox(min_lon=-180, min_lat=17, max_lon=-64, max_lat=72),
+        license="Public Domain", citation="USDA/NRCS, STATSGO2",
+    )
+
+
+@register("us_nass_cropscape")
+class USCropscapeConnector(NationalWCSConnector):
+    slug = "us_nass_cropscape"
+    display_name = "US CropScape 30m (NASS)"
+    base_url = "https://nassgeodata.gmu.edu/CropScape"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="us_nass_cropscape",
+        display_name="US Cropland Data Layer 30m (USDA NASS CropScape)",
+        wcs_url="https://nassgeodata.gmu.edu/axis2/services/CDLService/wcs",
+        coverage_id="CDL_2023",
+        variable=Variable(name="crop_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="US crop type classification (~130 classes, annual)"),
+        resolution_m=30, category="land_cover",
+        bbox=BoundingBox(min_lon=-127, min_lat=24, max_lon=-65, max_lat=50),
+        license="Public Domain", citation="USDA NASS, Cropland Data Layer 2023",
+    )
+
+
+@register("us_ned_slope")
+class USNEDSlopeConnector(NationalWCSConnector):
+    slug = "us_ned_slope"
+    display_name = "US Slope 10m (3DEP)"
+    base_url = "https://elevation.nationalmap.gov/arcgis/services/3DEPElevation/ImageServer/WCSServer"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="us_ned_slope",
+        display_name="US Slope 10m (USGS 3DEP derived)",
+        wcs_url="https://elevation.nationalmap.gov/arcgis/services/3DEPElevation/ImageServer/WCSServer",
+        coverage_id="3DEPElevation",
+        variable=Variable(name="slope", units="degrees", data_type=DataType.CONTINUOUS,
+                          valid_range=(0, 90),
+                          description="Slope from USGS 3DEP NED 10m"),
+        resolution_m=10, category="terrain",
+        bbox=BoundingBox(min_lon=-180, min_lat=17, max_lon=-64, max_lat=72),
+        license="Public Domain", citation="USGS, 3DEP Elevation Products",
+    )
+
+
+@register("us_gap_lc")
+class USGAPLCConnector(NationalWCSConnector):
+    slug = "us_gap_lc"
+    display_name = "US GAP Land Cover 30m"
+    base_url = "https://www.sciencebase.gov/arcgis/services"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="us_gap_lc",
+        display_name="US GAP/LANDFIRE National Land Cover 30m",
+        wcs_url="https://www.sciencebase.gov/arcgis/services/GAP/GAP_Land_Cover_NVC_Class_Landuse/MapServer/WCSServer",
+        coverage_id="1",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="US ecological land cover (NatureServe NVC classes)"),
+        resolution_m=30, category="land_cover",
+        bbox=BoundingBox(min_lon=-180, min_lat=17, max_lon=-64, max_lat=72),
+        license="Public Domain", citation="USGS GAP/LANDFIRE, National Land Cover",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  CANADA — additional datasets
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("canada_soil")
+class CanadaSoilConnector(NationalWCSConnector):
+    slug = "canada_soil"
+    display_name = "Canada Soil Landscape (SLCS)"
+    base_url = "https://geo.weather.gc.ca/geomet"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="canada_soil",
+        display_name="Canada Soil Landscapes of Canada (SLC v3.2)",
+        wcs_url="https://wms.aafcgeomatics.ca/cgi-bin/soil_en.cgi",
+        coverage_id="soil:slc_v3.2",
+        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="Canadian soil landscape polygon classification"),
+        resolution_m=250, category="soil",
+        bbox=BoundingBox(min_lon=-141, min_lat=41.7, max_lon=-52.6, max_lat=83.1),
+        license="Open Government Licence - Canada",
+        citation="AAFC, Soil Landscapes of Canada v3.2",
+    )
+
+
+@register("canada_geology")
+class CanadaGeologyConnector(NationalWCSConnector):
+    slug = "canada_geology"
+    display_name = "Canada Bedrock Geology (GSC)"
+    base_url = "https://geoappext.nrcan.gc.ca/arcgis/services"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="canada_geology",
+        display_name="Canada Bedrock Geology (GSC/NRCan)",
+        wcs_url="https://geoappext.nrcan.gc.ca/arcgis/services/FGP/CGI_CBGM_5M_en/MapServer/WMSServer",
+        coverage_id="0",
+        variable=Variable(name="geology", units="class", data_type=DataType.CATEGORICAL,
+                          description="Canadian bedrock geology 1:5M"),
+        resolution_m=5000, category="geology",
+        bbox=BoundingBox(min_lon=-141, min_lat=41.7, max_lon=-52.6, max_lat=83.1),
+        license="Open Government Licence - Canada",
+        citation="GSC/NRCan, Canadian Geoscience Map",
+    )
+
+
+@register("canada_wetland")
+class CanadaWetlandConnector(NationalWCSConnector):
+    slug = "canada_wetland"
+    display_name = "Canada Wetland Inventory"
+    base_url = "https://geo.weather.gc.ca/geomet"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="canada_wetland",
+        display_name="Canada National Wetland Inventory (CWS)",
+        wcs_url="https://wms.aafcgeomatics.ca/cgi-bin/wetland_en.cgi",
+        coverage_id="wetland:cwi",
+        variable=Variable(name="wetland_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="Canadian wetland classification (bog, fen, marsh, swamp, water)"),
+        resolution_m=250, category="hydrology",
+        bbox=BoundingBox(min_lon=-141, min_lat=41.7, max_lon=-52.6, max_lat=83.1),
+        license="Open Government Licence - Canada",
+        citation="Canadian Wildlife Service, National Wetland Inventory",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  AUSTRALIA — additional TERN/SLGA layers
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("australia_clay")
+class AustraliaClayConnector(NationalWCSConnector):
+    slug = "australia_clay"
+    display_name = "Australia Clay Content (SLGA)"
+    base_url = "https://www.asris.csiro.au/arcgis/services/TERN"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="australia_clay",
+        display_name="Australia Clay Content 0-30cm (SLGA/TERN)",
+        wcs_url="https://www.asris.csiro.au/arcgis/services/TERN/CLY_000_030_EV_N_P_AU_TRN_N_20210901/MapServer/WCSServer",
+        coverage_id="1",
+        variable=Variable(name="clay", units="%", data_type=DataType.CONTINUOUS,
+                          valid_range=(0, 100),
+                          description="Clay content in 0-30cm (SLGA)"),
+        resolution_m=90, category="soil",
+        bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
+        license="CC-BY 4.0", citation="TERN/CSIRO, SLGA Clay Content",
+    )
+
+
+@register("australia_sand")
+class AustraliaSandConnector(NationalWCSConnector):
+    slug = "australia_sand"
+    display_name = "Australia Sand Content (SLGA)"
+    base_url = "https://www.asris.csiro.au/arcgis/services/TERN"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="australia_sand",
+        display_name="Australia Sand Content 0-30cm (SLGA/TERN)",
+        wcs_url="https://www.asris.csiro.au/arcgis/services/TERN/SND_000_030_EV_N_P_AU_TRN_N_20210901/MapServer/WCSServer",
+        coverage_id="1",
+        variable=Variable(name="sand", units="%", data_type=DataType.CONTINUOUS,
+                          valid_range=(0, 100),
+                          description="Sand content in 0-30cm (SLGA)"),
+        resolution_m=90, category="soil",
+        bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
+        license="CC-BY 4.0", citation="TERN/CSIRO, SLGA Sand Content",
+    )
+
+
+@register("australia_ph")
+class AustraliaPHConnector(NationalWCSConnector):
+    slug = "australia_ph"
+    display_name = "Australia Soil pH (SLGA)"
+    base_url = "https://www.asris.csiro.au/arcgis/services/TERN"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="australia_ph",
+        display_name="Australia Soil pH 0-30cm (SLGA/TERN)",
+        wcs_url="https://www.asris.csiro.au/arcgis/services/TERN/PHC_000_030_EV_N_P_AU_TRN_N_20210901/MapServer/WCSServer",
+        coverage_id="1",
+        variable=Variable(name="soil_ph", units="pH", data_type=DataType.CONTINUOUS,
+                          valid_range=(2, 12),
+                          description="Soil pH (CaCl2) in 0-30cm (SLGA)"),
+        resolution_m=90, category="soil",
+        bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
+        license="CC-BY 4.0", citation="TERN/CSIRO, SLGA Soil pH",
+    )
+
+
+@register("australia_soc")
+class AustraliaSOCConnector(NationalWCSConnector):
+    slug = "australia_soc"
+    display_name = "Australia Organic Carbon (SLGA)"
+    base_url = "https://www.asris.csiro.au/arcgis/services/TERN"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="australia_soc",
+        display_name="Australia Organic Carbon 0-30cm (SLGA/TERN)",
+        wcs_url="https://www.asris.csiro.au/arcgis/services/TERN/SOC_000_030_EV_N_P_AU_TRN_N_20210901/MapServer/WCSServer",
+        coverage_id="1",
+        variable=Variable(name="soc", units="%", data_type=DataType.CONTINUOUS,
+                          valid_range=(0, 60),
+                          description="Soil organic carbon in 0-30cm (SLGA)"),
+        resolution_m=90, category="soil",
+        bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
+        license="CC-BY 4.0", citation="TERN/CSIRO, SLGA Soil Organic Carbon",
+    )
+
+
+@register("australia_awc")
+class AustraliaAWCConnector(NationalWCSConnector):
+    slug = "australia_awc"
+    display_name = "Australia Available Water Capacity (SLGA)"
+    base_url = "https://www.asris.csiro.au/arcgis/services/TERN"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="australia_awc",
+        display_name="Australia Available Water Capacity (SLGA/TERN)",
+        wcs_url="https://www.asris.csiro.au/arcgis/services/TERN/AWC_000_200_EV_N_P_AU_TRN_N_20210901/MapServer/WCSServer",
+        coverage_id="1",
+        variable=Variable(name="awc", units="mm", data_type=DataType.CONTINUOUS,
+                          valid_range=(0, 500),
+                          description="Available water capacity 0-200cm (SLGA)"),
+        resolution_m=90, category="soil",
+        bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
+        license="CC-BY 4.0", citation="TERN/CSIRO, SLGA Available Water Capacity",
+    )
+
+
+@register("australia_geology")
+class AustraliaGeologyConnector(NationalWCSConnector):
+    slug = "australia_geology"
+    display_name = "Australia Surface Geology (GA)"
+    base_url = "https://services.ga.gov.au/gis/services"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="australia_geology",
+        display_name="Australia Surface Geology 1:1M (Geoscience Australia)",
+        wcs_url="https://services.ga.gov.au/gis/services/Surface_Geology_Of_Australia/MapServer/WMSServer",
+        coverage_id="0",
+        variable=Variable(name="geology", units="class", data_type=DataType.CATEGORICAL,
+                          description="Australian surface geological units 1:1,000,000"),
+        resolution_m=1000, category="geology",
+        bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
+        license="CC-BY 4.0",
+        citation="Geoscience Australia, Surface Geology of Australia 1:1M",
+    )
