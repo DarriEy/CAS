@@ -139,6 +139,94 @@ export CAS_TANDEMX_USER=your_email
 export CAS_TANDEMX_PASSWORD=your_password
 ```
 
+### Google Earth Engine / Dynamic World (Google Cloud)
+
+Global 10m near-real-time land cover from Sentinel-2.
+
+1. Create a Google Cloud project at https://console.cloud.google.com/
+2. Enable the Earth Engine API
+3. Create a service account with Earth Engine scope
+4. Download the JSON key file
+5. Set the path:
+```bash
+export CAS_GEE_SERVICE_ACCOUNT_KEY=/path/to/service-account-key.json
+```
+Or authenticate interactively: `earthengine authenticate`
+
+### Finland DEM 2m (Maanmittauslaitos)
+
+National high-resolution DEM from the Finnish Land Survey.
+
+1. Register at https://www.maanmittauslaitos.fi/rajapinnat/api-avaimen-ohje
+2. Create a free API key
+3. Set the key:
+```bash
+export CAS_MML_API_KEY=your_key
+```
+
+### Denmark DEMs (Dataforsyningen / SDFI)
+
+National DHM 0.4m and terrain data from the Danish Agency for Data Supply.
+
+1. Register at https://dataforsyningen.dk/
+2. Create a user and generate an API token
+3. Set the token:
+```bash
+export CAS_DATAFORSYNINGEN_TOKEN=your_token
+```
+
+### Germany DGM200 (BKG)
+
+National 200m DEM from the German Federal Agency for Cartography.
+
+1. Register at https://gdz.bkg.bund.de/
+2. Request a UUID access token (free for open data services)
+3. Set the token:
+```bash
+export CAS_BKG_UUID=your_uuid
+```
+
+### Copernicus CORINE Land Cover (Copernicus Dataspace)
+
+European land cover at 100m from the Copernicus programme.
+
+1. Register at https://dataspace.copernicus.eu/
+2. Generate an API token
+3. Set the token:
+```bash
+export CAS_COPERNICUS_TOKEN=your_token
+```
+
+### Digital Earth Africa (DEA)
+
+Pan-African SRTM derivatives and ESA WorldCover via WCS.
+
+Access may be restricted by region. If you receive 403 errors:
+1. Check https://www.digitalearthafrica.org/ for current access policies
+2. DEA services may require access from African IP ranges or API registration
+
+### Sweden DEM/Soil (Lantmateriet)
+
+Swedish national elevation and soil data.
+
+1. Register at https://www.lantmateriet.se/sv/geodata/vara-produkter/
+2. Generate an API key
+3. Set the key:
+```bash
+export CAS_LANTMATERIET_API_KEY=your_key
+```
+
+### New Zealand LRIS (Landcare Research)
+
+New Zealand land resource data (soil, land cover).
+
+1. Register at https://lris.scinfo.org.nz/
+2. Create an API key from your account settings
+3. Set the key:
+```bash
+export CAS_LRIS_API_KEY=your_key
+```
+
 ## Adding a Provider
 
 1. Create `src/cas/connectors/my_provider.py`

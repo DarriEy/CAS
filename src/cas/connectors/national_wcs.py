@@ -54,6 +54,7 @@ class NationalDatasetConfig:
     category: str = "elevation"
     auth_token_env: str = ""
     nodata_value: float | None = None
+    use_wms: bool = False
 
 
 def _geometry_to_bbox(geometry: Geometry) -> tuple[float, float, float, float]:
@@ -112,7 +113,20 @@ class NationalWCSConnector(BaseConnector):
         headers: dict[str, str] = {}
         params: dict = {}
 
-        if cfg.protocol_version == "2.0.1":
+        if cfg.use_wms:
+            params = {
+                "service": "WMS",
+                "version": "1.1.1",
+                "request": "GetMap",
+                "layers": cfg.coverage_id,
+                "SRS": cfg.crs,
+                "BBOX": f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}",
+                "width": "500",
+                "height": "500",
+                "format": "image/geotiff",
+                **cfg.extra_params,
+            }
+        elif cfg.protocol_version == "2.0.1":
             params = {
                 "service": "WCS",
                 "version": "2.0.1",
@@ -525,12 +539,13 @@ class AustraliaDEALCConnector(NationalWCSConnector):
 class BrazilSoilConnector(NationalWCSConnector):
     slug = "brazil_soil"
     display_name = "Brazil Soil Map (EMBRAPA)"
-    base_url = "https://geoinfo.dados.embrapa.br/geoserver/ows"
+    base_url = "https://geoinfo.dados.embrapa.br/geoserver/geonode/wms"
     protocol = "wcs"
     _config = NationalDatasetConfig(
         slug="brazil_soil", display_name="Brazil Soil Map (EMBRAPA GeoInfo)",
-        wcs_url="https://geoinfo.dados.embrapa.br/geoserver/ows",
+        wcs_url="https://geoinfo.dados.embrapa.br/geoserver/geonode/wms",
         coverage_id="geonode:soils_brazil_wrb_wgs84",
+        use_wms=True,
         variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
                           description="Brazilian soil classification (WRB)"),
         resolution_m=1000, category="soil",
@@ -561,11 +576,11 @@ class CanadaAAFCCropsConnector(NationalWCSConnector):
 class ArgentinaSoilConnector(NationalWCSConnector):
     slug = "argentina_soil"
     display_name = "Argentina Soil Map (INTA)"
-    base_url = "http://geointa.inta.gov.ar/geoserver/wms"
+    base_url = "https://geo-backend.inta.gob.ar/geoserver/ows"
     protocol = "wcs"
     _config = NationalDatasetConfig(
         slug="argentina_soil", display_name="Argentina Soil Map 1:500k (INTA GeoINTA)",
-        wcs_url="http://geointa.inta.gov.ar/geoserver/wms",
+        wcs_url="https://geo-backend.inta.gob.ar/geoserver/ows",
         coverage_id="suelos_argentina_1_500",
         variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
                           description="Argentine soil classification 1:500,000"),
@@ -625,6 +640,7 @@ class GermanyDGM200Connector(NationalWCSConnector):
         coverage_id="dgm200", variable=ELEV_VAR, resolution_m=200,
         bbox=BoundingBox(min_lon=5.9, min_lat=47.3, max_lon=15.0, max_lat=55.1),
         license="GeoNutzV (GeoBasis-DE / BKG)", citation="BKG, Digitales Geländemodell 200",
+        auth_token_env="CAS_BKG_UUID",
     )
 
 
@@ -664,13 +680,13 @@ class GermanySoilConnector(NationalWCSConnector):
 @register("germany_lc")
 class GermanyLCConnector(NationalWCSConnector):
     slug = "germany_lc"
-    display_name = "Germany LBM-DE Land Cover"
-    base_url = "https://sgx.geodatenzentrum.de/wms_lbm_de"
+    display_name = "Germany LB-DE Land Cover"
+    base_url = "https://sgx.geodatenzentrum.de/wms_lb-de"
     protocol = "wcs"
     _config = NationalDatasetConfig(
-        slug="germany_lc", display_name="Germany LBM-DE Land Cover (BKG)",
-        wcs_url="https://sgx.geodatenzentrum.de/wms_lbm_de",
-        coverage_id="lbm_de_2021",
+        slug="germany_lc", display_name="Germany LB-DE Land Cover (BKG)",
+        wcs_url="https://sgx.geodatenzentrum.de/wms_lb-de",
+        coverage_id="2023_lb_de",
         variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
                           description="German land cover model (CORINE nomenclature, 1ha MMU)"),
         resolution_m=5, category="land_cover",
@@ -979,12 +995,12 @@ class GermanyCroplandOCConnector(NationalWCSConnector):
 class FranceSoilConnector(NationalWCSConnector):
     slug = "france_soil"
     display_name = "France Soil Map (INRAE)"
-    base_url = "https://agroenvgeo.data.inra.fr/geoserver/gissol_rmqs/wms"
+    base_url = "https://geodata.inrae.fr/geoserver/gissol_rmqs/wms"
     protocol = "wcs"
     _config = NationalDatasetConfig(
         slug="france_soil", display_name="France Soil (GIS Sol / INRAE RMQS)",
-        wcs_url="https://agroenvgeo.data.inra.fr/geoserver/gissol_rmqs/wms",
-        coverage_id="gissol_rmqs:rmqs_topsoil",
+        wcs_url="https://geodata.inrae.fr/geoserver/gissol_rmqs/wms",
+        coverage_id="gissol_rmqs:rmqs_teneur_pedo",
         variable=Variable(name="soil_properties", units="various", data_type=DataType.CONTINUOUS,
                           description="French soil monitoring network (pH, SOC, trace elements)"),
         resolution_m=1000, category="soil",
@@ -1380,12 +1396,12 @@ class ColombiaLCConnector(NationalWCSConnector):
 class LithuaniaDEMConnector(NationalWCSConnector):
     slug = "lithuania_dem"
     display_name = "Lithuania DEM (INSPIRE)"
-    base_url = "https://www.geoportal.lt/inspire-services/rest/services/INSPIRE/Elevation/MapServer/WMSServer"
+    base_url = "https://www.inspire-geoportal.lt/geoserver/el/wms"
     protocol = "wcs"
     _config = NationalDatasetConfig(
         slug="lithuania_dem", display_name="Lithuania Elevation (GIS-Centras)",
-        wcs_url="https://www.geoportal.lt/inspire-services/rest/services/INSPIRE/Elevation/MapServer/WMSServer",
-        coverage_id="0", variable=ELEV_VAR, resolution_m=10,
+        wcs_url="https://www.inspire-geoportal.lt/geoserver/el/wms",
+        coverage_id="EL.SpotElevation", variable=ELEV_VAR, resolution_m=10,
         bbox=BoundingBox(min_lon=20.9, min_lat=53.9, max_lon=26.8, max_lat=56.5),
         license="Open (Lithuania)", citation="GIS-Centras, Lithuania INSPIRE Elevation",
     )
@@ -1979,12 +1995,12 @@ class EstoniaLCConnector(NationalWCSConnector):
 class ArgentinaLCConnector(NationalWCSConnector):
     slug = "argentina_lc"
     display_name = "Argentina Land Cover (MapBiomas)"
-    base_url = "https://storage.googleapis.com/mapbiomas-public/initiatives/argentina/collection_2/coverage"
+    base_url = "https://storage.googleapis.com/mapbiomas-public/initiatives/argentina/collection-2/coverage"
     protocol = "rest"
     _config = NationalDatasetConfig(
         slug="argentina_lc",
         display_name="Argentina MapBiomas Land Cover 30m (1998-2024)",
-        wcs_url="https://storage.googleapis.com/mapbiomas-public/initiatives/argentina/collection_2/coverage",
+        wcs_url="https://storage.googleapis.com/mapbiomas-public/initiatives/argentina/collection-2/coverage",
         coverage_id="mapbiomas_argentina",
         variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
                           description="MapBiomas Argentina annual land cover (15 classes, Landsat)"),

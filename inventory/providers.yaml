@@ -43,7 +43,7 @@
 - slug: argentina_lc
   name: Argentina Land Cover (MapBiomas)
   protocol: rest
-  base_url: https://storage.googleapis.com/mapbiomas-public/initiatives/argentina/collection_2/coverage
+  base_url: https://storage.googleapis.com/mapbiomas-public/initiatives/argentina/collection-2/coverage
   resolution_m: 30.0
   bbox: [-74.0, -56.0, -53.0, -21.0]
   temporal_type: static
@@ -56,7 +56,7 @@
 - slug: argentina_soil
   name: Argentina Soil Map (INTA)
   protocol: wcs
-  base_url: http://geointa.inta.gov.ar/geoserver/wms
+  base_url: https://geo-backend.inta.gob.ar/geoserver/ows
   resolution_m: 500.0
   bbox: [-74.0, -56.0, -53.0, -21.0]
   temporal_type: static
@@ -250,8 +250,8 @@
 
 - slug: brazil_soil
   name: Brazil Soil Map (EMBRAPA)
-  protocol: wcs
-  base_url: https://geoinfo.dados.embrapa.br/geoserver/ows
+  protocol: wms
+  base_url: https://geoinfo.dados.embrapa.br/geoserver/geonode/wms
   resolution_m: 1000.0
   bbox: [-74.0, -34.0, -34.0, 6.0]
   temporal_type: static
@@ -303,7 +303,7 @@
 - slug: canopy_height
   name: ETH Canopy Height 10m
   protocol: rest
-  base_url: https://share.phys.ethz.ch/~pf/nlangdata/ETH_GlobalCanopyHeight_10m_2020_version1/3deg_cogs
+  base_url: https://libdrive.ethz.ch/index.php/s/cO8or7iOe5dT2Rt/download
   resolution_m: 10.0
   bbox: [-180.0, -56.0, 180.0, 72.0]
   temporal_type: static
@@ -940,7 +940,7 @@
 - slug: france_soil
   name: France Soil Map (INRAE)
   protocol: wcs
-  base_url: https://agroenvgeo.data.inra.fr/geoserver/gissol_rmqs/wms
+  base_url: https://geodata.inrae.fr/geoserver/gissol_rmqs/wms
   resolution_m: 1000.0
   bbox: [-5.2, 41.3, 9.6, 51.1]
   temporal_type: static
@@ -1094,14 +1094,14 @@
   status: implemented
 
 - slug: germany_lc
-  name: Germany LBM-DE Land Cover
+  name: Germany LB-DE Land Cover
   protocol: wcs
-  base_url: https://sgx.geodatenzentrum.de/wms_lbm_de
+  base_url: https://sgx.geodatenzentrum.de/wms_lb-de
   resolution_m: 5.0
   bbox: [5.9, 47.3, 15.0, 55.1]
   temporal_type: static
-  license: "GeoNutzV"
-  citation: "BKG, Landbedeckungsmodell Deutschland 2021"
+  license: "CC-BY 4.0"
+  citation: "BKG, Landbedeckung Deutschland 2023"
   datasets: 1
   variables: [land_cover]
   status: implemented
@@ -1590,7 +1590,7 @@
 - slug: lithuania_dem
   name: Lithuania DEM (INSPIRE)
   protocol: wcs
-  base_url: https://www.geoportal.lt/inspire-services/rest/services/INSPIRE/Elevation/MapServer/WMSServer
+  base_url: https://www.inspire-geoportal.lt/geoserver/el/wms
   resolution_m: 10.0
   bbox: [20.9, 53.9, 26.8, 56.5]
   temporal_type: static
@@ -1824,7 +1824,7 @@
 - slug: nlcd
   name: NLCD (US)
   protocol: wcs
-  base_url: https://dmsdata.cr.usgs.gov/geoserver
+  base_url: https://www.mrlc.gov/geoserver
   resolution_m: 30.0
   bbox: [-130.0, 22.0, -64.0, 52.0]
   temporal_type: annual
@@ -2005,8 +2005,8 @@
 
 - slug: openlandmap
   name: OpenLandMap
-  protocol: wcs
-  base_url: https://geoserver.opengeohub.org/landgisgeoserver/ows
+  protocol: rest
+  base_url: https://s3.openlandmap.org/arco
   resolution_m: 250.0
   bbox: [-180.0, -62.0, 180.0, 87.0]
   temporal_type: static

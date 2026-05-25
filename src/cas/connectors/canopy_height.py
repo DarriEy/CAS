@@ -33,7 +33,7 @@ from cas.extract.zonal import compute_zonal_stats, parse_geotiff, rasterize_geom
 
 logger = structlog.get_logger()
 
-ETH_BASE = "https://share.phys.ethz.ch/~pf/nlangdata/ETH_GlobalCanopyHeight_10m_2020_version1/3deg_cogs"
+ETH_BASE = "https://libdrive.ethz.ch/index.php/s/cO8or7iOe5dT2Rt/download"
 
 CANOPY_HEIGHT_VAR = Variable(
     name="canopy_height", units="m", data_type=DataType.CONTINUOUS,
@@ -76,7 +76,8 @@ class CanopyHeightConnector(BaseConnector):
         start_time = time.monotonic()
         bbox = _geometry_to_bbox(geometry)
         tile_name = _bbox_to_tile(bbox)
-        tile_url = f"{ETH_BASE}/ETH_GlobalCanopyHeight_10m_2020_{tile_name}_Map.tif"
+        tile_file = f"ETH_GlobalCanopyHeight_10m_2020_{tile_name}_Map.tif"
+        tile_url = f"{ETH_BASE}?path=%2F3deg_cogs&files={tile_file}"
 
         try:
             raster_bytes = await self._get_bytes(tile_url)

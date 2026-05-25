@@ -66,7 +66,7 @@ AVAILABLE_YEARS = [2001, 2004, 2006, 2008, 2011, 2013, 2016, 2019, 2021]
 class NLCDConnector(BaseConnector):
     slug = "nlcd"
     display_name = "NLCD (US)"
-    base_url = "https://dmsdata.cr.usgs.gov/geoserver"
+    base_url = "https://www.mrlc.gov/geoserver"
     protocol = "wcs"
 
     async def list_datasets(self) -> list[Dataset]:
@@ -101,8 +101,8 @@ class NLCDConnector(BaseConnector):
             target = time_range.start.year
             year = min(AVAILABLE_YEARS, key=lambda y: abs(y - target))
 
-        layer = f"mrlc_Land-Cover-Native_conus_{year}_data"
-        wcs_url = f"{self.base_url}/{layer}/wcs"
+        layer = f"mrlc_download:NLCD_{year}_Land_Cover_L48"
+        wcs_url = f"{self.base_url}/mrlc_download/wcs"
 
         params = {
             "service": "WCS",
