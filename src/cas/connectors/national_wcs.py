@@ -4251,3 +4251,216 @@ class IcelandSoilConnector(NationalWCSConnector):
         license="Open (LMI)",
         citation="AUI/NLSI, Jardvegsrof (Soil Erosion Map of Iceland)",
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  FILLING THIN COUNTRIES — adding missing layer types
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("portugal_geology")
+class PortugalGeologyConnector(NationalWCSConnector):
+    slug = "portugal_geology"
+    display_name = "Portugal Geological Map (LNEG)"
+    base_url = "https://sig.lneg.pt/server/services/CGP1M/MapServer/WMSServer"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="portugal_geology",
+        display_name="Portugal Geological Map 1:1M (LNEG)",
+        wcs_url="https://sig.lneg.pt/server/services/CGP1M/MapServer/WMSServer",
+        coverage_id="0",
+        variable=Variable(name="geology", units="class", data_type=DataType.CATEGORICAL,
+                          description="Portuguese geological units 1:1,000,000"),
+        resolution_m=1000, category="geology",
+        bbox=BoundingBox(min_lon=-9.5, min_lat=36.9, max_lon=-6.2, max_lat=42.2),
+        license="Open (LNEG)", citation="LNEG, Carta Geológica de Portugal",
+    )
+
+
+@register("colombia_soil")
+class ColombiaSoilConnector(NationalWCSConnector):
+    slug = "colombia_soil"
+    display_name = "Colombia Soil Map (IGAC)"
+    base_url = "https://geocarto.igac.gov.co/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="colombia_soil",
+        display_name="Colombia Soil Map (IGAC)",
+        wcs_url="https://geocarto.igac.gov.co/geoserver/wms",
+        coverage_id="igac:suelos_general",
+        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="Colombian soil classification"),
+        resolution_m=100, category="soil",
+        bbox=BoundingBox(min_lon=-82, min_lat=-5, max_lon=-67, max_lat=13),
+        license="Open (IGAC)", citation="IGAC, Suelos de Colombia",
+    )
+
+
+@register("peru_soil")
+class PeruSoilConnector(NationalWCSConnector):
+    slug = "peru_soil"
+    display_name = "Peru Soil Map (MIDAGRI)"
+    base_url = "https://geoservicios.midagri.gob.pe/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="peru_soil",
+        display_name="Peru Soil Capacity Map (MIDAGRI)",
+        wcs_url="https://geoservicios.midagri.gob.pe/geoserver/wms",
+        coverage_id="midagri:capacidad_uso_suelo",
+        variable=Variable(name="soil_capacity", units="class", data_type=DataType.CATEGORICAL,
+                          description="Peruvian soil use capacity classification"),
+        resolution_m=250, category="soil",
+        bbox=BoundingBox(min_lon=-81.3, min_lat=-18.4, max_lon=-68.7, max_lat=-0.04),
+        license="Open (MIDAGRI)", citation="MIDAGRI, Capacidad de Uso Mayor de Suelos",
+    )
+
+
+@register("slovenia_soil")
+class SloveniaSoilConnector(NationalWCSConnector):
+    slug = "slovenia_soil"
+    display_name = "Slovenia Soil Map (MKGP)"
+    base_url = "https://rkg.gov.si/GERK/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="slovenia_soil",
+        display_name="Slovenia Soil Map (MKGP/ARSO)",
+        wcs_url="https://rkg.gov.si/GERK/wms",
+        coverage_id="talnirazredi",
+        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="Slovenian soil classification"),
+        resolution_m=25, category="soil",
+        bbox=BoundingBox(min_lon=13.4, min_lat=45.4, max_lon=16.6, max_lat=46.9),
+        license="Open (MKGP)", citation="MKGP, Talni razredi",
+    )
+
+
+@register("slovenia_lc")
+class SloveniaLCConnector(NationalWCSConnector):
+    slug = "slovenia_lc"
+    display_name = "Slovenia Land Use (MKGP)"
+    base_url = "https://rkg.gov.si/GERK/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="slovenia_lc",
+        display_name="Slovenia GERK Land Use (MKGP)",
+        wcs_url="https://rkg.gov.si/GERK/wms",
+        coverage_id="GERK_VRS",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Slovenian agricultural land use register"),
+        resolution_m=5, category="land_cover",
+        bbox=BoundingBox(min_lon=13.4, min_lat=45.4, max_lon=16.6, max_lat=46.9),
+        license="Open (MKGP)", citation="MKGP, GERK Register",
+    )
+
+
+@register("croatia_lc")
+class CroatiaLCConnector(NationalWCSConnector):
+    slug = "croatia_lc"
+    display_name = "Croatia CORINE Land Cover"
+    base_url = "https://geoportal.dgu.hr/services/inspire/lc_wms/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="croatia_lc",
+        display_name="Croatia CORINE Land Cover (DGU INSPIRE)",
+        wcs_url="https://geoportal.dgu.hr/services/inspire/lc_wms/wms",
+        coverage_id="LC.LandCoverSurface",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Croatian land cover (CORINE nomenclature)"),
+        resolution_m=100, category="land_cover",
+        bbox=BoundingBox(min_lon=13.5, min_lat=42.4, max_lon=19.5, max_lat=46.6),
+        license="Open (DGU)", citation="DGU, Croatia INSPIRE Land Cover",
+    )
+
+
+@register("slovakia_soil")
+class SlovakiaSoilConnector(NationalWCSConnector):
+    slug = "slovakia_soil"
+    display_name = "Slovakia Soil Map (VUPOP)"
+    base_url = "https://zbgisws.skgeodesy.sk/inspire_wcs_so/service.svc/get"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="slovakia_soil",
+        display_name="Slovakia Soil Map (VUPOP INSPIRE)",
+        wcs_url="https://zbgisws.skgeodesy.sk/inspire_wcs_so/service.svc/get",
+        coverage_id="SO.SoilBody",
+        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="Slovak soil classification"),
+        resolution_m=100, category="soil",
+        bbox=BoundingBox(min_lon=16.8, min_lat=47.7, max_lon=22.6, max_lat=49.6),
+        license="Open (VUPOP)", citation="VUPOP, Soil Map of Slovakia",
+    )
+
+
+@register("latvia_soil")
+class LatviaSoilConnector(NationalWCSConnector):
+    slug = "latvia_soil"
+    display_name = "Latvia Soil Map"
+    base_url = "https://karte.vmd.gov.lv/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="latvia_soil",
+        display_name="Latvia Agricultural Soil Map (VMD)",
+        wcs_url="https://karte.vmd.gov.lv/geoserver/wms",
+        coverage_id="vmd:augsnes",
+        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="Latvian agricultural soil classification"),
+        resolution_m=50, category="soil",
+        bbox=BoundingBox(min_lon=20.9, min_lat=55.7, max_lon=28.2, max_lat=58.1),
+        license="Open (VMD)", citation="VMD, Latvia Soil Map",
+    )
+
+
+@register("lithuania_soil")
+class LithuaniaSoilConnector(NationalWCSConnector):
+    slug = "lithuania_soil"
+    display_name = "Lithuania Soil Map"
+    base_url = "https://www.geoportal.lt/inspire-services/rest/services/INSPIRE/Soil/MapServer/WMSServer"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="lithuania_soil",
+        display_name="Lithuania Soil Map (GIS-Centras INSPIRE)",
+        wcs_url="https://www.geoportal.lt/inspire-services/rest/services/INSPIRE/Soil/MapServer/WMSServer",
+        coverage_id="0",
+        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="Lithuanian soil classification"),
+        resolution_m=100, category="soil",
+        bbox=BoundingBox(min_lon=20.9, min_lat=53.9, max_lon=26.8, max_lat=56.5),
+        license="Open (Lithuania)", citation="GIS-Centras, Lithuania INSPIRE Soil",
+    )
+
+
+@register("indonesia_lc")
+class IndonesiaLCConnector(NationalWCSConnector):
+    slug = "indonesia_lc"
+    display_name = "Indonesia Land Cover (KLHK)"
+    base_url = "https://geoportal.menlhk.go.id/server/services"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="indonesia_lc",
+        display_name="Indonesia Land Cover (KLHK/MoEF)",
+        wcs_url="https://geoportal.menlhk.go.id/server/services/LP/MapServer/WCSServer",
+        coverage_id="1",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Indonesian land cover classification (23 classes)"),
+        resolution_m=30, category="land_cover",
+        bbox=BoundingBox(min_lon=95, min_lat=-11, max_lon=141, max_lat=6),
+        license="Open (KLHK)", citation="KLHK, Peta Penutupan Lahan Indonesia",
+    )
+
+
+@register("taiwan_soil")
+class TaiwanSoilConnector(NationalWCSConnector):
+    slug = "taiwan_soil"
+    display_name = "Taiwan Soil Map (TARI)"
+    base_url = "https://tgos.nat.gov.tw/tgos/web/tgos_MapProxy.ashx"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="taiwan_soil",
+        display_name="Taiwan Soil Classification (TARI/COA)",
+        wcs_url="https://tgos.nat.gov.tw/tgos/web/tgos_MapProxy.ashx",
+        coverage_id="TARI_SOIL",
+        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="Taiwanese soil classification"),
+        resolution_m=50, category="soil",
+        bbox=BoundingBox(min_lon=119.9, min_lat=21.9, max_lon=122.1, max_lat=25.3),
+        license="Open (TARI)", citation="TARI/COA, Taiwan Soil Map",
+    )
