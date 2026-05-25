@@ -8,7 +8,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 
-from cas.core.models import AttributeRequest, AttributeResponse
+from cas.core.models import (
+    AttributeRequest,
+    AttributeResponse,
+    BatchAttributeRequest,
+    BatchAttributeResponse,
+)
 from cas.core.registry import discover, get_connector, list_providers
 
 
@@ -34,6 +39,15 @@ def create_app() -> FastAPI:
 
         try:
             return await extract(request)
+        except Exception as e:
+            raise HTTPException(status_code=502, detail=str(e)) from e
+
+    @app.post("/api/v1/extract/batch", response_model=BatchAttributeResponse)
+    async def batch_extract_attributes(request: BatchAttributeRequest):
+        from cas.extract.engine import batch_extract
+
+        try:
+            return await batch_extract(request)
         except Exception as e:
             raise HTTPException(status_code=502, detail=str(e)) from e
 
@@ -68,6 +82,12 @@ def create_app() -> FastAPI:
 
     @app.get("/health")
     async def health_check():
-        return {"status": "ok", "providers_registered": len(list_providers())}
+        from cas.extract.engine import get_result_cache
+
+        return {
+            "status": "ok",
+            "providers_registered": len(list_providers()),
+            "cache": get_result_cache().stats(),
+        }
 
     return app

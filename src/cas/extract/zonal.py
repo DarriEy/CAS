@@ -91,9 +91,15 @@ def rasterize_geometry(
 ) -> np.ndarray:
     """Create a boolean mask from a GeoJSON geometry on the raster grid.
 
+    For Point geometries, returns a mask with a single True pixel at the
+    point location. For Polygon/MultiPolygon, rasterizes the full geometry.
+
     If src_crs is provided and differs from EPSG:4326, the geometry
     is reprojected to the raster's native CRS before masking.
     """
+    if geometry_dict.get("type") == "Point":
+        return _point_mask(geometry_dict, shape, transform, src_crs)
+
     from rasterio.features import geometry_mask
     from shapely.geometry import shape as shapely_shape
 
@@ -113,6 +119,30 @@ def rasterize_geometry(
         all_touched=True,
     )
     return mask  # type: ignore[no-any-return]
+
+
+def _point_mask(
+    geometry_dict: dict,
+    shape: tuple[int, int],
+    transform: object,
+    src_crs: object | None = None,
+) -> np.ndarray:
+    """Create a single-pixel boolean mask for a Point geometry."""
+    from rasterio.transform import rowcol
+
+    lon, lat = geometry_dict["coordinates"][0], geometry_dict["coordinates"][1]
+
+    if src_crs and str(src_crs) != "EPSG:4326":
+        from pyproj import Transformer
+
+        transformer = Transformer.from_crs("EPSG:4326", str(src_crs), always_xy=True)
+        lon, lat = transformer.transform(lon, lat)
+
+    row, col = rowcol(transform, lon, lat)
+    mask = np.zeros(shape, dtype=bool)
+    if 0 <= row < shape[0] and 0 <= col < shape[1]:
+        mask[row, col] = True
+    return mask
 
 
 def parse_geotiff(data: bytes) -> tuple[np.ndarray, object, float | None, object]:

@@ -57,6 +57,10 @@ class WCSMixin:
     @staticmethod
     def _geometry_to_bbox(geometry: Geometry) -> tuple[float, float, float, float]:
         """Extract bounding box from a GeoJSON geometry."""
+        if geometry.type == "Point":
+            lon, lat = geometry.coordinates[0], geometry.coordinates[1]
+            buf = 0.001
+            return (lon - buf, lat - buf, lon + buf, lat + buf)
         if geometry.type == "Polygon":
             coords = geometry.coordinates[0]
         else:

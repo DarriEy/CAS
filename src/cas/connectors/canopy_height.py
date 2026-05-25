@@ -107,6 +107,10 @@ class CanopyHeightConnector(BaseConnector):
 
 
 def _geometry_to_bbox(geometry: Geometry) -> tuple[float, float, float, float]:
+    if geometry.type == "Point":
+        lon, lat = geometry.coordinates[0], geometry.coordinates[1]
+        buf = 0.001
+        return (lon - buf, lat - buf, lon + buf, lat + buf)
     if geometry.type == "Polygon":
         coords = geometry.coordinates[0]
     else:

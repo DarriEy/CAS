@@ -36,6 +36,19 @@ def sample_geometry() -> Geometry:
     )
 
 
+@pytest.fixture(autouse=True)
+def _clear_result_cache():
+    """Clear the engine's result cache between tests."""
+    from cas.extract.engine import get_result_cache
+    get_result_cache().clear()
+
+
+@pytest.fixture
+def sample_point_geometry() -> Geometry:
+    """Point in central Kansas."""
+    return Geometry(type="Point", coordinates=[-96.55, 39.05])
+
+
 @pytest.fixture
 def sample_dataset() -> Dataset:
     return Dataset(

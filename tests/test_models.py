@@ -22,9 +22,13 @@ class TestGeometry:
         assert sample_geometry.type == "Polygon"
         assert len(sample_geometry.coordinates[0]) == 5
 
-    def test_rejects_point(self):
-        with pytest.raises(ValidationError):
-            Geometry(type="Point", coordinates=[0, 0])
+    def test_accepts_point(self):
+        geom = Geometry(type="Point", coordinates=[-96.55, 39.05])
+        assert geom.type == "Point"
+        assert geom.is_point
+
+    def test_polygon_is_not_point(self, sample_geometry):
+        assert not sample_geometry.is_point
 
     def test_multipolygon(self):
         geom = Geometry(

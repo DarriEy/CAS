@@ -41,6 +41,10 @@ EU_BBOX = BoundingBox(min_lon=-32, min_lat=27, max_lon=45, max_lat=72)
 
 
 def _geometry_to_bbox(geometry: Geometry) -> tuple[float, float, float, float]:
+    if geometry.type == "Point":
+        lon, lat = geometry.coordinates[0], geometry.coordinates[1]
+        buf = 0.001
+        return (lon - buf, lat - buf, lon + buf, lat + buf)
     if geometry.type == "Polygon":
         coords = geometry.coordinates[0]
     else:

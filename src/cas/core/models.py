@@ -105,8 +105,12 @@ class Dataset(BaseModel):
 
 
 class Geometry(BaseModel):
-    type: str = Field(pattern="^(Polygon|MultiPolygon)$")
+    type: str = Field(pattern="^(Point|Polygon|MultiPolygon)$")
     coordinates: list
+
+    @property
+    def is_point(self) -> bool:
+        return self.type == "Point"
 
 
 class TimeRange(BaseModel):
@@ -142,6 +146,25 @@ class AttributeResponse(BaseModel):
     geometry_hash: str
     results: list[AttributeResult]
     warnings: list[str] = Field(default_factory=list)
+    elapsed_ms: int
+
+
+# ── Batch Request / Response ──────────────────────────────────────
+
+
+class BatchAttributeRequest(BaseModel):
+    geometries: list[Geometry] = Field(min_length=1, max_length=1000)
+    dataset_ids: list[str] = Field(min_length=1)
+    time_range: TimeRange | None = None
+    aggregation: AggregationMethod = AggregationMethod.MEAN
+    target_crs: str = "EPSG:4326"
+
+
+class BatchAttributeResponse(BaseModel):
+    request_id: str
+    responses: list[AttributeResponse]
+    total_geometries: int
+    total_results: int
     elapsed_ms: int
 
 

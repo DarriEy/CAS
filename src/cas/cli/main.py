@@ -26,7 +26,10 @@ def cli(ctx: click.Context) -> None:
 
 
 @cli.command()
-@click.option("--geometry", "-g", required=True, help="GeoJSON geometry string or @filepath")
+@click.option(
+    "--geometry", "-g", required=True,
+    help="GeoJSON geometry (Point, Polygon, MultiPolygon) or @filepath",
+)
 @click.option("--datasets", "-d", required=True, multiple=True, help="Dataset ID(s) to query")
 @click.option("--start", default=None, help="Start time (ISO 8601) for dynamic datasets")
 @click.option("--end", default=None, help="End time (ISO 8601) for dynamic datasets")
@@ -37,9 +40,11 @@ def extract(geometry, datasets, start, end, aggregation, output):
     from cas.core.models import (
         AggregationMethod,
         AttributeRequest,
+        BatchAttributeRequest,
         Geometry,
         TimeRange,
     )
+    from cas.extract.engine import batch_extract
     from cas.extract.engine import extract as run_extract
 
     if geometry.startswith("@"):
@@ -47,9 +52,6 @@ def extract(geometry, datasets, start, end, aggregation, output):
             geom_data = json.load(f)
     else:
         geom_data = json.loads(geometry)
-
-    if "geometry" in geom_data:
-        geom_data = geom_data["geometry"]
 
     time_range = None
     if start and end:
@@ -60,11 +62,41 @@ def extract(geometry, datasets, start, end, aggregation, output):
             end=datetime.fromisoformat(end),
         )
 
+    agg = AggregationMethod(aggregation)
+    ds_ids = list(datasets)
+
+    if geom_data.get("type") == "FeatureCollection":
+        geometries = [
+            Geometry(**f["geometry"]) for f in geom_data["features"]
+        ]
+        batch_request = BatchAttributeRequest(
+            geometries=geometries,
+            dataset_ids=ds_ids,
+            time_range=time_range,
+            aggregation=agg,
+        )
+
+        async def _run():
+            response = await batch_extract(batch_request)
+            result_json = response.model_dump_json(indent=2)
+            if output:
+                with open(output, "w") as f:
+                    f.write(result_json)
+                click.echo(f"Results written to {output}")
+            else:
+                click.echo(result_json)
+
+        asyncio.run(_run())
+        return
+
+    if "geometry" in geom_data:
+        geom_data = geom_data["geometry"]
+
     request = AttributeRequest(
         geometry=Geometry(**geom_data),
-        dataset_ids=list(datasets),
+        dataset_ids=ds_ids,
         time_range=time_range,
-        aggregation=AggregationMethod(aggregation),
+        aggregation=agg,
     )
 
     async def _run():

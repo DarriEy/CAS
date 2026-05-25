@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import numpy as np
+from rasterio.transform import from_bounds
 
 from cas.core.models import AggregationMethod, DataType
-from cas.extract.zonal import compute_zonal_stats
+from cas.extract.zonal import compute_zonal_stats, rasterize_geometry
 
 
 class TestContinuousStats:
@@ -117,3 +118,56 @@ class TestCategoricalStats:
 
 # Need pytest import for approx
 import pytest  # noqa: E402
+
+
+class TestPointMask:
+    def _make_raster_and_transform(self):
+        raster = np.array([
+            [100, 200, 300],
+            [400, 500, 600],
+            [700, 800, 900],
+        ], dtype=np.float32)
+        transform = from_bounds(-97.0, 39.0, -96.0, 40.0, 3, 3)
+        return raster, transform
+
+    def test_point_mask_single_pixel(self):
+        raster, transform = self._make_raster_and_transform()
+        geom = {"type": "Point", "coordinates": [-96.5, 39.5]}
+        mask = rasterize_geometry(geom, raster.shape, transform)
+        assert mask.sum() == 1
+        value, coverage, count = compute_zonal_stats(
+            raster, mask, None, AggregationMethod.MEAN, DataType.CONTINUOUS,
+        )
+        assert value == 500.0
+        assert coverage == 1.0
+        assert count == 1
+
+    def test_point_out_of_bounds(self):
+        raster, transform = self._make_raster_and_transform()
+        geom = {"type": "Point", "coordinates": [0.0, 0.0]}
+        mask = rasterize_geometry(geom, raster.shape, transform)
+        assert mask.sum() == 0
+
+    def test_point_at_nodata(self):
+        raster, transform = self._make_raster_and_transform()
+        raster[1, 1] = -9999.0
+        geom = {"type": "Point", "coordinates": [-96.5, 39.5]}
+        mask = rasterize_geometry(geom, raster.shape, transform)
+        value, coverage, count = compute_zonal_stats(
+            raster, mask, -9999.0, AggregationMethod.MEAN, DataType.CONTINUOUS,
+        )
+        assert value is None
+        assert coverage == 0.0
+        assert count == 0
+
+    def test_polygon_still_works(self):
+        raster, transform = self._make_raster_and_transform()
+        geom = {
+            "type": "Polygon",
+            "coordinates": [[
+                [-97.0, 39.0], [-96.0, 39.0], [-96.0, 40.0],
+                [-97.0, 40.0], [-97.0, 39.0],
+            ]],
+        }
+        mask = rasterize_geometry(geom, raster.shape, transform)
+        assert mask.sum() == 9
