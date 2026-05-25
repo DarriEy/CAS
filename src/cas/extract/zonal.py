@@ -155,3 +155,25 @@ def parse_geotiff(data: bytes) -> tuple[np.ndarray, object, float | None, object
         nodata = src.nodata
         crs = src.crs
     return arr, transform, nodata, crs
+
+
+def geometry_to_bbox(geometry) -> tuple[float, float, float, float]:
+    """Convert a Geometry (Point/Polygon/MultiPolygon) to (min_lon, min_lat, max_lon, max_lat).
+
+    For Points, adds a small buffer (~100m) around the coordinate.
+    Accepts Geometry model instances or raw dicts with 'type' and 'coordinates'.
+    """
+    gtype = geometry.type if hasattr(geometry, "type") else geometry["type"]
+    coords_raw = geometry.coordinates if hasattr(geometry, "coordinates") else geometry["coordinates"]
+
+    if gtype == "Point":
+        lon, lat = coords_raw[0], coords_raw[1]
+        buf = 0.001
+        return (lon - buf, lat - buf, lon + buf, lat + buf)
+    if gtype == "Polygon":
+        coords = coords_raw[0]
+    else:
+        coords = [c for ring in coords_raw for c in ring[0]]
+    lons = [c[0] for c in coords]
+    lats = [c[1] for c in coords]
+    return (min(lons), min(lats), max(lons), max(lats))

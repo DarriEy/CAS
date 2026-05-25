@@ -35,7 +35,7 @@ from cas.core.models import (
     Variable,
 )
 from cas.core.registry import register
-from cas.extract.zonal import compute_zonal_stats, parse_geotiff, rasterize_geometry
+from cas.extract.zonal import geometry_to_bbox, compute_zonal_stats, parse_geotiff, rasterize_geometry
 
 logger = structlog.get_logger()
 
@@ -100,7 +100,7 @@ class MERITDEMConnector(BaseConnector):
     ) -> AttributeResult:
         start_time = time.monotonic()
         user, password = self._get_credentials()
-        bbox = _geometry_to_bbox(geometry)
+        bbox = geometry_to_bbox(geometry)
 
         # MERIT tiles are 5x5 degrees, named by SW corner: e.g. n30w090
         tile_name = _bbox_to_tile(bbox)
@@ -157,19 +157,6 @@ class MERITDEMConnector(BaseConnector):
             provenance=f"MERIT DEM tile: {tile_name}",
         )
 
-
-def _geometry_to_bbox(geometry: Geometry) -> tuple[float, float, float, float]:
-    if geometry.type == "Point":
-        lon, lat = geometry.coordinates[0], geometry.coordinates[1]
-        buf = 0.001
-        return (lon - buf, lat - buf, lon + buf, lat + buf)
-    if geometry.type == "Polygon":
-        coords = geometry.coordinates[0]
-    else:
-        coords = [c for ring in geometry.coordinates for c in ring[0]]
-    lons = [c[0] for c in coords]
-    lats = [c[1] for c in coords]
-    return (min(lons), min(lats), max(lons), max(lats))
 
 
 def _bbox_to_tile(bbox: tuple[float, float, float, float]) -> str:

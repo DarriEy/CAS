@@ -27,6 +27,7 @@ from cas.core.models import (
     Variable,
 )
 from cas.core.registry import register
+from cas.extract.zonal import geometry_to_bbox
 
 logger = structlog.get_logger()
 
@@ -103,7 +104,7 @@ class ISRICSoilGridsConnector(BaseConnector):
             raise DataFormatError(self.slug, f"Unknown variable: {var_name}")
 
         var_meta = SOILGRIDS_VARIABLES[var_name]
-        bbox = _geometry_to_bbox(geometry)
+        bbox = geometry_to_bbox(geometry)
 
         sample_points = _generate_grid_points(bbox, GRID_SPACING_DEG)
         if not sample_points:
@@ -180,19 +181,6 @@ class ISRICSoilGridsConnector(BaseConnector):
             except Exception:
                 return None
 
-
-def _geometry_to_bbox(geometry: Geometry) -> tuple[float, float, float, float]:
-    if geometry.type == "Point":
-        lon, lat = geometry.coordinates[0], geometry.coordinates[1]
-        buf = 0.001
-        return (lon - buf, lat - buf, lon + buf, lat + buf)
-    if geometry.type == "Polygon":
-        coords = geometry.coordinates[0]
-    else:
-        coords = [c for ring in geometry.coordinates for c in ring[0]]
-    lons = [c[0] for c in coords]
-    lats = [c[1] for c in coords]
-    return (min(lons), min(lats), max(lons), max(lats))
 
 
 def _generate_grid_points(

@@ -32,7 +32,7 @@ from cas.core.models import (
     Variable,
 )
 from cas.core.registry import register
-from cas.extract.zonal import compute_zonal_stats, rasterize_geometry
+from cas.extract.zonal import compute_zonal_stats, geometry_to_bbox, rasterize_geometry
 
 logger = structlog.get_logger()
 
@@ -141,7 +141,7 @@ class OpenLandMapConnector(BaseConnector):
 
         filename, var_meta = OLM_VARIABLES[var_key]
         cog_url = f"{S3_BASE}/{filename}"
-        bbox = self._geometry_to_bbox(geometry)
+        bbox = geometry_to_bbox(geometry)
 
         import asyncio
         loop = asyncio.get_event_loop()
@@ -174,16 +174,3 @@ class OpenLandMapConnector(BaseConnector):
             provenance=f"COG: {filename}",
         )
 
-    @staticmethod
-    def _geometry_to_bbox(geometry: Geometry) -> tuple[float, float, float, float]:
-        if geometry.type == "Point":
-            lon, lat = geometry.coordinates[0], geometry.coordinates[1]
-            buf = 0.01
-            return (lon - buf, lat - buf, lon + buf, lat + buf)
-        if geometry.type == "Polygon":
-            coords = geometry.coordinates[0]
-        else:
-            coords = [c for ring in geometry.coordinates for c in ring[0]]
-        lons = [c[0] for c in coords]
-        lats = [c[1] for c in coords]
-        return (min(lons), min(lats), max(lons), max(lats))

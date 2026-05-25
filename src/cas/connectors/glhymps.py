@@ -32,6 +32,7 @@ from cas.core.models import (
     Variable,
 )
 from cas.core.registry import register
+from cas.extract.zonal import geometry_to_bbox
 
 logger = structlog.get_logger()
 
@@ -103,7 +104,7 @@ class GLHYMPSConnector(BaseConnector):
                 "Provides local access to GLHYMPS permeability and porosity data.",
             ) from exc
 
-        bbox = _geometry_to_bbox(geometry)
+        bbox = geometry_to_bbox(geometry)
         center_lon = (bbox[0] + bbox[2]) / 2
         center_lat = (bbox[1] + bbox[3]) / 2
 
@@ -132,16 +133,3 @@ class GLHYMPSConnector(BaseConnector):
             provenance="pygeoglim point query",
         )
 
-
-def _geometry_to_bbox(geometry: Geometry) -> tuple[float, float, float, float]:
-    if geometry.type == "Point":
-        lon, lat = geometry.coordinates[0], geometry.coordinates[1]
-        buf = 0.001
-        return (lon - buf, lat - buf, lon + buf, lat + buf)
-    if geometry.type == "Polygon":
-        coords = geometry.coordinates[0]
-    else:
-        coords = [c for ring in geometry.coordinates for c in ring[0]]
-    lons = [c[0] for c in coords]
-    lats = [c[1] for c in coords]
-    return (min(lons), min(lats), max(lons), max(lats))
