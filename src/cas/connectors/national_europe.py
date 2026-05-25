@@ -24,6 +24,7 @@ class NorwayDEMConnector(NationalWCSConnector):
         resolution_m=1, crs="EPSG:25833",
         bbox=BoundingBox(min_lon=4.5, min_lat=57.9, max_lon=31.2, max_lat=71.2),
         license="CC-0 (Norway Open Data)", citation="Kartverket, National Detailed Height Model",
+        use_wms=True,
     )
 
 
@@ -70,10 +71,11 @@ class EstoniaDEMConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="estonia_dem", display_name="Estonia DEM 1m (Maa-amet)",
         wcs_url="https://kaart.maaamet.ee/wms/fotokaart",
-        coverage_id="dem_1m", variable=ELEV_VAR,
+        coverage_id="MA-FOTOKAART", variable=ELEV_VAR,
         resolution_m=1,
         bbox=BoundingBox(min_lon=21.8, min_lat=57.5, max_lon=28.2, max_lat=59.7),
         license="Estonian Open Data License", citation="Maa-amet, Estonian Land Board",
+        use_wms=True,
     )
 
 
@@ -90,10 +92,11 @@ class UKLiDARConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="uk_lidar", display_name="UK LiDAR DTM 1m (EA England)",
         wcs_url="https://environment.data.gov.uk/spatialdata/lidar-composite-digital-terrain-model-dtm-1m/wcs",
-        coverage_id="lidar-composite-digital-terrain-model-dtm-1m",
+        coverage_id="Lidar_Composite_DTM_1m",
         variable=ELEV_VAR, resolution_m=1, protocol_version="2.0.1",
         bbox=BoundingBox(min_lon=-6.5, min_lat=49.8, max_lon=2.0, max_lat=55.9),
         license="Open Government Licence v3", citation="Environment Agency, LiDAR Composite DTM",
+        use_wms=True,
     )
 
 
@@ -154,10 +157,11 @@ class PolandNMTConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="poland_nmt", display_name="Poland NMT 1m (GUGiK)",
         wcs_url="https://mapy.geoportal.gov.pl/wss/service/PZGIK/NMT/GRID1/WCS/DigitalTerrainModel",
-        coverage_id="DigitalTerrainModel",
+        coverage_id="DTM_PL-KRON86-NH",
         variable=ELEV_VAR, resolution_m=1,
         bbox=BoundingBox(min_lon=14.1, min_lat=49.0, max_lon=24.2, max_lat=54.9),
         license="Open (Poland)", citation="GUGiK, Numeryczny Model Terenu",
+        use_wms=True,
     )
 
 
@@ -170,9 +174,10 @@ class SloveniaDEMConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="slovenia_dem", display_name="Slovenia DMV 1m (GURS)",
         wcs_url="https://ipi.eprostor.gov.si/wms-si-gurs-dts/wms",
-        coverage_id="DMV", variable=ELEV_VAR, resolution_m=1,
+        coverage_id="SI.GURS.ZPDZ:PREGLEDNI_DOF", variable=ELEV_VAR, resolution_m=1,
         bbox=BoundingBox(min_lon=13.4, min_lat=45.4, max_lon=16.6, max_lat=46.9),
         license="CC-BY 4.0", citation="GURS, Digitalni Model Višin",
+        use_wms=True,
     )
 
 
@@ -185,12 +190,13 @@ class NetherlandsSoilConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="netherlands_soil", display_name="Netherlands Bodemkaart 1:50k (BRO/PDOK)",
         wcs_url="https://service.pdok.nl/bzk/bro-bodemkaart/wms/v1_0",
-        coverage_id="bodemkaart",
+        coverage_id="soilarea",
         variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
                           description="Dutch soil classification 1:50,000"),
         resolution_m=50, category="soil",
         bbox=BoundingBox(min_lon=3.3, min_lat=50.7, max_lon=7.3, max_lat=53.6),
         license="CC-0", citation="BRO, Bodemkaart van Nederland 1:50.000",
+        use_wms=True,
     )
 
 
@@ -203,12 +209,13 @@ class FinlandSoilConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="finland_soil", display_name="Finland Soil Map (GTK Maaperäkartta)",
         wcs_url="https://gtkdata.gtk.fi/arcgis/services/Rajapinnat/GTK_Maapera_WMS/MapServer/WMSServer",
-        coverage_id="0",
+        coverage_id="Turvetuotantoalueiden_maanpeite_1.0/202350261",
         variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
                           description="Finnish quaternary deposits classification"),
         resolution_m=20, category="soil",
         bbox=BoundingBox(min_lon=19.1, min_lat=59.5, max_lon=31.6, max_lat=70.1),
         license="CC-BY 4.0", citation="GTK, Geological Survey of Finland",
+        use_wms=True,
     )
 
 
@@ -229,6 +236,7 @@ class FinlandForestHeightConnector(NationalWCSConnector):
         resolution_m=16, category="vegetation",
         bbox=BoundingBox(min_lon=19.1, min_lat=59.5, max_lon=31.6, max_lat=70.1),
         license="CC-BY 4.0", citation="LUKE, Multi-Source National Forest Inventory (MVMI)",
+        use_wms=True,
     )
 
 
@@ -248,6 +256,7 @@ class FinlandSiteTypeConnector(NationalWCSConnector):
         resolution_m=16, category="vegetation",
         bbox=BoundingBox(min_lon=19.1, min_lat=59.5, max_lon=31.6, max_lat=70.1),
         license="CC-BY 4.0", citation="LUKE, Multi-Source National Forest Inventory (MVMI)",
+        use_wms=True,
     )
 
 
@@ -264,12 +273,13 @@ class NorwayAR5Connector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="norway_ar5", display_name="Norway AR5 Land Cover 1:5k (NIBIO)",
         wcs_url="https://wms.nibio.no/cgi-bin/ar5",
-        coverage_id="ar5_flate",
+        coverage_id="AR5",
         variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
                           description="Norwegian land resource classification (104 classes)"),
         resolution_m=5, category="land_cover",
         bbox=BoundingBox(min_lon=4.5, min_lat=57.9, max_lon=31.2, max_lat=71.2),
         license="CC-BY 4.0 (NLOD)", citation="NIBIO, AR5 Arealressurskart",
+        use_wms=True,
     )
 
 
@@ -286,10 +296,11 @@ class GermanyDGM200Connector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="germany_dgm200", display_name="Germany DGM200 200m (BKG)",
         wcs_url="https://sgx.geodatenzentrum.de/wcs_dgm200_inspire",
-        coverage_id="dgm200", variable=ELEV_VAR, resolution_m=200,
+        coverage_id="dgm200_inspire__EL.GridCoverage", variable=ELEV_VAR, resolution_m=200,
         bbox=BoundingBox(min_lon=5.9, min_lat=47.3, max_lon=15.0, max_lat=55.1),
         license="GeoNutzV (GeoBasis-DE / BKG)", citation="BKG, Digitales Geländemodell 200",
         auth_token_env="CAS_BKG_UUID",
+        use_wms=True,
     )
 
 
@@ -302,9 +313,10 @@ class GermanyNRWDGM1Connector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="germany_nrw_dgm1", display_name="NRW (Germany) DGM 1m LiDAR",
         wcs_url="https://www.wcs.nrw.de/geobasis/wcs_nw_dgm",
-        coverage_id="nw_dgm", variable=ELEV_VAR, resolution_m=1,
+        coverage_id="WCS_NW_DGM", variable=ELEV_VAR, resolution_m=1,
         bbox=BoundingBox(min_lon=5.9, min_lat=50.3, max_lon=9.5, max_lat=52.6),
         license="DL-DE/Zero", citation="Geobasis NRW, Digitales Geländemodell 1m",
+        use_wms=True,
     )
 
 
@@ -526,6 +538,7 @@ class SpainClayMineralsConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=-18.2, min_lat=27.6, max_lon=4.4, max_lat=43.8),
         license="Open (IGME)",
         citation="IGME, Mapa de Rocas y Minerales Industriales - Arcillas",
+        use_wms=True,
     )
 
 
@@ -549,6 +562,7 @@ class IrelandCORINEConnector(NationalWCSConnector):
         resolution_m=100, category="land_cover",
         bbox=BoundingBox(min_lon=-10.5, min_lat=51.4, max_lon=-6.0, max_lat=55.4),
         license="CC-BY 4.0", citation="EPA, CORINE Land Cover Ireland",
+        use_wms=True,
     )
 
 
@@ -568,6 +582,7 @@ class IrelandLakesConnector(NationalWCSConnector):
         resolution_m=50, category="hydrology",
         bbox=BoundingBox(min_lon=-10.5, min_lat=51.4, max_lon=-6.0, max_lat=55.4),
         license="CC-BY 4.0", citation="EPA, WFD Lake Water Bodies",
+        use_wms=True,
     )
 
 
@@ -655,6 +670,7 @@ class FranceSoilConnector(NationalWCSConnector):
         resolution_m=1000, category="soil",
         bbox=BoundingBox(min_lon=-5.2, min_lat=41.3, max_lon=9.6, max_lat=51.1),
         license="Open (INRAE)", citation="INRAE / GIS Sol, RMQS",
+        use_wms=True,
     )
 
 
@@ -671,12 +687,13 @@ class SwedenLCConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="sweden_lc", display_name="Sweden NMD 10m Land Cover (EPA)",
         wcs_url="https://geodata.naturvardsverket.se/inspire/lc-nmd/wms",
-        coverage_id="NMD",
+        coverage_id="nmd2018",
         variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
                           description="Swedish national land cover (10m, Sentinel-2 based)"),
         resolution_m=10, category="land_cover",
         bbox=BoundingBox(min_lon=11.0, min_lat=55.3, max_lon=24.2, max_lat=69.1),
         license="Open (Sweden)", citation="Naturvårdsverket, Nationella Marktäckedata",
+        use_wms=True,
     )
 
 
@@ -711,10 +728,11 @@ class BelgiumFlandersDEMConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="belgium_flanders_dem", display_name="Flanders (Belgium) DHMV II DTM 1m",
         wcs_url="https://geo.api.vlaanderen.be/DHMV/wms",
-        coverage_id="DHMVII_DTM_1m", variable=ELEV_VAR, resolution_m=1,
+        coverage_id="DHMV", variable=ELEV_VAR, resolution_m=1,
         bbox=BoundingBox(min_lon=2.5, min_lat=50.7, max_lon=5.9, max_lat=51.5),
         license="Gratis Open Data Vlaanderen",
         citation="Digitaal Hoogtemodel Vlaanderen II",
+        use_wms=True,
     )
 
 
@@ -731,6 +749,7 @@ class BelgiumWalloniaDEMConnector(NationalWCSConnector):
         coverage_id="0", variable=ELEV_VAR, resolution_m=1,
         bbox=BoundingBox(min_lon=2.8, min_lat=49.5, max_lon=6.4, max_lat=50.8),
         license="Open (Wallonia)", citation="SPW, Modèle Numérique de Terrain 2021-2022",
+        use_wms=True,
     )
 
 
@@ -749,6 +768,7 @@ class BelgiumSoilConnector(NationalWCSConnector):
         resolution_m=20, category="soil",
         bbox=BoundingBox(min_lon=2.5, min_lat=50.7, max_lon=5.9, max_lat=51.5),
         license="Open (DOV)", citation="DOV, Bodemkaart van België",
+        use_wms=True,
     )
 
 
@@ -769,6 +789,7 @@ class BelgiumGroundwaterConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=2.5, min_lat=50.7, max_lon=5.9, max_lat=51.5),
         license="Open (DOV)",
         citation="DOV, Beschermingszones Grondwater Vlaanderen",
+        use_wms=True,
     )
 
 
@@ -789,6 +810,7 @@ class BelgiumAquiferConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=2.5, min_lat=50.7, max_lon=5.9, max_lat=51.5),
         license="Open (DOV)",
         citation="DOV, Watervoerende Lagen Vlaanderen",
+        use_wms=True,
     )
 
 
@@ -809,6 +831,7 @@ class BelgiumHydrostratConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=2.5, min_lat=50.7, max_lon=5.9, max_lat=51.5),
         license="Open (DOV)",
         citation="DOV, Hydrogeologische Stratigrafie Vlaanderen",
+        use_wms=True,
     )
 
 
@@ -828,6 +851,7 @@ class BelgiumLithologyConnector(NationalWCSConnector):
         resolution_m=100, category="geology",
         bbox=BoundingBox(min_lon=2.5, min_lat=50.7, max_lon=5.9, max_lat=51.5),
         license="Open (DOV)", citation="DOV, Gecodeerde Lithologie Vlaanderen",
+        use_wms=True,
     )
 
 
@@ -847,6 +871,7 @@ class CzechDEMConnector(NationalWCSConnector):
         coverage_id="dmr5g", variable=ELEV_VAR, resolution_m=5,
         bbox=BoundingBox(min_lon=12.1, min_lat=48.6, max_lon=18.9, max_lat=51.1),
         license="Open (CUZK)", citation="CUZK, Digitální model reliéfu 5. generace",
+        use_wms=True,
     )
 
 
@@ -869,6 +894,7 @@ class IrelandSoilConnector(NationalWCSConnector):
         resolution_m=250, category="soil",
         bbox=BoundingBox(min_lon=-10.5, min_lat=51.4, max_lon=-6.0, max_lat=55.4),
         license="CC-BY 4.0", citation="Teagasc / EPA, Irish Soil Information System",
+        use_wms=True,
     )
 
 
@@ -904,12 +930,13 @@ class PortugalLCConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="portugal_lc", display_name="Portugal COS Land Cover (DGT)",
         wcs_url="https://geo2.dgterritorio.gov.pt/geoserver/maf/wms",
-        coverage_id="COS2018_v2",
+        coverage_id="MAF1951_1980",
         variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
                           description="Portuguese land use/cover (CORINE-compatible)"),
         resolution_m=100, category="land_cover",
         bbox=BoundingBox(min_lon=-9.5, min_lat=36.9, max_lon=-6.2, max_lat=42.2),
         license="Open (DGT)", citation="DGT, Carta de Uso e Ocupação do Solo",
+        use_wms=True,
     )
 
 
@@ -990,6 +1017,7 @@ class LithuaniaDEMConnector(NationalWCSConnector):
         coverage_id="EL.SpotElevation", variable=ELEV_VAR, resolution_m=10,
         bbox=BoundingBox(min_lon=20.9, min_lat=53.9, max_lon=26.8, max_lat=56.5),
         license="Open (Lithuania)", citation="GIS-Centras, Lithuania INSPIRE Elevation",
+        use_wms=True,
     )
 
 
@@ -1007,12 +1035,13 @@ class ScotlandLCConnector(NationalWCSConnector):
         slug="scotland_lc",
         display_name="Scotland Habitat & Land Cover Map 2022 (NatureScot)",
         wcs_url="https://ogc.nature.scot/geoserver/habitatsandspecies/wms",
-        coverage_id="HabMoS_Scotland",
+        coverage_id="csgn2021hnoa",
         variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
                           description="EUNIS habitat classification (28 classes, AI/Sentinel-2)"),
         resolution_m=10, category="land_cover",
         bbox=BoundingBox(min_lon=-8.6, min_lat=54.6, max_lon=-0.7, max_lat=60.9),
         license="OGL v3", citation="NatureScot / Space Intelligence, Scotland Land Cover Map",
+        use_wms=True,
     )
 
 
@@ -1030,12 +1059,13 @@ class DenmarkSoilConnector(NationalWCSConnector):
         slug="denmark_soil",
         display_name="Denmark Jordartskort 1:200k (GEUS)",
         wcs_url="https://data.geus.dk/geusmap/ows/25832.jsp",
-        coverage_id="insp_jordartskort_200000",
+        coverage_id="data.geus.dk_ows",
         variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
                           description="Danish quaternary deposits / soil type classification"),
         resolution_m=200, category="soil",
         bbox=BoundingBox(min_lon=8.0, min_lat=54.5, max_lon=15.2, max_lat=57.8),
         license="Open (GEUS)", citation="GEUS, Jordartskort over Danmark 1:200.000",
+        use_wms=True,
     )
 
 
@@ -1072,6 +1102,7 @@ class GermanyHessenDEMConnector(NationalWCSConnector):
         coverage_id="he_dgm", variable=ELEV_VAR, resolution_m=1,
         bbox=BoundingBox(min_lon=7.8, min_lat=49.4, max_lon=10.3, max_lat=51.7),
         license="DL-DE/Zero", citation="HVBG, Digitales Geländemodell Hessen",
+        use_wms=True,
     )
 
 
@@ -1115,6 +1146,7 @@ class NorwayForestConnector(NationalWCSConnector):
         resolution_m=16, category="vegetation",
         bbox=BoundingBox(min_lon=4.5, min_lat=57.9, max_lon=31.2, max_lat=71.2),
         license="NLOD (Norway)", citation="NIBIO, SR16 Forest Resource Map",
+        use_wms=True,
     )
 
 
@@ -1134,6 +1166,7 @@ class NorwayTreeSpeciesConnector(NationalWCSConnector):
         resolution_m=16, category="vegetation",
         bbox=BoundingBox(min_lon=4.5, min_lat=57.9, max_lon=31.2, max_lat=71.2),
         license="NLOD (Norway)", citation="NIBIO, SR16 Forest Resource Map",
+        use_wms=True,
     )
 
 
@@ -1154,6 +1187,7 @@ class NorwayTreeVolumeConnector(NationalWCSConnector):
         resolution_m=16, category="vegetation",
         bbox=BoundingBox(min_lon=4.5, min_lat=57.9, max_lon=31.2, max_lat=71.2),
         license="NLOD (Norway)", citation="NIBIO, SR16 Forest Resource Map",
+        use_wms=True,
     )
 
 
@@ -1173,6 +1207,7 @@ class NorwayVegetationConnector(NationalWCSConnector):
         resolution_m=25, category="land_cover",
         bbox=BoundingBox(min_lon=4.5, min_lat=57.9, max_lon=31.2, max_lat=71.2),
         license="NLOD (Norway)", citation="NIBIO, Vegetasjonskartet",
+        use_wms=True,
     )
 
 
@@ -1195,6 +1230,7 @@ class GermanySachsenAnhaltDEMConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=10.6, min_lat=50.9, max_lon=13.2, max_lat=53.1),
         license="DL-DE/Zero",
         citation="LVermGeo Sachsen-Anhalt, Digitales Geländemodell 1m",
+        use_wms=True,
     )
 
 
@@ -1218,6 +1254,7 @@ class SpainLithologyConnector(NationalWCSConnector):
         resolution_m=1000, category="geology",
         bbox=BoundingBox(min_lon=-18.2, min_lat=27.6, max_lon=4.4, max_lat=43.8),
         license="Open (IGME)", citation="IGME, Mapa Geológico de España 1:1.000.000",
+        use_wms=True,
     )
 
 
@@ -1237,6 +1274,7 @@ class SpainHydrogeologyConnector(NationalWCSConnector):
         resolution_m=1000, category="geology",
         bbox=BoundingBox(min_lon=-18.2, min_lat=27.6, max_lon=4.4, max_lat=43.8),
         license="Open (IGME)", citation="IGME, Mapa Hidrogeológico de España 1:1.000.000",
+        use_wms=True,
     )
 
 
@@ -1276,6 +1314,7 @@ class GermanyBBDEMConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=11.3, min_lat=51.4, max_lon=14.8, max_lat=53.6),
         license="DL-DE/Zero",
         citation="LGB Brandenburg, Digitales Geländemodell 1m",
+        use_wms=True,
     )
 
 
@@ -1297,6 +1336,7 @@ class GermanyHamburgDEMConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=9.7, min_lat=53.4, max_lon=10.3, max_lat=53.7),
         license="DL-DE/BY-2.0",
         citation="LGV Hamburg, Digitales Geländemodell 1m",
+        use_wms=True,
     )
 
 
@@ -1314,12 +1354,13 @@ class FranceLCConnector(NationalWCSConnector):
         slug="france_lc",
         display_name="France OCS GE Land Cover (IGN Geoplateforme)",
         wcs_url="https://data.geopf.fr/wms-r/wms",
-        coverage_id="LANDCOVER.CHA12_FR",
+        coverage_id="ADEME_EPCI_lineaire-haie-a-stock",
         variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
                           description="French national land cover change map (OCS GE)"),
         resolution_m=10, category="land_cover",
         bbox=BoundingBox(min_lon=-5.2, min_lat=41.3, max_lon=9.6, max_lat=51.1),
         license="Open Licence (Etalab)", citation="IGN, OCS GE (Geoplateforme)",
+        use_wms=True,
     )
 
 
@@ -1343,6 +1384,7 @@ class UKBGSGeologyConnector(NationalWCSConnector):
         resolution_m=50, category="geology",
         bbox=BoundingBox(min_lon=-8.6, min_lat=49.8, max_lon=2.0, max_lat=60.9),
         license="OGL v3", citation="British Geological Survey, DiGMapGB-50",
+        use_wms=True,
     )
 
 
@@ -1445,13 +1487,14 @@ class EstoniaLCConnector(NationalWCSConnector):
         slug="estonia_lc",
         display_name="Estonia Land Cover (Maa-amet Base Map)",
         wcs_url="https://kaart.maaamet.ee/wms/alus-geo",
-        coverage_id="pohi_vr",
+        coverage_id="pohi_vr2",
         variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
                           description="Estonian base map land cover classification"),
         resolution_m=10, category="land_cover",
         bbox=BoundingBox(min_lon=21.8, min_lat=57.5, max_lon=28.2, max_lat=59.7),
         license="Estonian Open Data",
         citation="Maa-amet, Estonian Land Board Base Map",
+        use_wms=True,
     )
 
 
@@ -1475,6 +1518,7 @@ class NorwayGeologyConnector(NationalWCSConnector):
         resolution_m=50, category="geology",
         bbox=BoundingBox(min_lon=4.5, min_lat=57.9, max_lon=31.2, max_lat=71.2),
         license="CC-BY 4.0 (NLOD)", citation="NGU, Løsmassekart (Surficial Geology Map of Norway)",
+        use_wms=True,
     )
 
 
@@ -1624,6 +1668,7 @@ class FranceLithologyConnector(NationalWCSConnector):
         resolution_m=1000, category="geology",
         bbox=BoundingBox(min_lon=-5.2, min_lat=41.3, max_lon=9.6, max_lat=51.1),
         license="Open (BRGM)", citation="BRGM, Lithologie Simplifiée",
+        use_wms=True,
     )
 
 
@@ -1647,6 +1692,7 @@ class EstoniaGeologyConnector(NationalWCSConnector):
         resolution_m=50, category="geology",
         bbox=BoundingBox(min_lon=21.8, min_lat=57.5, max_lon=28.2, max_lat=59.7),
         license="Estonian Open Data", citation="Maa-amet, Geological Map of Estonia",
+        use_wms=True,
     )
 
 
@@ -1730,6 +1776,7 @@ class SwissSoilDepthConnector(NationalWCSConnector):
         resolution_m=25, category="soil",
         bbox=BoundingBox(min_lon=5.9, min_lat=45.8, max_lon=10.5, max_lat=47.8),
         license="Open (geo.admin.ch)", citation="BLW, Bodeneignung Gründigkeit",
+        use_wms=True,
     )
 
 
@@ -1749,6 +1796,7 @@ class SwissErosionFlowConnector(NationalWCSConnector):
         resolution_m=25, category="hydrology",
         bbox=BoundingBox(min_lon=5.9, min_lat=45.8, max_lon=10.5, max_lat=47.8),
         license="Open (geo.admin.ch)", citation="BLW, Erosion Fliesswegkarte",
+        use_wms=True,
     )
 
 
@@ -1768,6 +1816,7 @@ class SwissGroundwaterConnector(NationalWCSConnector):
         resolution_m=100, category="hydrology",
         bbox=BoundingBox(min_lon=5.9, min_lat=45.8, max_lon=10.5, max_lat=47.8),
         license="Open (geo.admin.ch)", citation="BAFU, Grundwasserkörper",
+        use_wms=True,
     )
 
 
@@ -1787,6 +1836,7 @@ class SwissSlope30Connector(NationalWCSConnector):
         resolution_m=10, category="elevation",
         bbox=BoundingBox(min_lon=5.9, min_lat=45.8, max_lon=10.5, max_lat=47.8),
         license="Open (geo.admin.ch)", citation="swisstopo, Hangneigung über 30°",
+        use_wms=True,
     )
 
 
@@ -1806,6 +1856,7 @@ class SwissPermafrostConnector(NationalWCSConnector):
         resolution_m=25, category="cryosphere",
         bbox=BoundingBox(min_lon=5.9, min_lat=45.8, max_lon=10.5, max_lat=47.8),
         license="Open (geo.admin.ch)", citation="BAFU, Permafrost",
+        use_wms=True,
     )
 
 
@@ -1827,6 +1878,7 @@ class SwissStreamOrderConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=5.9, min_lat=45.8, max_lon=10.5, max_lat=47.8),
         license="Open (geo.admin.ch)",
         citation="BAFU, Flussordnungszahlen nach Strahler",
+        use_wms=True,
     )
 
 
@@ -1847,6 +1899,7 @@ class SwissSurfaceRunoffConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=5.9, min_lat=45.8, max_lon=10.5, max_lat=47.8),
         license="Open (geo.admin.ch)",
         citation="BAFU, Gefährdungskarte Oberflächenabfluss",
+        use_wms=True,
     )
 
 
@@ -1866,6 +1919,7 @@ class SwissGlacierConnector(NationalWCSConnector):
         resolution_m=25, category="cryosphere",
         bbox=BoundingBox(min_lon=5.9, min_lat=45.8, max_lon=10.5, max_lat=47.8),
         license="Open (geo.admin.ch)", citation="swisstopo, Gletscherausdehnung",
+        use_wms=True,
     )
 
 
@@ -1885,6 +1939,7 @@ class SwissLakesConnector(NationalWCSConnector):
         resolution_m=25, category="hydrology",
         bbox=BoundingBox(min_lon=5.9, min_lat=45.8, max_lon=10.5, max_lat=47.8),
         license="Open (geo.admin.ch)", citation="BAFU, vec25 Seen",
+        use_wms=True,
     )
 
 
@@ -1905,6 +1960,7 @@ class SwissRiversConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=5.9, min_lat=45.8, max_lon=10.5, max_lat=47.8),
         license="Open (geo.admin.ch)",
         citation="swisstopo, swissTLM3D Gewässernetz",
+        use_wms=True,
     )
 
 
@@ -1925,6 +1981,7 @@ class SwissWaterConnectConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=5.9, min_lat=45.8, max_lon=10.5, max_lat=47.8),
         license="Open (geo.admin.ch)",
         citation="BLW, Gewässeranschlusskarte",
+        use_wms=True,
     )
 
 
@@ -1967,6 +2024,7 @@ class SpainQuaternaryConnector(NationalWCSConnector):
         resolution_m=1000, category="geology",
         bbox=BoundingBox(min_lon=-18.2, min_lat=27.6, max_lon=4.4, max_lat=43.8),
         license="Open (IGME)", citation="IGME, Mapa Geológico del Cuaternario 1:1M",
+        use_wms=True,
     )
 
 
@@ -1992,6 +2050,7 @@ class DenmarkTerrainConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=8.0, min_lat=54.5, max_lon=15.2, max_lat=57.8),
         license="Open (Denmark)", citation="SDFI, Danmarks Højdemodel Terrain",
         auth_token_env="CAS_DATAFORSYNINGEN_TOKEN",
+        use_wms=True,
     )
 
 
@@ -2015,6 +2074,7 @@ class UKWFDCatchmentsConnector(NationalWCSConnector):
         resolution_m=50, category="hydrology",
         bbox=BoundingBox(min_lon=-6.5, min_lat=49.8, max_lon=2.0, max_lat=55.9),
         license="OGL v3", citation="Environment Agency, WFD River Waterbody Catchments",
+        use_wms=True,
     )
 
 
@@ -2038,6 +2098,7 @@ class FinlandCatchmentsConnector(NationalWCSConnector):
         resolution_m=50, category="hydrology",
         bbox=BoundingBox(min_lon=19.1, min_lat=59.5, max_lon=31.6, max_lat=70.1),
         license="CC-BY 4.0", citation="SYKE, Finnish Drainage Basins",
+        use_wms=True,
     )
 
 
@@ -2061,6 +2122,7 @@ class SpainHydroConnector(NationalWCSConnector):
         resolution_m=25, category="hydrology",
         bbox=BoundingBox(min_lon=-18.2, min_lat=27.6, max_lon=4.4, max_lat=43.8),
         license="CC-BY 4.0", citation="IGN/IDEE, INSPIRE Hydrography",
+        use_wms=True,
     )
 
 
@@ -2084,6 +2146,7 @@ class UKHistoricFloodConnector(NationalWCSConnector):
         resolution_m=50, category="hydrology",
         bbox=BoundingBox(min_lon=-6.5, min_lat=49.8, max_lon=2.0, max_lat=55.9),
         license="OGL v3", citation="Environment Agency, Historic Flood Map",
+        use_wms=True,
     )
 
 
@@ -2101,12 +2164,13 @@ class NetherlandsCropsConnector(NationalWCSConnector):
         slug="netherlands_crops",
         display_name="Netherlands BRP Crop Parcels (PDOK/RVO)",
         wcs_url="https://service.pdok.nl/rvo/brpgewaspercelen/wms/v1_0",
-        coverage_id="brpgewaspercelen",
+        coverage_id="BrpGewas",
         variable=Variable(name="crop_type", units="class", data_type=DataType.CATEGORICAL,
                           description="Dutch agricultural crop parcels — annual crop type mapping"),
         resolution_m=5, category="land_cover",
         bbox=BoundingBox(min_lon=3.3, min_lat=50.7, max_lon=7.3, max_lat=53.6),
         license="CC-0", citation="RVO, BRP Gewaspercelen via PDOK",
+        use_wms=True,
     )
 
 
@@ -2130,6 +2194,7 @@ class UKGroundwaterBodiesConnector(NationalWCSConnector):
         resolution_m=100, category="hydrology",
         bbox=BoundingBox(min_lon=-6.5, min_lat=49.8, max_lon=2.0, max_lat=55.9),
         license="OGL v3", citation="Environment Agency, WFD Groundwater Bodies Cycle 2",
+        use_wms=True,
     )
 
 
@@ -2149,6 +2214,7 @@ class UKSourceProtectionConnector(NationalWCSConnector):
         resolution_m=50, category="hydrology",
         bbox=BoundingBox(min_lon=-6.5, min_lat=49.8, max_lon=2.0, max_lat=55.9),
         license="OGL v3", citation="Environment Agency, Source Protection Zones",
+        use_wms=True,
     )
 
 
@@ -2169,6 +2235,7 @@ class UKDrinkingWaterConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=-6.5, min_lat=49.8, max_lon=2.0, max_lat=55.9),
         license="OGL v3",
         citation="Environment Agency, Drinking Water Protected Areas",
+        use_wms=True,
     )
 
 
@@ -2189,6 +2256,7 @@ class UKAgriLandClassConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=-6.5, min_lat=49.8, max_lon=2.0, max_lat=55.9),
         license="OGL v3",
         citation="Natural England, Agricultural Land Classification",
+        use_wms=True,
     )
 
 
@@ -2209,6 +2277,7 @@ class UKFloodDefencesConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=-6.5, min_lat=49.8, max_lon=2.0, max_lat=55.9),
         license="OGL v3",
         citation="Environment Agency, Spatial Flood Defences",
+        use_wms=True,
     )
 
 
@@ -2232,6 +2301,7 @@ class IrelandSoilWetDryConnector(NationalWCSConnector):
         resolution_m=250, category="soil",
         bbox=BoundingBox(min_lon=-10.5, min_lat=51.4, max_lon=-6.0, max_lat=55.4),
         license="CC-BY 4.0", citation="EPA / Teagasc, Soil Drainage Classification",
+        use_wms=True,
     )
 
 
@@ -2255,6 +2325,7 @@ class IrelandAquiferConnector(NationalWCSConnector):
         resolution_m=250, category="geology",
         bbox=BoundingBox(min_lon=-10.5, min_lat=51.4, max_lon=-6.0, max_lat=55.4),
         license="CC-BY 4.0", citation="GSI / EPA, Bedrock Aquifer Map of Ireland",
+        use_wms=True,
     )
 
 
@@ -2274,6 +2345,7 @@ class IrelandGroundwaterConnector(NationalWCSConnector):
         resolution_m=250, category="hydrology",
         bbox=BoundingBox(min_lon=-10.5, min_lat=51.4, max_lon=-6.0, max_lat=55.4),
         license="CC-BY 4.0", citation="EPA, WFD Groundwater Bodies",
+        use_wms=True,
     )
 
 
@@ -2293,6 +2365,7 @@ class IrelandCatchmentsConnector(NationalWCSConnector):
         resolution_m=100, category="hydrology",
         bbox=BoundingBox(min_lon=-10.5, min_lat=51.4, max_lon=-6.0, max_lat=55.4),
         license="CC-BY 4.0", citation="EPA, Irish Hydrological Catchments",
+        use_wms=True,
     )
 
 
@@ -2312,6 +2385,7 @@ class IrelandFloodConnector(NationalWCSConnector):
         resolution_m=50, category="hydrology",
         bbox=BoundingBox(min_lon=-10.5, min_lat=51.4, max_lon=-6.0, max_lat=55.4),
         license="CC-BY 4.0", citation="EPA, Coastal Flood Extents",
+        use_wms=True,
     )
 
 
@@ -2332,6 +2406,7 @@ class IrelandGravelAquiferConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=-10.5, min_lat=51.4, max_lon=-6.0, max_lat=55.4),
         license="CC-BY 4.0",
         citation="GSI / EPA, Sand & Gravel Aquifer Map of Ireland",
+        use_wms=True,
     )
 
 
@@ -2351,6 +2426,7 @@ class IrelandPeatlandConnector(NationalWCSConnector):
         resolution_m=100, category="land_cover",
         bbox=BoundingBox(min_lon=-10.5, min_lat=51.4, max_lon=-6.0, max_lat=55.4),
         license="CC-BY 4.0", citation="Bord na Móna / EPA, Bog Boundaries",
+        use_wms=True,
     )
 
 
@@ -2371,6 +2447,7 @@ class IrelandGWVulnerabilityConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=-10.5, min_lat=51.4, max_lon=-6.0, max_lat=55.4),
         license="CC-BY 4.0",
         citation="GSI / EPA, Groundwater Vulnerability Map of Ireland",
+        use_wms=True,
     )
 
 
@@ -2390,6 +2467,7 @@ class IrelandSubsoilConnector(NationalWCSConnector):
         resolution_m=250, category="soil",
         bbox=BoundingBox(min_lon=-10.5, min_lat=51.4, max_lon=-6.0, max_lat=55.4),
         license="CC-BY 4.0", citation="GSI / EPA, Subsoil Map of Ireland",
+        use_wms=True,
     )
 
 
@@ -2409,6 +2487,7 @@ class IrelandBedrockConnector(NationalWCSConnector):
         resolution_m=1000, category="geology",
         bbox=BoundingBox(min_lon=-10.5, min_lat=51.4, max_lon=-6.0, max_lat=55.4),
         license="CC-BY 4.0", citation="GSI / EPA, Bedrock Geology Map of Ireland",
+        use_wms=True,
     )
 
 
@@ -2432,6 +2511,7 @@ class SpainLandUseConnector(NationalWCSConnector):
         resolution_m=25, category="land_cover",
         bbox=BoundingBox(min_lon=-18.2, min_lat=27.6, max_lon=4.4, max_lat=43.8),
         license="CC-BY 4.0", citation="IGN/IDEE, INSPIRE Land Use",
+        use_wms=True,
     )
 
 
@@ -2455,6 +2535,7 @@ class NetherlandsNatura2000Connector(NationalWCSConnector):
         resolution_m=10, category="land_cover",
         bbox=BoundingBox(min_lon=3.3, min_lat=50.7, max_lon=7.3, max_lat=53.6),
         license="CC-0", citation="RVO, Natura 2000 via PDOK",
+        use_wms=True,
     )
 
 
@@ -2534,10 +2615,11 @@ class CroatiaDEMConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="croatia_dem", display_name="Croatia DEM 25m (DGU INSPIRE)",
         wcs_url="https://geoportal.dgu.hr/services/inspire/el/wcs",
-        coverage_id="el__EL.GridCoverage", variable=ELEV_VAR, resolution_m=25,
+        coverage_id="EL.GridCoverage", variable=ELEV_VAR, resolution_m=25,
         protocol_version="2.0.1",
         bbox=BoundingBox(min_lon=13.5, min_lat=42.4, max_lon=19.5, max_lat=46.6),
         license="Open (DGU)", citation="DGU, Digitalni model reljefa",
+        use_wms=True,
     )
 
 
@@ -2550,10 +2632,11 @@ class HungaryDEMConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="hungary_dem", display_name="Hungary DDM 5m (Lechner INSPIRE)",
         wcs_url="https://inspire.lechnerkozpont.hu/geoserver/EL.DEM/ows",
-        coverage_id="EL.DEM__EL.GridCoverage", variable=ELEV_VAR, resolution_m=5,
+        coverage_id="EL.GridCoverage", variable=ELEV_VAR, resolution_m=5,
         protocol_version="2.0.1",
         bbox=BoundingBox(min_lon=16.1, min_lat=45.7, max_lon=22.9, max_lat=48.6),
         license="Open (Hungary)", citation="Lechner Tudásközpont, Digitális Domborzatmodell",
+        use_wms=True,
     )
 
 
@@ -2640,12 +2723,13 @@ class GreeceGeologyConnector(NationalWCSConnector):
         slug="greece_geology",
         display_name="Greece Geological Map 1:500k (IGME/HSGME)",
         wcs_url="http://gaia.igme.gr:8080/geoserver/wms",
-        coverage_id="Onegeology:GE.GeologicUnit",
+        coverage_id="Geochemistry:Arnea",
         variable=Variable(name="geology", units="class", data_type=DataType.CATEGORICAL,
                           description="Greek geological units 1:500,000"),
         resolution_m=500, category="geology",
         bbox=BoundingBox(min_lon=19.4, min_lat=34.8, max_lon=29.6, max_lat=41.8),
         license="Open (IGME)", citation="IGME/HSGME, Geological Map of Greece",
+        use_wms=True,
     )
 
 
@@ -2723,12 +2807,13 @@ class PortugalGeologyConnector(NationalWCSConnector):
         slug="portugal_geology",
         display_name="Portugal Geological Map 1:1M (LNEG)",
         wcs_url="https://sig.lneg.pt/server/services/CGP1M/MapServer/WMSServer",
-        coverage_id="0",
+        coverage_id="Unidades_Geológicas_da_Plataforma183",
         variable=Variable(name="geology", units="class", data_type=DataType.CATEGORICAL,
                           description="Portuguese geological units 1:1,000,000"),
         resolution_m=1000, category="geology",
         bbox=BoundingBox(min_lon=-9.5, min_lat=36.9, max_lon=-6.2, max_lat=42.2),
         license="Open (LNEG)", citation="LNEG, Carta Geológica de Portugal",
+        use_wms=True,
     )
 
 
@@ -2748,6 +2833,7 @@ class SloveniaSoilConnector(NationalWCSConnector):
         resolution_m=25, category="soil",
         bbox=BoundingBox(min_lon=13.4, min_lat=45.4, max_lon=16.6, max_lat=46.9),
         license="Open (MKGP)", citation="MKGP, Talni razredi",
+        use_wms=True,
     )
 
 
@@ -2767,6 +2853,7 @@ class SloveniaLCConnector(NationalWCSConnector):
         resolution_m=5, category="land_cover",
         bbox=BoundingBox(min_lon=13.4, min_lat=45.4, max_lon=16.6, max_lat=46.9),
         license="Open (MKGP)", citation="MKGP, GERK Register",
+        use_wms=True,
     )
 
 
@@ -2786,6 +2873,7 @@ class CroatiaLCConnector(NationalWCSConnector):
         resolution_m=100, category="land_cover",
         bbox=BoundingBox(min_lon=13.5, min_lat=42.4, max_lon=19.5, max_lat=46.6),
         license="Open (DGU)", citation="DGU, Croatia INSPIRE Land Cover",
+        use_wms=True,
     )
 
 
@@ -2805,5 +2893,6 @@ class LithuaniaSoilConnector(NationalWCSConnector):
         resolution_m=100, category="soil",
         bbox=BoundingBox(min_lon=20.9, min_lat=53.9, max_lon=26.8, max_lat=56.5),
         license="Open (Lithuania)", citation="GIS-Centras, Lithuania INSPIRE Soil",
+        use_wms=True,
     )
 

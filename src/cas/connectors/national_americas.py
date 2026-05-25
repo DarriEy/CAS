@@ -24,9 +24,10 @@ class CanadaHRDEMConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="canada_hrdem", display_name="Canada HRDEM 1-2m (NRCan)",
         wcs_url="https://datacube.services.geo.ca/ows/elevation",
-        coverage_id="hrdem-lidar:dtm", variable=ELEV_VAR, resolution_m=2,
+        coverage_id="dsm", variable=ELEV_VAR, resolution_m=2,
         bbox=BoundingBox(min_lon=-141, min_lat=41.7, max_lon=-52.6, max_lat=83.1),
         license="Open Government Licence - Canada", citation="NRCan, High Resolution DEM",
+        use_wms=True,
     )
 
 
@@ -62,12 +63,13 @@ class CanadaAAFCCropsConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="canada_aafc_crops", display_name="Canada AAFC Annual Crop Inventory 30m",
         wcs_url="https://agriculture.canada.ca/imagery-images/services/annual_crop_inventory/2024/ImageServer/WCSServer",
-        coverage_id="1",
+        coverage_id="annual_crop_inventory_2024",
         variable=Variable(name="cropland", units="class", data_type=DataType.CATEGORICAL,
                           description="Canadian crop type classification (~70 classes, annual)"),
         resolution_m=30, category="land_cover",
         bbox=BoundingBox(min_lon=-141, min_lat=41.7, max_lon=-52.6, max_lat=83.1),
         license="Open Government Licence - Canada", citation="AAFC, Annual Crop Inventory",
+        use_wms=True,
     )
 
 
@@ -108,6 +110,7 @@ class MexicoLCConnector(NationalWCSConnector):
         resolution_m=250, category="land_cover",
         bbox=BoundingBox(min_lon=-118, min_lat=14, max_lon=-86, max_lat=33),
         license="Open (INEGI)", citation="INEGI, Uso de Suelo y Vegetación",
+        use_wms=True,
     )
 
 
@@ -120,12 +123,13 @@ class MexicoSoilConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="mexico_soil", display_name="Mexico Edafología (INEGI)",
         wcs_url="https://gaia.inegi.org.mx/NLB/tunnel/wms/wms61",
-        coverage_id="Edafologia",
+        coverage_id="Servicio_WMS_MDM61",
         variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
                           description="Mexican soil classification (WRB)"),
         resolution_m=250, category="soil",
         bbox=BoundingBox(min_lon=-118, min_lat=14, max_lon=-86, max_lat=33),
         license="Open (INEGI)", citation="INEGI, Carta Edafológica",
+        use_wms=True,
     )
 
 
@@ -149,6 +153,7 @@ class ColombiaLCConnector(NationalWCSConnector):
         resolution_m=100, category="land_cover",
         bbox=BoundingBox(min_lon=-82, min_lat=-5, max_lon=-67, max_lat=13),
         license="Open (IDEAM)", citation="IDEAM, Coberturas de la Tierra",
+        use_wms=True,
     )
 
 
@@ -189,12 +194,13 @@ class PeruLCConnector(NationalWCSConnector):
         slug="peru_lc",
         display_name="Peru National Land Cover (MINAM)",
         wcs_url="https://geoservidorperu.minam.gob.pe/arcgis/services/ServicioTematico/MapServer/WMSServer",
-        coverage_id="0",
+        coverage_id="1",
         variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
                           description="Peruvian national vegetation/land cover classification (60 classes)"),
         resolution_m=250, category="land_cover",
         bbox=BoundingBox(min_lon=-82, min_lat=-19, max_lon=-68, max_lat=1),
         license="Open (MINAM)", citation="MINAM, Mapa Nacional de Cobertura Vegetal",
+        use_wms=True,
     )
 
 
@@ -266,6 +272,7 @@ class USGSWBDConnector(NationalWCSConnector):
         resolution_m=30, category="hydrology",
         bbox=BoundingBox(min_lon=-180, min_lat=17, max_lon=-64, max_lat=72),
         license="Public Domain", citation="USGS, Watershed Boundary Dataset",
+        use_wms=True,
     )
 
 
@@ -285,6 +292,7 @@ class USGSNHDConnector(NationalWCSConnector):
         resolution_m=10, category="hydrology",
         bbox=BoundingBox(min_lon=-180, min_lat=17, max_lon=-64, max_lat=72),
         license="Public Domain", citation="USGS, National Hydrography Dataset",
+        use_wms=True,
     )
 
 
@@ -317,12 +325,13 @@ class USGSKarstConnector(NationalWCSConnector):
         slug="usgs_karst",
         display_name="USGS Karst/Pseudokarst Map (US)",
         wcs_url="https://mrdata.usgs.gov/services/kb",
-        coverage_id="0",
+        coverage_id="KB_Geology",
         variable=Variable(name="karst", units="class", data_type=DataType.CATEGORICAL,
                           description="Karst and pseudokarst areas — controls subsurface drainage"),
         resolution_m=1000, category="geology",
         bbox=BoundingBox(min_lon=-180, min_lat=17, max_lon=-64, max_lat=72),
         license="Public Domain", citation="USGS, Karst Map of the US",
+        use_wms=True,
     )
 
 
@@ -371,6 +380,7 @@ class CanadaFGPLCConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=-141, min_lat=41.7, max_lon=-52.6, max_lat=83.1),
         license="Open Government Licence - Canada",
         citation="NRCan, Canada Land Cover 2015",
+        use_wms=True,
     )
 
 
@@ -388,12 +398,13 @@ class BrazilBiomesConnector(NationalWCSConnector):
         slug="brazil_biomes",
         display_name="Brazil Biomes 1:5M (IBGE)",
         wcs_url="https://geoservicos.ibge.gov.br/geoserver/wms",
-        coverage_id="CGEO:COM_BIOMAS_250",
+        coverage_id="BDIA:gpc_geol",
         variable=Variable(name="biome", units="class", data_type=DataType.CATEGORICAL,
                           description="Brazilian biomes (Amazon, Cerrado, Caatinga, etc.)"),
         resolution_m=250, category="land_cover",
         bbox=BoundingBox(min_lon=-74, min_lat=-34, max_lon=-34, max_lat=6),
         license="Open (IBGE)", citation="IBGE, Mapa de Biomas do Brasil",
+        use_wms=True,
     )
 
 
@@ -430,12 +441,13 @@ class USSTATSGOConnector(NationalWCSConnector):
         slug="us_statsgo",
         display_name="US STATSGO2 General Soil Map (USDA/NRCS)",
         wcs_url="https://SDMDataAccess.sc.egov.usda.gov/Spatial/SDMWGS84Geographic.wfs",
-        coverage_id="MapunitPoly",
+        coverage_id="mapunitpoly",
         variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
                           description="US general soil map 1:250k (STATSGO2)"),
         resolution_m=1000, category="soil",
         bbox=BoundingBox(min_lon=-180, min_lat=17, max_lon=-64, max_lat=72),
         license="Public Domain", citation="USDA/NRCS, STATSGO2",
+        use_wms=True,
     )
 
 
@@ -501,26 +513,6 @@ class USGAPLCConnector(NationalWCSConnector):
 #  CANADA — additional datasets
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("canada_soil")
-class CanadaSoilConnector(NationalWCSConnector):
-    slug = "canada_soil"
-    display_name = "Canada Soil Landscape (SLCS)"
-    base_url = "https://geo.weather.gc.ca/geomet"
-    protocol = "wcs"
-    _config = NationalDatasetConfig(
-        slug="canada_soil",
-        display_name="Canada Soil Landscapes of Canada (SLC v3.2)",
-        wcs_url="https://wms.aafcgeomatics.ca/cgi-bin/soil_en.cgi",
-        coverage_id="soil:slc_v3.2",
-        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
-                          description="Canadian soil landscape polygon classification"),
-        resolution_m=250, category="soil",
-        bbox=BoundingBox(min_lon=-141, min_lat=41.7, max_lon=-52.6, max_lat=83.1),
-        license="Open Government Licence - Canada",
-        citation="AAFC, Soil Landscapes of Canada v3.2",
-    )
-
-
 @register("canada_geology")
 class CanadaGeologyConnector(NationalWCSConnector):
     slug = "canada_geology"
@@ -538,25 +530,7 @@ class CanadaGeologyConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=-141, min_lat=41.7, max_lon=-52.6, max_lat=83.1),
         license="Open Government Licence - Canada",
         citation="GSC/NRCan, Canadian Geoscience Map",
+        use_wms=True,
     )
 
-
-@register("canada_wetland")
-class CanadaWetlandConnector(NationalWCSConnector):
-    slug = "canada_wetland"
-    display_name = "Canada Wetland Inventory"
-    base_url = "https://geo.weather.gc.ca/geomet"
-    protocol = "wcs"
-    _config = NationalDatasetConfig(
-        slug="canada_wetland",
-        display_name="Canada National Wetland Inventory (CWS)",
-        wcs_url="https://wms.aafcgeomatics.ca/cgi-bin/wetland_en.cgi",
-        coverage_id="wetland:cwi",
-        variable=Variable(name="wetland_type", units="class", data_type=DataType.CATEGORICAL,
-                          description="Canadian wetland classification (bog, fen, marsh, swamp, water)"),
-        resolution_m=250, category="hydrology",
-        bbox=BoundingBox(min_lon=-141, min_lat=41.7, max_lon=-52.6, max_lat=83.1),
-        license="Open Government Licence - Canada",
-        citation="Canadian Wildlife Service, National Wetland Inventory",
-    )
 

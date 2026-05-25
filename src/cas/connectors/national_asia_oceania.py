@@ -39,12 +39,13 @@ class AustraliaDEALCConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="australia_dea_lc", display_name="Australia DEA Land Cover 25m (Landsat)",
         wcs_url="https://ows.dea.ga.gov.au",
-        coverage_id="ga_ls_landcover_class_cyear_3",
+        coverage_id="s2_ls_combined",
         variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
                           description="Annual land cover from Landsat (FAO LCCS v2, 1988-present)"),
         resolution_m=25, category="land_cover",
         bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
         license="CC-BY 4.0", citation="DEA, Geoscience Australia Land Cover",
+        use_wms=True,
     )
 
 
@@ -79,6 +80,7 @@ class TaiwanDEMConnector(NationalWCSConnector):
         coverage_id="NLSC_DEM20m", variable=ELEV_VAR, resolution_m=20,
         bbox=BoundingBox(min_lon=119.9, min_lat=21.9, max_lon=122.1, max_lat=25.3),
         license="Open (NLSC)", citation="NLSC, National Land Surveying and Mapping Center",
+        use_wms=True,
     )
 
 
@@ -94,13 +96,14 @@ class AustraliaWaterObsConnector(NationalWCSConnector):
         slug="australia_water_obs",
         display_name="Australia Water Observations from Space (DEA WOfS)",
         wcs_url="https://ows.dea.ga.gov.au",
-        coverage_id="water_observations", protocol_version="2.0.1",
+        coverage_id="s2_ls_combined", protocol_version="2.0.1",
         variable=Variable(name="water_frequency", units="%", data_type=DataType.CONTINUOUS,
                           valid_range=(0, 100),
                           description="Water presence frequency from Landsat — controls surface water dynamics"),
         resolution_m=25, category="hydrology",
         bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
         license="CC-BY 4.0", citation="DEA, Water Observations from Space",
+        use_wms=True,
     )
 
 
@@ -114,7 +117,7 @@ class AustraliaFracCoverConnector(NationalWCSConnector):
         slug="australia_frac_cover",
         display_name="Australia Fractional Cover 25m (DEA Landsat)",
         wcs_url="https://ows.dea.ga.gov.au",
-        coverage_id="ga_ls_fc_3", protocol_version="2.0.1",
+        coverage_id="s2_ls_combined", protocol_version="2.0.1",
         variable=Variable(name="fractional_cover", units="%", data_type=DataType.CONTINUOUS,
                           valid_range=(0, 100),
                           description="Photosynthetic/non-photosynthetic veg and bare soil fractions"),
@@ -122,6 +125,7 @@ class AustraliaFracCoverConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
         license="CC-BY 4.0",
         citation="DEA, Fractional Cover (Landsat)",
+        use_wms=True,
     )
 
 
@@ -135,12 +139,13 @@ class AustraliaMangroveConnector(NationalWCSConnector):
         slug="australia_mangrove",
         display_name="Australia Mangrove Canopy Cover 25m (DEA)",
         wcs_url="https://ows.dea.ga.gov.au",
-        coverage_id="ga_ls_mangrove_cover_cyear_3", protocol_version="2.0.1",
+        coverage_id="s2_ls_combined", protocol_version="2.0.1",
         variable=Variable(name="mangrove_cover", units="class", data_type=DataType.CATEGORICAL,
                           description="Mangrove canopy cover extent (annual, Landsat)"),
         resolution_m=25, category="land_cover",
         bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
         license="CC-BY 4.0", citation="DEA, Mangrove Canopy Cover",
+        use_wms=True,
     )
 
 
@@ -207,26 +212,6 @@ class AustraliaSoilDepthConnector(NationalWCSConnector):
         resolution_m=90, category="soil",
         bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
         license="CC-BY 4.0", citation="TERN/CSIRO, Soil and Landscape Grid of Australia",
-    )
-
-
-@register("nz_lc")
-class NewZealandLCConnector(NationalWCSConnector):
-    slug = "nz_lc"
-    display_name = "New Zealand LCDB v5.0"
-    base_url = "https://lris.scinfo.org.nz/services/wmts"
-    protocol = "wcs"
-    _config = NationalDatasetConfig(
-        slug="nz_lc",
-        display_name="New Zealand Land Cover Database v5.0 (LRIS)",
-        wcs_url="https://data.lris.govt.nz/v1/wms/",
-        coverage_id="lcdb-v50-land-cover-database-version-50",
-        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
-                          description="New Zealand land cover (33 classes, 2018/19)"),
-        resolution_m=15, category="land_cover",
-        bbox=BoundingBox(min_lon=166.0, min_lat=-47.5, max_lon=178.7, max_lat=-34.3),
-        license="CC-BY 4.0", citation="LRIS/MfE, Land Cover Database v5.0",
-        auth_token_env="CAS_LRIS_API_KEY",
     )
 
 

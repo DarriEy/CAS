@@ -218,6 +218,7 @@ class GEBCOConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=-180, min_lat=-90, max_lon=180, max_lat=90),
         license="Open (GEBCO)",
         citation="GEBCO Compilation Group 2024, GEBCO 2024 Grid",
+        use_wms=True,
     )
 
 
@@ -266,6 +267,7 @@ class RamsarWetlandsConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=-180, min_lat=-90, max_lon=180, max_lat=90),
         license="Open (Ramsar Convention)",
         citation="Ramsar Convention Secretariat, Ramsar Sites Information Service",
+        use_wms=True,
     )
 
 
@@ -278,9 +280,10 @@ class ETOPO2022Connector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="etopo_2022", display_name="ETOPO 2022 60s Global Relief (NOAA/NCEI)",
         wcs_url="https://gis.ngdc.noaa.gov/arcgis/services/DEM_mosaics/DEM_global_mosaic/ImageServer/WCSServer",
-        coverage_id="1", variable=BATHY_VAR, resolution_m=1852,
+        coverage_id="DEM_global_mosaic", variable=BATHY_VAR, resolution_m=1852,
         bbox=BoundingBox(min_lon=-180, min_lat=-90, max_lon=180, max_lat=90),
         license="Open (NOAA)", citation="NOAA NCEI, ETOPO 2022 Global Relief Model",
+        use_wms=True,
     )
 
 
