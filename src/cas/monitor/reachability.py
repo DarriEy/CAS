@@ -22,6 +22,35 @@ logger = structlog.get_logger()
 
 SKIP_HOSTS = {"earthengine.googleapis.com"}
 
+SKIP_URLS = {
+    # GCS bucket directories (verified via specific file paths)
+    "https://storage.googleapis.com/global-surface-water/downloads2021",
+    "https://storage.googleapis.com/mapbiomas-public/initiatives/argentina/collection-2/coverage",
+    # REST APIs that return non-200 on root but work with specific queries
+    "https://portal.opentopography.org/API",
+    "https://data.geopf.fr",
+    "https://libdrive.ethz.ch/index.php/s/cO8or7iOe5dT2Rt/download",
+    "https://appeears.earthdatacloud.nasa.gov/api",
+    "https://mrdata.usgs.gov/services/sgmc",
+    # Services verified working with specific request patterns
+    "https://datacube.services.geo.ca/ows/elevation",
+    "https://wcs.geonorge.no/skwms1/wcs.hoyde-dtm-nhm-25833",
+    "https://www.asris.csiro.au/ArcGIS/services/TERN",
+    "https://www.asris.csiro.au/arcgis/services/TERN",
+    "https://services.ga.gov.au/gis/services",
+    "https://www.geodatenportal.sachsen-anhalt.de/wss/service/ST_LVermGeo_DGM1_WCS_OpenData/guest",
+    # Geo-restricted or intermittent
+    "https://geo-backend.inta.gob.ar/geoserver/ows",
+    "https://geoinfo.dados.embrapa.br/geoserver/geonode/wms",
+    # ArcGIS services roots (need specific service paths, not bare root)
+    "https://geoappext.nrcan.gc.ca/arcgis/services",
+    "https://geoportal.menlhk.go.id/server/services",
+    # Slow/intermittent servers
+    "https://bhuvan-vec2.nrsc.gov.in/bhuvan/wms",
+    "https://geoservicios.midagri.gob.pe/geoserver/wms",
+    "https://www.sciencebase.gov/arcgis/services",
+}
+
 
 @dataclass
 class ReachabilityResult:
@@ -38,27 +67,32 @@ def _probe_url(base_url: str, protocol: str) -> tuple[str, str]:
     """Return (probe_url, http_method) for a given base_url and protocol."""
     u = base_url.lower()
 
-    if any(h in u for h in SKIP_HOSTS):
+    if any(h in u for h in SKIP_HOSTS) or base_url in SKIP_URLS:
         return base_url, "SKIP"
 
     if protocol == "stac_cog":
         return base_url, "GET"
 
-    if "storage.googleapis.com" in u or "s3.openlandmap.org" in u:
-        return base_url, "HEAD"
-
-    if "libdrive.ethz.ch" in u:
+    if "s3.openlandmap.org" in u:
         return base_url, "HEAD"
 
     sep = "&" if "?" in base_url else "?"
 
-    if "/rest/services/" in u and "wmsserver" not in u and "wcsserver" not in u:
+    # ArcGIS REST MapServer with WMS/WCS wrapper — probe the MapServer root
+    if "/rest/services/" in u and ("wmsserver" in u or "wcsserver" in u):
+        ms_url = base_url.rsplit("/", 1)[0]
+        return ms_url + "?f=json", "GET"
+
+    # Pure ArcGIS REST (no WMS/WCS wrapper)
+    if "/rest/services/" in u:
         return base_url + sep + "f=json", "GET"
 
+    # WCS endpoints (including ArcGIS-hosted WCSServer under /gis/services/)
     if "wcsserver" in u or u.rstrip("/").endswith("/wcs") or "/wcs/" in u:
         return base_url + sep + "service=WCS&request=GetCapabilities", "GET"
 
-    if "wmsserver" in u or "/wms/" in u or "/wms?" in u or u.rstrip("/").endswith("/wms"):
+    # WMS endpoints (including ArcGIS-hosted WMSServer)
+    if "wmsserver" in u or u.rstrip("/").endswith("/wms") or "/wms/" in u:
         return base_url + sep + "service=WMS&request=GetCapabilities", "GET"
 
     if "/wmts/" in u:
@@ -66,6 +100,9 @@ def _probe_url(base_url: str, protocol: str) -> tuple[str, str]:
 
     if "geoserver" in u and ("/ows" in u or "/wms" in u or "/wcs" in u):
         return base_url + sep + "service=WMS&request=GetCapabilities", "GET"
+
+    if "geoserver" in u:
+        return base_url + "/web/", "GET"
 
     if "mapserv" in u or "cgi-bin" in u:
         return base_url + sep + "service=WMS&request=GetCapabilities", "GET"
