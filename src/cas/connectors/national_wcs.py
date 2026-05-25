@@ -3256,3 +3256,173 @@ class NorwayLandslideConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=4.5, min_lat=57.9, max_lon=31.2, max_lat=71.2),
         license="NLOD (Norway)", citation="NVE, Skredfaresoner",
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  PAN-EUROPEAN DEM
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("eu_dem")
+class EUDEMConnector(NationalWCSConnector):
+    slug = "eu_dem"
+    display_name = "EU-DEM v1.1 25m"
+    base_url = "https://image.discomap.eea.europa.eu/arcgis/services/Elevation/EUElev_DEM_V11/MapServer/WCSServer"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="eu_dem", display_name="EU-DEM v1.1 25m (EEA/Copernicus)",
+        wcs_url="https://image.discomap.eea.europa.eu/arcgis/services/Elevation/EUElev_DEM_V11/MapServer/WCSServer",
+        coverage_id="1", variable=ELEV_VAR, resolution_m=25,
+        bbox=BoundingBox(min_lon=-34, min_lat=27, max_lon=45, max_lat=72),
+        license="Open (EEA)", citation="EEA, EU-DEM v1.1 (Copernicus Land Monitoring Service)",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  SWEDEN DEM
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("sweden_dem")
+class SwedenDEMConnector(NationalWCSConnector):
+    slug = "sweden_dem"
+    display_name = "Sweden DEM 2m"
+    base_url = "https://maps.lantmateriet.se/topowebb-wcs/v1"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="sweden_dem", display_name="Sweden Elevation Model 2m (Lantmäteriet)",
+        wcs_url="https://maps.lantmateriet.se/topowebb-wcs/v1",
+        coverage_id="dem2m", variable=ELEV_VAR, resolution_m=2, protocol_version="2.0.1",
+        bbox=BoundingBox(min_lon=11.0, min_lat=55.3, max_lon=24.2, max_lat=69.1),
+        license="Open (Lantmäteriet)", citation="Lantmäteriet, GSD-Höjddata grid 2+",
+        auth_token_env="CAS_LANTMATERIET_API_KEY",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  SCOTLAND DEM
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("scotland_dem")
+class ScotlandDEMConnector(NationalWCSConnector):
+    slug = "scotland_dem"
+    display_name = "Scotland LiDAR DTM 1m"
+    base_url = "https://remotesensingdata.gov.scot/services/wcs"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="scotland_dem", display_name="Scotland LiDAR DTM 1m (SG)",
+        wcs_url="https://remotesensingdata.gov.scot/services/wcs",
+        coverage_id="Scotland_DTM_1m", variable=ELEV_VAR, resolution_m=1,
+        protocol_version="2.0.1",
+        bbox=BoundingBox(min_lon=-7.7, min_lat=54.6, max_lon=-0.7, max_lat=60.9),
+        license="Open Government Licence v3",
+        citation="Scottish Government, National LiDAR DTM",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  EASTERN EUROPE DEMs
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("latvia_dem")
+class LatviaDEMConnector(NationalWCSConnector):
+    slug = "latvia_dem"
+    display_name = "Latvia DEM 1m"
+    base_url = "https://lvmgeoserver.lvm.lv/geoserver/public/wcs"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="latvia_dem", display_name="Latvia LiDAR DEM 1m (LVM GEO)",
+        wcs_url="https://lvmgeoserver.lvm.lv/geoserver/public/wcs",
+        coverage_id="public:dem_1m", variable=ELEV_VAR, resolution_m=1,
+        protocol_version="2.0.1",
+        bbox=BoundingBox(min_lon=20.9, min_lat=55.7, max_lon=28.2, max_lat=58.1),
+        license="Open (Latvia)", citation="LVM GEO, Latvia LiDAR DEM",
+    )
+
+
+@register("slovakia_dem")
+class SlovakiaDEMConnector(NationalWCSConnector):
+    slug = "slovakia_dem"
+    display_name = "Slovakia DTM 5m"
+    base_url = "https://zbgisws.skgeodesy.sk/inspire_wcs_el/service.svc/get"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="slovakia_dem", display_name="Slovakia DMR3.5 5m (UGKK)",
+        wcs_url="https://zbgisws.skgeodesy.sk/inspire_wcs_el/service.svc/get",
+        coverage_id="EL.GridCoverage.DTM", variable=ELEV_VAR, resolution_m=5,
+        protocol_version="2.0.1",
+        bbox=BoundingBox(min_lon=16.8, min_lat=47.7, max_lon=22.6, max_lat=49.6),
+        license="Open (UGKK)", citation="UGKK, Digitálny model reliéfu",
+    )
+
+
+@register("croatia_dem")
+class CroatiaDEMConnector(NationalWCSConnector):
+    slug = "croatia_dem"
+    display_name = "Croatia DEM 25m"
+    base_url = "https://geoportal.dgu.hr/services/inspire/el_wcs/wcs"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="croatia_dem", display_name="Croatia DEM 25m (DGU INSPIRE)",
+        wcs_url="https://geoportal.dgu.hr/services/inspire/el_wcs/wcs",
+        coverage_id="EL.GridCoverage.DTM", variable=ELEV_VAR, resolution_m=25,
+        protocol_version="2.0.1",
+        bbox=BoundingBox(min_lon=13.5, min_lat=42.4, max_lon=19.5, max_lat=46.6),
+        license="Open (DGU)", citation="DGU, Digitalni model reljefa",
+    )
+
+
+@register("hungary_dem")
+class HungaryDEMConnector(NationalWCSConnector):
+    slug = "hungary_dem"
+    display_name = "Hungary DEM 5m"
+    base_url = "https://inspire.fomi.hu/ows/el/wcs"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="hungary_dem", display_name="Hungary DDM 5m (Lechner INSPIRE)",
+        wcs_url="https://inspire.fomi.hu/ows/el/wcs",
+        coverage_id="EL.GridCoverage.DTM", variable=ELEV_VAR, resolution_m=5,
+        protocol_version="2.0.1",
+        bbox=BoundingBox(min_lon=16.1, min_lat=45.7, max_lon=22.9, max_lat=48.6),
+        license="Open (Hungary)", citation="Lechner Tudásközpont, Digitális Domborzatmodell",
+    )
+
+
+@register("romania_dem")
+class RomaniaDEMConnector(NationalWCSConnector):
+    slug = "romania_dem"
+    display_name = "Romania DEM 5m"
+    base_url = "https://geoportal.ancpi.ro/inspire/el/wcs"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="romania_dem", display_name="Romania Elevation 5m (ANCPI INSPIRE)",
+        wcs_url="https://geoportal.ancpi.ro/inspire/el/wcs",
+        coverage_id="EL.GridCoverage.DTM", variable=ELEV_VAR, resolution_m=5,
+        protocol_version="2.0.1",
+        bbox=BoundingBox(min_lon=20.3, min_lat=43.6, max_lon=29.7, max_lat=48.3),
+        license="Open (ANCPI)", citation="ANCPI, Modelul Digital al Terenului",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  GLOBAL TOPO+BATHYMETRY
+# ═══════════════════════════════════════════════════════════════════════
+
+BATHY_VAR = Variable(
+    name="elevation", units="m", data_type=DataType.CONTINUOUS,
+    valid_range=(-11000, 9000),
+    description="Combined land elevation and ocean depth",
+)
+
+
+@register("etopo_2022")
+class ETOPO2022Connector(NationalWCSConnector):
+    slug = "etopo_2022"
+    display_name = "ETOPO 2022 Global Topo+Bathy"
+    base_url = "https://gis.ngdc.noaa.gov/arcgis/services/DEM_mosaics/DEM_global_mosaic/ImageServer/WCSServer"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="etopo_2022", display_name="ETOPO 2022 60s Global Relief (NOAA/NCEI)",
+        wcs_url="https://gis.ngdc.noaa.gov/arcgis/services/DEM_mosaics/DEM_global_mosaic/ImageServer/WCSServer",
+        coverage_id="1", variable=BATHY_VAR, resolution_m=1852,
+        bbox=BoundingBox(min_lon=-180, min_lat=-90, max_lon=180, max_lat=90),
+        license="Open (NOAA)", citation="NOAA NCEI, ETOPO 2022 Global Relief Model",
+    )
