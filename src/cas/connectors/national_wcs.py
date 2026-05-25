@@ -3796,3 +3796,254 @@ class HungarySoilConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=16.1, min_lat=45.7, max_lon=22.9, max_lat=48.6),
         license="Open (Hungary)", citation="NÉBIH, Hungarian Soil Map",
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  BALKANS & SOUTHEASTERN EUROPE
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("greece_geology")
+class GreeceGeologyConnector(NationalWCSConnector):
+    slug = "greece_geology"
+    display_name = "Greece Geological Map (IGME)"
+    base_url = "https://gaia.igme.gr/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="greece_geology",
+        display_name="Greece Geological Map 1:500k (IGME/HSGME)",
+        wcs_url="https://gaia.igme.gr/geoserver/wms",
+        coverage_id="igme:geology_500k",
+        variable=Variable(name="geology", units="class", data_type=DataType.CATEGORICAL,
+                          description="Greek geological units 1:500,000"),
+        resolution_m=500, category="geology",
+        bbox=BoundingBox(min_lon=19.4, min_lat=34.8, max_lon=29.6, max_lat=41.8),
+        license="Open (IGME)", citation="IGME/HSGME, Geological Map of Greece",
+    )
+
+
+@register("bulgaria_lc")
+class BulgariaLCConnector(NationalWCSConnector):
+    slug = "bulgaria_lc"
+    display_name = "Bulgaria CORINE Land Cover"
+    base_url = "https://inspire.cadastre.bg/arcgis/services/LC/LandCoverRaster/ImageServer/WCSServer"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="bulgaria_lc",
+        display_name="Bulgaria CORINE Land Cover (EEA/Cadastre)",
+        wcs_url="https://inspire.cadastre.bg/arcgis/services/LC/LandCoverRaster/ImageServer/WCSServer",
+        coverage_id="1",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Bulgarian land cover (CORINE nomenclature)"),
+        resolution_m=100, category="land_cover",
+        bbox=BoundingBox(min_lon=22.4, min_lat=41.2, max_lon=28.6, max_lat=44.2),
+        license="Open (Bulgaria)", citation="Cadastral Agency, Bulgaria INSPIRE LC",
+    )
+
+
+@register("turkey_dem")
+class TurkeyDEMConnector(NationalWCSConnector):
+    slug = "turkey_dem"
+    display_name = "Turkey DEM (HGM)"
+    base_url = "https://cbs.hgm.gov.tr/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="turkey_dem",
+        display_name="Turkey Elevation Model (HGM INSPIRE)",
+        wcs_url="https://cbs.hgm.gov.tr/geoserver/wms",
+        coverage_id="EL.GridCoverage",
+        variable=ELEV_VAR, resolution_m=30,
+        bbox=BoundingBox(min_lon=26.0, min_lat=35.8, max_lon=44.8, max_lat=42.1),
+        license="Open (HGM)", citation="HGM, General Directorate of Mapping, Turkey",
+    )
+
+
+@register("serbia_geology")
+class SerbiaGeologyConnector(NationalWCSConnector):
+    slug = "serbia_geology"
+    display_name = "Serbia Geological Map"
+    base_url = "https://geoliss.mre.gov.rs/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="serbia_geology",
+        display_name="Serbia Geological Map 1:300k (GeoLISS)",
+        wcs_url="https://geoliss.mre.gov.rs/geoserver/wms",
+        coverage_id="geoliss:osnovna_geoloska_karta",
+        variable=Variable(name="geology", units="class", data_type=DataType.CATEGORICAL,
+                          description="Serbian geological units"),
+        resolution_m=300, category="geology",
+        bbox=BoundingBox(min_lon=18.8, min_lat=42.2, max_lon=23.0, max_lat=46.2),
+        license="Open (GeoLISS)",
+        citation="Mining and Geology Institute, GeoLISS Serbia",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  NORTH AFRICA & MIDDLE EAST
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("morocco_geology")
+class MoroccoGeologyConnector(NationalWCSConnector):
+    slug = "morocco_geology"
+    display_name = "Morocco Geological Map"
+    base_url = "https://gis.onhym.com/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="morocco_geology",
+        display_name="Morocco Geological Map 1:1M (ONHYM)",
+        wcs_url="https://gis.onhym.com/geoserver/wms",
+        coverage_id="onhym:carte_geologique",
+        variable=Variable(name="geology", units="class", data_type=DataType.CATEGORICAL,
+                          description="Moroccan geological units"),
+        resolution_m=1000, category="geology",
+        bbox=BoundingBox(min_lon=-13.2, min_lat=27.7, max_lon=-1.0, max_lat=35.9),
+        license="Open (ONHYM)",
+        citation="ONHYM, Carte Géologique du Maroc",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  SOUTHEAST ASIA
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("thailand_lc")
+class ThailandLCConnector(NationalWCSConnector):
+    slug = "thailand_lc"
+    display_name = "Thailand Land Use (LDD)"
+    base_url = "https://eis.ldd.go.th/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="thailand_lc",
+        display_name="Thailand Land Use Map (LDD)",
+        wcs_url="https://eis.ldd.go.th/geoserver/wms",
+        coverage_id="ldd:landuse",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Thai land use classification"),
+        resolution_m=30, category="land_cover",
+        bbox=BoundingBox(min_lon=97.3, min_lat=5.6, max_lon=105.6, max_lat=20.5),
+        license="Open (LDD)",
+        citation="Land Development Department, Thailand Land Use",
+    )
+
+
+@register("thailand_soil")
+class ThailandSoilConnector(NationalWCSConnector):
+    slug = "thailand_soil"
+    display_name = "Thailand Soil Map (LDD)"
+    base_url = "https://eis.ldd.go.th/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="thailand_soil",
+        display_name="Thailand Soil Group Map (LDD)",
+        wcs_url="https://eis.ldd.go.th/geoserver/wms",
+        coverage_id="ldd:soil_group",
+        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="Thai soil group classification"),
+        resolution_m=100, category="soil",
+        bbox=BoundingBox(min_lon=97.3, min_lat=5.6, max_lon=105.6, max_lat=20.5),
+        license="Open (LDD)", citation="Land Development Department, Thailand Soil Map",
+    )
+
+
+@register("philippines_lc")
+class PhilippinesLCConnector(NationalWCSConnector):
+    slug = "philippines_lc"
+    display_name = "Philippines Land Cover (NAMRIA)"
+    base_url = "https://geoportal.gov.ph/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="philippines_lc",
+        display_name="Philippines Land Cover 2020 (NAMRIA)",
+        wcs_url="https://geoportal.gov.ph/geoserver/wms",
+        coverage_id="namria:land_cover_2020",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Philippine land cover classification"),
+        resolution_m=30, category="land_cover",
+        bbox=BoundingBox(min_lon=116.9, min_lat=4.6, max_lon=126.6, max_lat=21.1),
+        license="Open (NAMRIA)", citation="NAMRIA, Philippine Land Cover",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  ADDITIONAL SOUTH AMERICA
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("ecuador_lc")
+class EcuadorLCConnector(NationalWCSConnector):
+    slug = "ecuador_lc"
+    display_name = "Ecuador Land Cover (MAE)"
+    base_url = "https://ide.ambiente.gob.ec/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="ecuador_lc",
+        display_name="Ecuador Cobertura de la Tierra (MAE)",
+        wcs_url="https://ide.ambiente.gob.ec/geoserver/wms",
+        coverage_id="mae:cobertura_tierra_2018",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Ecuadorian land cover classification"),
+        resolution_m=30, category="land_cover",
+        bbox=BoundingBox(min_lon=-81.0, min_lat=-5.0, max_lon=-75.2, max_lat=1.4),
+        license="Open (MAE)",
+        citation="MAE, Mapa de Cobertura y Uso de la Tierra del Ecuador",
+    )
+
+
+@register("uruguay_soil")
+class UruguaySoilConnector(NationalWCSConnector):
+    slug = "uruguay_soil"
+    display_name = "Uruguay Soil Map (CONEAT)"
+    base_url = "https://www.gub.uy/ministerio-ganaderia-agricultura-pesca/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="uruguay_soil",
+        display_name="Uruguay CONEAT Soil Groups (MGAP)",
+        wcs_url="https://www.gub.uy/ministerio-ganaderia-agricultura-pesca/geoserver/wms",
+        coverage_id="coneat:grupos_coneat",
+        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="Uruguayan CONEAT soil/productivity groups"),
+        resolution_m=250, category="soil",
+        bbox=BoundingBox(min_lon=-58.4, min_lat=-35.0, max_lon=-53.1, max_lat=-30.1),
+        license="Open (MGAP)", citation="MGAP, Grupos CONEAT Uruguay",
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  EAST AFRICA
+# ═══════════════════════════════════════════════════════════════════════
+
+@register("kenya_soil")
+class KenyaSoilConnector(NationalWCSConnector):
+    slug = "kenya_soil"
+    display_name = "Kenya Soil Map (KARI)"
+    base_url = "https://soils.openlandmap.org/geoserver/wms"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="kenya_soil",
+        display_name="Kenya Soil Map (KenSOTER/iSDA)",
+        wcs_url="https://soils.openlandmap.org/geoserver/wms",
+        coverage_id="openlandmap:kenya_soils",
+        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
+                          description="Kenyan soil classification (KenSOTER)"),
+        resolution_m=250, category="soil",
+        bbox=BoundingBox(min_lon=33.9, min_lat=-4.7, max_lon=41.9, max_lat=5.5),
+        license="CC-BY 4.0", citation="KenSOTER / iSDA / OpenLandMap",
+    )
+
+
+@register("ethiopia_lc")
+class EthiopiaLCConnector(NationalWCSConnector):
+    slug = "ethiopia_lc"
+    display_name = "Ethiopia Land Cover (ESA CCI)"
+    base_url = "https://ows.digitalearth.africa"
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="ethiopia_lc",
+        display_name="Ethiopia ESA CCI Land Cover (via DEA Africa)",
+        wcs_url="https://ows.digitalearth.africa/wcs",
+        coverage_id="esa_worldcover_2021", protocol_version="2.0.1",
+        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
+                          description="Ethiopian land cover (ESA WorldCover via DEA Africa)"),
+        resolution_m=10, category="land_cover",
+        bbox=BoundingBox(min_lon=33.0, min_lat=3.4, max_lon=48.0, max_lat=14.9),
+        license="CC-BY 4.0",
+        citation="ESA WorldCover via Digital Earth Africa",
+    )
