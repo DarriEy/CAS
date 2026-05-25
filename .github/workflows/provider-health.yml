@@ -20,6 +20,10 @@ jobs:
       - name: Install dependencies
         run: pip install -e ".[dev,stac]"
 
+      - name: Endpoint reachability check
+        run: cas verify
+        timeout-minutes: 2
+
       - name: Health check (Central US polygon)
         run: cas health --polygon central_us
         timeout-minutes: 10

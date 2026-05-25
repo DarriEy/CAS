@@ -151,6 +151,45 @@ def datasets(provider):
 
 
 @cli.command()
+@click.option("--slug", "-s", default=None, help="Check a single provider by slug")
+def verify(slug):
+    """Fast endpoint reachability check for all providers (~20s)."""
+    from cas.monitor.reachability import check_all_reachability
+
+    async def _run():
+        slugs = [slug] if slug else None
+        results = await check_all_reachability(slugs=slugs)
+
+        ok = auth = skip = fail = 0
+        failures = []
+        for r in sorted(results, key=lambda r: r.slug):
+            if r.skipped:
+                icon, skip = "SKIP", skip + 1
+            elif r.reachable and r.status_code in (401, 403):
+                icon, auth = "AUTH", auth + 1
+            elif r.reachable:
+                icon, ok = "OK  ", ok + 1
+            else:
+                icon, fail = "FAIL", fail + 1
+                failures.append(r)
+            click.echo(
+                f"  [{icon}]  {r.slug:30s}  {r.elapsed_s:5.1f}s  {r.detail}"
+            )
+
+        total = ok + auth + skip + fail
+        click.echo(f"\n  {total} providers: {ok} ok, {auth} auth-gated, "
+                    f"{skip} skipped, {fail} failed")
+
+        if failures:
+            click.echo("\nFailed endpoints:", err=True)
+            for r in failures:
+                click.echo(f"  {r.slug}: {r.url}  ({r.detail})", err=True)
+            raise SystemExit(1)
+
+    asyncio.run(_run())
+
+
+@cli.command()
 @click.option("--polygon", default="central_us", help="Test polygon name")
 def health(polygon):
     """Run health checks against all providers."""

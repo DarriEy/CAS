@@ -68,6 +68,9 @@ ignore = ["B905"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+markers = [
+    "network: tests requiring network access (deselect with '-m not network')",
+]
 
 [tool.mypy]
 python_version = "3.11"
