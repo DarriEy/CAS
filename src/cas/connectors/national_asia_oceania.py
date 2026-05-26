@@ -53,22 +53,6 @@ class AustraliaDEALCConnector(NationalWCSConnector):
 #  ASIA
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("indonesia_dem")
-class IndonesiaDEMConnector(NationalWCSConnector):
-    slug = "indonesia_dem"
-    display_name = "Indonesia DEMNAS 8m"
-    base_url = "https://geoservices.big.go.id/raster/rest/services/DEMNAS/DEM_Indonesia/ImageServer"
-    protocol = "wcs"
-    _config = NationalDatasetConfig(
-        slug="indonesia_dem", display_name="Indonesia DEMNAS 8m (BIG)",
-        wcs_url="https://geoservices.big.go.id/raster/rest/services/DEMNAS/DEM_Indonesia/ImageServer/WCSServer",
-        coverage_id="1", variable=ELEV_VAR, resolution_m=8,
-        bbox=BoundingBox(min_lon=95, min_lat=-11, max_lon=141, max_lat=6),
-        license="Open (BIG)", citation="Badan Informasi Geospasial, DEMNAS",
-        use_wms=True,
-    )
-
-
 @register("taiwan_dem")
 class TaiwanDEMConnector(NationalWCSConnector):
     slug = "taiwan_dem"
@@ -380,23 +364,4 @@ class AustraliaAWCConnector(NationalWCSConnector):
         license="CC-BY 4.0", citation="TERN/CSIRO, SLGA Available Water Capacity",
     )
 
-
-@register("australia_geology")
-class AustraliaGeologyConnector(NationalWCSConnector):
-    slug = "australia_geology"
-    display_name = "Australia Surface Geology (GA)"
-    base_url = "https://services.ga.gov.au/gis/services"
-    protocol = "wcs"
-    _config = NationalDatasetConfig(
-        slug="australia_geology",
-        display_name="Australia Surface Geology 1:1M (Geoscience Australia)",
-        wcs_url="https://services.ga.gov.au/gis/services/Surface_Geology_Of_Australia/MapServer/WMSServer",
-        coverage_id="0",
-        variable=Variable(name="geology", units="class", data_type=DataType.CATEGORICAL,
-                          description="Australian surface geological units 1:1,000,000"),
-        resolution_m=1000, category="geology",
-        bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
-        license="CC-BY 4.0",
-        citation="Geoscience Australia, Surface Geology of Australia 1:1M",
-    )
 

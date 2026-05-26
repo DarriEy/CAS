@@ -161,26 +161,6 @@ class ColombiaLCConnector(NationalWCSConnector):
 #  CHILE — soil
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("chile_soil")
-class ChileSoilConnector(NationalWCSConnector):
-    slug = "chile_soil"
-    display_name = "Chile Soil Map (CIREN)"
-    base_url = "https://esri.ciren.cl/server/rest/services/IDEMINAGRI/SUELOS_AGROLOGICOS/MapServer/WMSServer"
-    protocol = "wcs"
-    _config = NationalDatasetConfig(
-        slug="chile_soil",
-        display_name="Chile Agrological Soil Map (CIREN/MINAGRI)",
-        wcs_url="https://esri.ciren.cl/server/rest/services/IDEMINAGRI/SUELOS_AGROLOGICOS/MapServer/WMSServer",
-        coverage_id="0",
-        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
-                          description="Chilean agrological soil classification"),
-        resolution_m=100, category="soil",
-        bbox=BoundingBox(min_lon=-76, min_lat=-56, max_lon=-66, max_lat=-17),
-        license="Open (CIREN)", citation="CIREN / MINAGRI, Suelos Agrológicos de Chile",
-        use_wms=True,
-    )
-
-
 # ═══════════════════════════════════════════════════════════════════════
 #  PERU — land cover
 # ═══════════════════════════════════════════════════════════════════════
@@ -209,50 +189,9 @@ class PeruLCConnector(NationalWCSConnector):
 #  MEXICO — additional (CONABIO land use)
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("mexico_conabio_lc")
-class MexicoCONABIOLCConnector(NationalWCSConnector):
-    slug = "mexico_conabio_lc"
-    display_name = "Mexico CONABIO Land Use"
-    base_url = "http://geoportal.conabio.gob.mx/cgi-bin/mapserv"
-    protocol = "wcs"
-    _config = NationalDatasetConfig(
-        slug="mexico_conabio_lc",
-        display_name="Mexico CONABIO Uso de Suelo y Vegetación",
-        wcs_url="http://geoportal.conabio.gob.mx/cgi-bin/mapserv",
-        coverage_id="uso_suelo_vegetacion",
-        extra_params={"map": "/web/map_files/cws/uso_suelo_map.map"},
-        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
-                          description="Mexican land use/vegetation (CONABIO/INEGI)"),
-        resolution_m=250, category="land_cover",
-        bbox=BoundingBox(min_lon=-118, min_lat=14, max_lon=-86, max_lat=33),
-        license="Open (CONABIO)", citation="CONABIO / INEGI, Uso de Suelo y Vegetación",
-        use_wms=True,
-    )
-
-
 # ═══════════════════════════════════════════════════════════════════════
 #  ARGENTINA — land cover (MapBiomas via WMS)
 # ═══════════════════════════════════════════════════════════════════════
-
-@register("argentina_lc")
-class ArgentinaLCConnector(NationalWCSConnector):
-    slug = "argentina_lc"
-    display_name = "Argentina Land Cover (MapBiomas)"
-    base_url = "https://storage.googleapis.com/mapbiomas-public/initiatives/argentina/collection-2/coverage"
-    protocol = "rest"
-    _config = NationalDatasetConfig(
-        slug="argentina_lc",
-        display_name="Argentina MapBiomas Land Cover 30m (1998-2024)",
-        wcs_url="https://storage.googleapis.com/mapbiomas-public/initiatives/argentina/collection-2/coverage",
-        coverage_id="mapbiomas_argentina",
-        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
-                          description="MapBiomas Argentina annual land cover (15 classes, Landsat)"),
-        resolution_m=30, category="land_cover",
-        bbox=BoundingBox(min_lon=-74, min_lat=-56, max_lon=-53, max_lat=-21),
-        license="CC-BY-SA 4.0",
-        citation="MapBiomas Argentina, Collection 2",
-    )
-
 
 # ═══════════════════════════════════════════════════════════════════════
 #  US — USGS WBD Watershed Boundaries
@@ -432,26 +371,6 @@ class PeruSoilConnector(NationalWCSConnector):
 # ═══════════════════════════════════════════════════════════════════════
 #  US — additional datasets
 # ═══════════════════════════════════════════════════════════════════════
-
-@register("us_statsgo")
-class USSTATSGOConnector(NationalWCSConnector):
-    slug = "us_statsgo"
-    display_name = "US STATSGO2 Soil 1km"
-    base_url = "https://sdmdataaccess.sc.egov.usda.gov"
-    protocol = "wcs"
-    _config = NationalDatasetConfig(
-        slug="us_statsgo",
-        display_name="US STATSGO2 General Soil Map (USDA/NRCS)",
-        wcs_url="https://SDMDataAccess.sc.egov.usda.gov/Spatial/SDMWGS84Geographic.wfs",
-        coverage_id="mapunitpoly",
-        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
-                          description="US general soil map 1:250k (STATSGO2)"),
-        resolution_m=1000, category="soil",
-        bbox=BoundingBox(min_lon=-180, min_lat=17, max_lon=-64, max_lat=72),
-        license="Public Domain", citation="USDA/NRCS, STATSGO2",
-        use_wms=True,
-    )
-
 
 @register("us_nass_cropscape")
 class USCropscapeConnector(NationalWCSConnector):

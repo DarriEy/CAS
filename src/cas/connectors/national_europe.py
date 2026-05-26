@@ -1119,26 +1119,6 @@ class GermanyHessenDEMConnector(NationalWCSConnector):
 #  NORWAY SOIL
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("norway_soil")
-class NorwaySoilConnector(NationalWCSConnector):
-    slug = "norway_soil"
-    display_name = "Norway Soil Map (NIBIO)"
-    base_url = "https://wms.nibio.no/cgi-bin/jordkart"
-    protocol = "wcs"
-    _config = NationalDatasetConfig(
-        slug="norway_soil",
-        display_name="Norway Soil Map 1:5k-1:250k (NIBIO)",
-        wcs_url="https://wms.nibio.no/cgi-bin/jordkart",
-        coverage_id="jordkart",
-        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
-                          description="Norwegian soil type classification"),
-        resolution_m=5, category="soil",
-        bbox=BoundingBox(min_lon=4.5, min_lat=57.9, max_lon=31.2, max_lat=71.2),
-        license="NLOD (Norway)", citation="NIBIO, Jordkart (Soil Map of Norway)",
-        use_wms=True,
-    )
-
-
 @register("norway_forest")
 class NorwayForestConnector(NationalWCSConnector):
     slug = "norway_forest"
@@ -1537,25 +1517,6 @@ class NorwayGeologyConnector(NationalWCSConnector):
 #  NETHERLANDS — land cover
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("netherlands_lc")
-class NetherlandsLCConnector(NationalWCSConnector):
-    slug = "netherlands_lc"
-    display_name = "Netherlands BRT Land Cover"
-    base_url = "https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0"
-    protocol = "wcs"
-    _config = NationalDatasetConfig(
-        slug="netherlands_lc",
-        display_name="Netherlands BRT/TOP10NL Land Cover (PDOK)",
-        wcs_url="https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0",
-        coverage_id="standaard",
-        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
-                          description="Dutch topographic land cover from BRT/TOP10NL"),
-        resolution_m=10, category="land_cover",
-        bbox=BoundingBox(min_lon=3.3, min_lat=50.7, max_lon=7.3, max_lat=53.6),
-        license="CC-0", citation="Kadaster, BRT/TOP10NL via PDOK",
-    )
-
-
 # ═══════════════════════════════════════════════════════════════════════
 #  ITALY — DEM slope/aspect derivatives
 # ═══════════════════════════════════════════════════════════════════════
@@ -1733,45 +1694,6 @@ class UKSoilscapesConnector(NationalWCSConnector):
 # ═══════════════════════════════════════════════════════════════════════
 #  SWITZERLAND — soil erosion + organic soils
 # ═══════════════════════════════════════════════════════════════════════
-
-@register("swiss_soil_erosion")
-class SwissSoilErosionConnector(NationalWCSConnector):
-    slug = "swiss_soil_erosion"
-    display_name = "Switzerland Soil Erosion Risk"
-    base_url = "https://data.geo.admin.ch/api/stac/v1"
-    protocol = "stac_cog"
-    _config = NationalDatasetConfig(
-        slug="swiss_soil_erosion",
-        display_name="Switzerland Monthly Soil Erosion Risk (BAFU)",
-        wcs_url="https://data.geo.admin.ch/api/stac/v1",
-        coverage_id="ch.bafu.erosion-gruenland_bodenabtrag",
-        variable=Variable(name="soil_erosion", units="t/ha/yr", data_type=DataType.CONTINUOUS,
-                          valid_range=(0, 100),
-                          description="Soil erosion risk for grassland — controls sediment yield"),
-        resolution_m=25, category="soil",
-        bbox=BoundingBox(min_lon=5.9, min_lat=45.8, max_lon=10.5, max_lat=47.8),
-        license="Open (swisstopo)", citation="BAFU, Soil Erosion Risk Maps",
-    )
-
-
-@register("swiss_organic_soils")
-class SwissOrganicSoilsConnector(NationalWCSConnector):
-    slug = "swiss_organic_soils"
-    display_name = "Switzerland Organic Soils"
-    base_url = "https://data.geo.admin.ch/api/stac/v1"
-    protocol = "stac_cog"
-    _config = NationalDatasetConfig(
-        slug="swiss_organic_soils",
-        display_name="Switzerland Organic Soils Distribution (Agroscope)",
-        wcs_url="https://data.geo.admin.ch/api/stac/v1",
-        coverage_id="ch.agroscope.abschaetzung-organische_boeden",
-        variable=Variable(name="organic_soil", units="class", data_type=DataType.CATEGORICAL,
-                          description="Distribution of organic soils — controls carbon/water storage"),
-        resolution_m=25, category="soil",
-        bbox=BoundingBox(min_lon=5.9, min_lat=45.8, max_lon=10.5, max_lat=47.8),
-        license="Open (Agroscope)", citation="Agroscope, Organic Soils of Switzerland",
-    )
-
 
 @register("swiss_soil_depth")
 class SwissSoilDepthConnector(NationalWCSConnector):
@@ -2598,23 +2520,6 @@ class NorwayLandslideConnector(NationalWCSConnector):
 # ═══════════════════════════════════════════════════════════════════════
 #  SCOTLAND DEM
 # ═══════════════════════════════════════════════════════════════════════
-
-@register("scotland_dem")
-class ScotlandDEMConnector(NationalWCSConnector):
-    slug = "scotland_dem"
-    display_name = "Scotland LiDAR DTM 1m"
-    base_url = "https://srsp-ows.jncc.gov.uk/scotland/wcs"
-    protocol = "wcs"
-    _config = NationalDatasetConfig(
-        slug="scotland_dem", display_name="Scotland LiDAR DTM 1m (JNCC/SG)",
-        wcs_url="https://srsp-ows.jncc.gov.uk/scotland/wcs",
-        coverage_id="scotland__scotland-gov-lidar-hes-2010-dtm", variable=ELEV_VAR, resolution_m=1,
-        protocol_version="2.0.1",
-        bbox=BoundingBox(min_lon=-7.7, min_lat=54.6, max_lon=-0.7, max_lat=60.9),
-        license="Open Government Licence v3",
-        citation="Scottish Government, National LiDAR DTM",
-    )
-
 
 # ═══════════════════════════════════════════════════════════════════════
 #  EASTERN EUROPE DEMs
