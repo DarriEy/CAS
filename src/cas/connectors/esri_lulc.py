@@ -96,6 +96,7 @@ class EsriLULCConnector(STACMixin, BaseConnector):
         raster_data = None
         transform = None
         nodata = None
+        src_crs = "EPSG:4326"
         provenance = ""
 
         # Provider first: Esri ImageServer exportImage

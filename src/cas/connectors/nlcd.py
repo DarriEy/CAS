@@ -110,7 +110,7 @@ class NLCDConnector(BaseConnector):
             "request": "GetCoverage",
             "coverage": layer,
             "CRS": "EPSG:4326",
-            "BBOX": f"{bbox[1]},{bbox[0]},{bbox[3]},{bbox[2]}",
+            "BBOX": f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}",
             "width": "500",
             "height": "500",
             "format": "GeoTIFF",

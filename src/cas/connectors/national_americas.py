@@ -348,8 +348,8 @@ class NLCDChangeIndexConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="nlcd_change_index",
         display_name="NLCD Land Cover Change Index 2001-2021 30m (MRLC)",
-        wcs_url="https://www.mrlc.gov/geoserver/mrlc_display/wms",
-        coverage_id="NLCD_2001_2021_Land_Cover_Change_Index_L48",
+        wcs_url="https://www.mrlc.gov/geoserver/mrlc_download/wcs",
+        coverage_id="mrlc_download:NLCD_2001_2021_Land_Cover_Change_Index_L48",
         variable=Variable(name="lc_change_index", units="class", data_type=DataType.CATEGORICAL,
                           description="NLCD land cover change index 2001-2021 — identifies changed areas"),
         resolution_m=30, category="land_cover",
