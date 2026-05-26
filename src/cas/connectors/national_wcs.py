@@ -176,6 +176,14 @@ class NationalWCSConnector(BaseConnector):
                     resp.status_code >= 400
                     or ("xml" in content_type and "tiff" not in content_type)
                 )
+                if failed and not cfg.use_wms and cfg.protocol_version == "1.0.0":
+                    params["BBOX"] = f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}"
+                    resp = await client.get(cfg.wcs_url, params=params, headers=headers)
+                    content_type = resp.headers.get("content-type", "")
+                    failed = (
+                        resp.status_code >= 400
+                        or ("xml" in content_type and "tiff" not in content_type)
+                    )
                 if failed and cfg.use_wms:
                     fallback_combos = [
                         (cfg.crs, "image/tiff"),
@@ -310,7 +318,7 @@ class PermafrostConnector(NationalWCSConnector):
         slug="permafrost",
         display_name="Global Permafrost Zonation Index 1km (U Zurich)",
         wcs_url="https://geoserver.geo.uzh.ch/cryogis/wms",
-        coverage_id="PermafrostZonationIndex",
+        coverage_id="cryogis:Permafrost-Global-PFI",
         variable=Variable(name="permafrost_index", units="index", data_type=DataType.CONTINUOUS,
                           valid_range=(0, 1),
                           description="Permafrost zonation probability index"),

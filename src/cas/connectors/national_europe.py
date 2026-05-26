@@ -126,7 +126,7 @@ class ItalyTINITALYConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="italy_tinitaly", display_name="Italy TINITALY/1.1 10m (INGV)",
         wcs_url="http://tinitaly.pi.ingv.it/TINItaly_1_1/wcs",
-        coverage_id="TINItaly_1_1__tinitaly_dem",
+        coverage_id="TINItaly_1_1:tinitaly_dem",
         variable=ELEV_VAR, resolution_m=10,
         bbox=BoundingBox(min_lon=6.6, min_lat=36.6, max_lon=18.6, max_lat=47.1),
         license="CC-BY 4.0", citation="Tarquini et al. 2023, TINITALY/1.1",
@@ -162,6 +162,7 @@ class PolandNMTConnector(NationalWCSConnector):
         variable=ELEV_VAR, resolution_m=1,
         bbox=BoundingBox(min_lon=14.1, min_lat=49.0, max_lon=24.2, max_lat=54.9),
         license="Open (Poland)", citation="GUGiK, Numeryczny Model Terenu",
+        crs="EPSG:28992",
         use_wms=True,
     )
 
@@ -689,7 +690,7 @@ class SwedenLCConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="sweden_lc", display_name="Sweden NMD 10m Land Cover (EPA)",
         wcs_url="https://geodata.naturvardsverket.se/inspire/lc-nmd/wms",
-        coverage_id="nmd2018",
+        coverage_id="LC.LandCoverRaster.Bas.2018",
         variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
                           description="Swedish national land cover (10m, Sentinel-2 based)"),
         resolution_m=10, category="land_cover",
@@ -730,7 +731,7 @@ class BelgiumFlandersDEMConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="belgium_flanders_dem", display_name="Flanders (Belgium) DHMV II DTM 1m",
         wcs_url="https://geo.api.vlaanderen.be/DHMV/wms",
-        coverage_id="DHMV", variable=ELEV_VAR, resolution_m=1,
+        coverage_id="DHMV-II", variable=ELEV_VAR, resolution_m=1,
         bbox=BoundingBox(min_lon=2.5, min_lat=50.7, max_lon=5.9, max_lat=51.5),
         license="Gratis Open Data Vlaanderen",
         citation="Digitaal Hoogtemodel Vlaanderen II",
@@ -1563,7 +1564,7 @@ class ItalySlopeConnector(NationalWCSConnector):
         slug="italy_slope",
         display_name="Italy Slope 10m (TINITALY/INGV)",
         wcs_url="http://tinitaly.pi.ingv.it/TINItaly_1_1/wcs",
-        coverage_id="TINItaly_1_1__tinitaly_slope",
+        coverage_id="TINItaly_1_1:tinitaly_slope",
         variable=Variable(name="slope", units="degrees", data_type=DataType.CONTINUOUS,
                           valid_range=(0, 90),
                           description="Terrain slope — controls runoff velocity and erosion"),
@@ -1583,7 +1584,7 @@ class ItalyAspectConnector(NationalWCSConnector):
         slug="italy_aspect",
         display_name="Italy Aspect 10m (TINITALY/INGV)",
         wcs_url="http://tinitaly.pi.ingv.it/TINItaly_1_1/wcs",
-        coverage_id="TINItaly_1_1__tinitaly_hsv",
+        coverage_id="TINItaly_1_1:tinitaly_hsv",
         variable=Variable(name="aspect", units="degrees", data_type=DataType.CONTINUOUS,
                           valid_range=(0, 360),
                           description="Terrain aspect — controls solar radiation and snowmelt"),
@@ -1603,7 +1604,7 @@ class ItalyHillshadeConnector(NationalWCSConnector):
         slug="italy_hillshade",
         display_name="Italy Hillshade 10m (TINITALY/INGV)",
         wcs_url="http://tinitaly.pi.ingv.it/TINItaly_1_1/wcs",
-        coverage_id="TINItaly_1_1__tinitaly_hshd",
+        coverage_id="TINItaly_1_1:tinitaly_hshd",
         variable=Variable(name="hillshade", units="index", data_type=DataType.CONTINUOUS,
                           valid_range=(0, 255),
                           description="Terrain hillshade — visualizes topographic features"),
@@ -1623,7 +1624,7 @@ class ItalySkyviewConnector(NationalWCSConnector):
         slug="italy_skyview",
         display_name="Italy Sky-View Factor 10m (TINITALY/INGV)",
         wcs_url="http://tinitaly.pi.ingv.it/TINItaly_1_1/wcs",
-        coverage_id="TINItaly_1_1__tinitaly_hsv",
+        coverage_id="TINItaly_1_1:tinitaly_svf_2d5",
         variable=Variable(name="sky_view_factor", units="fraction", data_type=DataType.CONTINUOUS,
                           valid_range=(0, 1),
                           description="Sky-view factor — controls solar radiation and ET"),
@@ -1647,7 +1648,7 @@ class FranceGeologyConnector(NationalWCSConnector):
         slug="france_geology",
         display_name="France Geological Map 1:1M (BRGM)",
         wcs_url="https://geoservices.brgm.fr/geologie",
-        coverage_id="SCAN_F_GEOL1M",
+        coverage_id="GEOSERVICES_GEOLOGIE",
         variable=Variable(name="geology", units="class", data_type=DataType.CATEGORICAL,
                           description="French geological/lithological classification 1:1M"),
         resolution_m=1000, category="geology",
@@ -2028,6 +2029,7 @@ class SpainQuaternaryConnector(NationalWCSConnector):
         resolution_m=1000, category="geology",
         bbox=BoundingBox(min_lon=-18.2, min_lat=27.6, max_lon=4.4, max_lat=43.8),
         license="Open (IGME)", citation="IGME, Mapa Geológico del Cuaternario 1:1M",
+        crs="EPSG:28992",
         use_wms=True,
     )
 
