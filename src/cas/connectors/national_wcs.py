@@ -224,7 +224,7 @@ class NationalWCSConnector(BaseConnector):
                     resp.status_code >= 400
                     or ("xml" in content_type and "tiff" not in content_type)
                 )
-                if still_failed and "/arcgis/" in cfg.wcs_url.lower() and "mapserver" in cfg.wcs_url.lower():
+                if still_failed and "/rest/services/" in cfg.wcs_url.lower() and "mapserver" in cfg.wcs_url.lower():
                     export_url = cfg.wcs_url
                     for suffix in ("/WMSServer", "/WCSServer"):
                         if export_url.endswith(suffix):

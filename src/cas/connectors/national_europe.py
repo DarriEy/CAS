@@ -356,6 +356,7 @@ class GermanyLCConnector(NationalWCSConnector):
         resolution_m=5, category="land_cover",
         bbox=BoundingBox(min_lon=5.9, min_lat=47.3, max_lon=15.0, max_lat=55.1),
         license="GeoNutzV", citation="BKG, Landbedeckungsmodell Deutschland 2021",
+        use_wms=True,
     )
 
 
