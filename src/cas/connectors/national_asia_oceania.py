@@ -65,6 +65,7 @@ class IndonesiaDEMConnector(NationalWCSConnector):
         coverage_id="1", variable=ELEV_VAR, resolution_m=8,
         bbox=BoundingBox(min_lon=95, min_lat=-11, max_lon=141, max_lat=6),
         license="Open (BIG)", citation="Badan Informasi Geospasial, DEMNAS",
+        use_wms=True,
     )
 
 
@@ -166,6 +167,7 @@ class IndiaSoilConnector(NationalWCSConnector):
         resolution_m=500, category="soil",
         bbox=BoundingBox(min_lon=68.1, min_lat=6.7, max_lon=97.4, max_lat=37.1),
         license="Open (ISRO/Bhuvan)", citation="NBSS&LUP / ISRO Bhuvan",
+        use_wms=True,
     )
 
 
@@ -185,6 +187,7 @@ class IndiaLULCConnector(NationalWCSConnector):
         resolution_m=50, category="land_cover",
         bbox=BoundingBox(min_lon=68.1, min_lat=6.7, max_lon=97.4, max_lat=37.1),
         license="Open (ISRO/Bhuvan)", citation="NRSC/ISRO, LULC 1:50k",
+        use_wms=True,
     )
 
 

@@ -715,6 +715,7 @@ class SwedenSoilConnector(NationalWCSConnector):
         resolution_m=25, category="soil",
         bbox=BoundingBox(min_lon=11.0, min_lat=55.3, max_lon=24.2, max_lat=69.1),
         license="Open (SGU)", citation="SGU, Geological Survey of Sweden",
+        use_wms=True,
     )
 
 
@@ -917,6 +918,7 @@ class AustriaTirolDEMConnector(NationalWCSConnector):
         coverage_id="0", variable=ELEV_VAR, resolution_m=1,
         bbox=BoundingBox(min_lon=10.1, min_lat=46.7, max_lon=12.8, max_lat=47.7),
         license="CC-BY 4.0", citation="Land Tirol, Digitales Geländemodell",
+        use_wms=True,
     )
 
 
@@ -1001,6 +1003,7 @@ class LuxembourgDEMConnector(NationalWCSConnector):
         variable=ELEV_VAR, resolution_m=1,
         bbox=BoundingBox(min_lon=5.7, min_lat=49.4, max_lon=6.5, max_lat=50.2),
         license="Open (Luxembourg)", citation="ACT, Modèle Numérique de Terrain",
+        use_wms=True,
     )
 
 
@@ -1131,6 +1134,7 @@ class NorwaySoilConnector(NationalWCSConnector):
         resolution_m=5, category="soil",
         bbox=BoundingBox(min_lon=4.5, min_lat=57.9, max_lon=31.2, max_lat=71.2),
         license="NLOD (Norway)", citation="NIBIO, Jordkart (Soil Map of Norway)",
+        use_wms=True,
     )
 
 

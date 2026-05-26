@@ -398,5 +398,6 @@ class SouthKoreaSoilConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=124.6, min_lat=33.1, max_lon=131.9, max_lat=38.6),
         license="Open (RDA)",
         citation="Rural Development Administration, Korea Soil Map",
+        use_wms=True,
     )
 

@@ -177,6 +177,7 @@ class ChileSoilConnector(NationalWCSConnector):
         resolution_m=100, category="soil",
         bbox=BoundingBox(min_lon=-76, min_lat=-56, max_lon=-66, max_lat=-17),
         license="Open (CIREN)", citation="CIREN / MINAGRI, Suelos Agrológicos de Chile",
+        use_wms=True,
     )
 
 
@@ -225,6 +226,7 @@ class MexicoCONABIOLCConnector(NationalWCSConnector):
         resolution_m=250, category="land_cover",
         bbox=BoundingBox(min_lon=-118, min_lat=14, max_lon=-86, max_lat=33),
         license="Open (CONABIO)", citation="CONABIO / INEGI, Uso de Suelo y Vegetación",
+        use_wms=True,
     )
 
 
