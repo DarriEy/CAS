@@ -60,7 +60,7 @@ IMPERV_LAYERS = {
 }
 
 
-@register("global_imperviousness")
+# @register("global_imperviousness")  # Data retired from OpenLandMap S3
 class GlobalImperviousnessConnector(STACMixin, BaseConnector):
     slug = "global_imperviousness"
     display_name = "Global Imperviousness & Urban Density"

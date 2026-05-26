@@ -42,7 +42,7 @@ COG_URL = (
 )
 
 
-@register("worldpop")
+# @register("worldpop")  # COG URLs need updating
 class WorldPopConnector(STACMixin, BaseConnector):
     slug = "worldpop"
     display_name = "WorldPop Population 1km"

@@ -85,7 +85,7 @@ ISDA_VARIABLES: dict[str, tuple[str, Variable]] = {
 DEPTHS = {"0-20cm": "0_20", "20-50cm": "20_50"}
 
 
-@register("isdasoil")
+# @register("isdasoil")  # COG URLs need updating
 class ISDAsoilConnector(STACMixin, BaseConnector):
     slug = "isdasoil"
     display_name = "iSDAsoil (Africa)"

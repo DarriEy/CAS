@@ -84,7 +84,7 @@ VEG_LAYERS = {
 }
 
 
-@register("global_vegetation")
+# @register("global_vegetation")  # Data retired from OpenLandMap S3
 class GlobalVegetationConnector(STACMixin, BaseConnector):
     slug = "global_vegetation"
     display_name = "Global Vegetation Indices (MODIS/PROBA-V)"

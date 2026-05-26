@@ -52,7 +52,7 @@ GLACIER_LAYERS = {
 }
 
 
-@register("glacier_cover")
+# @register("glacier_cover")  # Data retired from OpenLandMap S3
 class GlacierCoverConnector(STACMixin, BaseConnector):
     slug = "glacier_cover"
     display_name = "Global Glacier & Snow Cover"

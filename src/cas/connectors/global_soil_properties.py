@@ -76,7 +76,7 @@ SOIL_PROP_LAYERS = {
 }
 
 
-@register("global_soil_properties")
+# @register("global_soil_properties")  # Data retired from OpenLandMap S3
 class GlobalSoilPropertiesConnector(STACMixin, BaseConnector):
     slug = "global_soil_properties"
     display_name = "Global Soil Properties (OpenLandMap)"

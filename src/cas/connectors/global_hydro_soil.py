@@ -84,7 +84,7 @@ HYDRO_SOIL_LAYERS = {
 }
 
 
-@register("global_hydro_soil")
+# @register("global_hydro_soil")  # Data retired from OpenLandMap S3
 class GlobalHydroSoilConnector(STACMixin, BaseConnector):
     slug = "global_hydro_soil"
     display_name = "Global Hydrological Soil Properties"

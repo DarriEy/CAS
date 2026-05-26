@@ -68,7 +68,7 @@ EROSION_LAYERS = {
 }
 
 
-@register("global_soil_erosion")
+# @register("global_soil_erosion")  # Data retired from OpenLandMap S3
 class GlobalSoilErosionConnector(STACMixin, BaseConnector):
     slug = "global_soil_erosion"
     display_name = "Global Soil Erosion & Fire"

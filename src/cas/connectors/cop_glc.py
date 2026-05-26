@@ -111,7 +111,7 @@ GLC_DATASETS = {
 STAC_COLLECTION = "io-lulc-annual-v02"  # Copernicus GLC is not on PC; use IO LULC or ESA
 
 
-@register("cop_glc_100")
+# @register("cop_glc_100")  # Cloudferro S3 URL changed
 class CopernicusGLC100Connector(STACMixin, BaseConnector):
     slug = "cop_glc_100"
     display_name = "Copernicus Global Land Cover 100m"

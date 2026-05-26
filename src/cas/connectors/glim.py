@@ -40,7 +40,7 @@ LITHOLOGY_VAR = Variable(
 COG_URL = "https://s3.eu-central-1.wasabisys.com/openlandmap/layers1km/sol_lithology_usgs.ecotapestry_c_1km_s0..0cm_2017_v1.0.tif"
 
 
-@register("glim")
+# @register("glim")  # Data retired from OpenLandMap S3
 class GLiMConnector(STACMixin, BaseConnector):
     slug = "glim"
     display_name = "GLiM Global Lithology 1km"

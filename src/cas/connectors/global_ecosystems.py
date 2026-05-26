@@ -84,7 +84,7 @@ ECO_LAYERS = {
 }
 
 
-@register("global_ecosystems")
+# @register("global_ecosystems")  # Data retired from OpenLandMap S3
 class GlobalEcosystemsConnector(STACMixin, BaseConnector):
     slug = "global_ecosystems"
     display_name = "Global Ecosystems & Land Characteristics"

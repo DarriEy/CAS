@@ -84,7 +84,7 @@ HYDRAULIC_LAYERS = {
 }
 
 
-@register("soil_hydraulic")
+# @register("soil_hydraulic")  # Data retired from OpenLandMap S3
 class SoilHydraulicConnector(STACMixin, BaseConnector):
     slug = "soil_hydraulic"
     display_name = "Global Soil Hydraulic Properties 250m"

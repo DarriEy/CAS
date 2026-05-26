@@ -125,7 +125,7 @@ class _DeltaresBase(STACMixin, BaseConnector):
         )
 
 
-@register("deltares_floods")
+# @register("deltares_floods")  # Needs rasterio bounds/asset fix
 class DeltaresFloodsConnector(_DeltaresBase):
     slug = "deltares_floods"
     display_name = "Deltares Global Flood Maps"
@@ -139,7 +139,7 @@ class DeltaresFloodsConnector(_DeltaresBase):
     )
 
 
-@register("deltares_water")
+# @register("deltares_water")  # Needs rasterio bounds/asset fix
 class DeltaresWaterConnector(_DeltaresBase):
     slug = "deltares_water"
     display_name = "Deltares Global Water Availability"

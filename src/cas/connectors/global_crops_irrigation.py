@@ -68,7 +68,7 @@ CROP_LAYERS = {
 }
 
 
-@register("global_crops")
+# @register("global_crops")  # Data retired from OpenLandMap S3
 class GlobalCropsConnector(STACMixin, BaseConnector):
     slug = "global_crops"
     display_name = "Global Cropland & Irrigation"

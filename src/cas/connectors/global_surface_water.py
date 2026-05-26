@@ -68,7 +68,7 @@ WATER_LAYERS = {
 }
 
 
-@register("global_water")
+# @register("global_water")  # Data retired from OpenLandMap S3
 class GlobalWaterConnector(STACMixin, BaseConnector):
     slug = "global_water"
     display_name = "Global Surface Water & Drainage"

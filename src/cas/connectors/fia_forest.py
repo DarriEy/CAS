@@ -38,7 +38,7 @@ FOREST_VAR = Variable(
 )
 
 
-@register("fia_forest")
+# @register("fia_forest")  # Needs rasterio bounds/asset fix
 class FIAForestConnector(STACMixin, BaseConnector):
     slug = "fia_forest"
     display_name = "USFS FIA Forest Inventory (US)"
