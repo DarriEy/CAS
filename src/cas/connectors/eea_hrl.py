@@ -266,40 +266,6 @@ class EEALeafTypeChangeConnector(EEAImageServerConnector):
     )
 
 
-@register("eea_riparian")
-class EEARiparianConnector(EEAImageServerConnector):
-    slug = "eea_riparian"
-    display_name = "Europe Riparian Zones LC 10m (HRL)"
-    base_url = EEA_BASE
-    protocol = "rest"
-    _service_name = "RZ_LandCover_2018"
-    _variable = Variable(
-        name="riparian_land_cover", units="class", data_type=DataType.CATEGORICAL,
-        description="European riparian zone land cover (detailed wetland/floodplain classes)",
-    )
 
 
-@register("eea_n2k")
-class EEAN2KConnector(EEAImageServerConnector):
-    slug = "eea_n2k"
-    display_name = "Europe Natura 2000 LC 10m"
-    base_url = EEA_BASE
-    protocol = "rest"
-    _service_name = "N2K_LandCover_2018"
-    _variable = Variable(
-        name="natura2000_land_cover", units="class", data_type=DataType.CATEGORICAL,
-        description="Natura 2000 protected site land cover (detailed habitat classes)",
-    )
 
-
-@register("eea_coastal")
-class EEACoastalConnector(EEAImageServerConnector):
-    slug = "eea_coastal"
-    display_name = "Europe Coastal Zones LC 10m"
-    base_url = EEA_BASE
-    protocol = "rest"
-    _service_name = "CZ_LandCover_2018"
-    _variable = Variable(
-        name="coastal_land_cover", units="class", data_type=DataType.CATEGORICAL,
-        description="European coastal zone land cover (detailed littoral/marine classes)",
-    )

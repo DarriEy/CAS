@@ -38,7 +38,7 @@ ELEVATION_VAR = Variable(
 )
 
 
-@register("islands_dem")
+# @register("islands_dem")  # WCS coverage removed from server
 class IslandsDEMConnector(WCSMixin, BaseConnector):
     slug = "islands_dem"
     display_name = "IslandsDEM 10m (Iceland)"

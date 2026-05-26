@@ -39,14 +39,14 @@ logger = structlog.get_logger()
 S3_BASE = "https://s3.openlandmap.org/arco"
 
 OLM_VARIABLES: dict[str, tuple[str, Variable]] = {
+    "sand": (
+        "sand.wfraction_usda.3a1a1a_m_250m_b0cm_19500101_20171231_go_epsg.4326_v0.2.tif",
+        Variable(name="sand", units="%", data_type=DataType.CONTINUOUS, valid_range=(0, 100)),
+    ),
     "clay": (
         "clay.tot_iso.11277.2020.wpct_m_30m_b0cm..20cm_20000101_20021231_eu_epsg.3035_v20251028.tif",
         Variable(name="clay", units="%", data_type=DataType.CONTINUOUS, valid_range=(0, 100),
                  description="Clay content (EU 30m only)"),
-    ),
-    "sand": (
-        "sand.wfraction_usda.3a1a1a_m_250m_b0cm_19500101_20171231_go_epsg.4326_v0.2.tif",
-        Variable(name="sand", units="%", data_type=DataType.CONTINUOUS, valid_range=(0, 100)),
     ),
     "bd": (
         "bulkdens.fineearth_usda.4a1h_m_250m_b0cm_19500101_20171231_go_epsg.4326_v0.2.tif",
