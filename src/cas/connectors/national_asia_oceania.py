@@ -201,7 +201,7 @@ class AustraliaSoilDepthConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="australia_soil_depth",
         display_name="Australia Soil Depth (SLGA/TERN)",
-        wcs_url="https://www.asris.csiro.au/arcgis/services/TERN/SLGA_Soil_Depth/MapServer/WCSServer",
+        wcs_url="https://www.asris.csiro.au/ArcGIS/services/TERN/DES_ACLEP_AU_TRN_N/MapServer/WCSServer",
         coverage_id="1",
         variable=Variable(name="soil_depth", units="m", data_type=DataType.CONTINUOUS,
                           valid_range=(0, 20),
@@ -287,7 +287,7 @@ class AustraliaClayConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="australia_clay",
         display_name="Australia Clay Content 0-30cm (SLGA/TERN)",
-        wcs_url="https://www.asris.csiro.au/arcgis/services/TERN/CLY_000_030_EV_N_P_AU_TRN_N_20210901/MapServer/WCSServer",
+        wcs_url="https://www.asris.csiro.au/ArcGIS/services/TERN/CLY_ACLEP_AU_TRN_N/MapServer/WCSServer",
         coverage_id="1",
         variable=Variable(name="clay", units="%", data_type=DataType.CONTINUOUS,
                           valid_range=(0, 100),
@@ -307,7 +307,7 @@ class AustraliaSandConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="australia_sand",
         display_name="Australia Sand Content 0-30cm (SLGA/TERN)",
-        wcs_url="https://www.asris.csiro.au/arcgis/services/TERN/SND_000_030_EV_N_P_AU_TRN_N_20210901/MapServer/WCSServer",
+        wcs_url="https://www.asris.csiro.au/ArcGIS/services/TERN/SND_ACLEP_AU_TRN_N/MapServer/WCSServer",
         coverage_id="1",
         variable=Variable(name="sand", units="%", data_type=DataType.CONTINUOUS,
                           valid_range=(0, 100),
@@ -327,7 +327,7 @@ class AustraliaPHConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="australia_ph",
         display_name="Australia Soil pH 0-30cm (SLGA/TERN)",
-        wcs_url="https://www.asris.csiro.au/arcgis/services/TERN/PHC_000_030_EV_N_P_AU_TRN_N_20210901/MapServer/WCSServer",
+        wcs_url="https://www.asris.csiro.au/ArcGIS/services/TERN/PHC_ACLEP_AU_TRN_N/MapServer/WCSServer",
         coverage_id="1",
         variable=Variable(name="soil_ph", units="pH", data_type=DataType.CONTINUOUS,
                           valid_range=(2, 12),
@@ -347,7 +347,7 @@ class AustraliaSOCConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="australia_soc",
         display_name="Australia Organic Carbon 0-30cm (SLGA/TERN)",
-        wcs_url="https://www.asris.csiro.au/arcgis/services/TERN/SOC_000_030_EV_N_P_AU_TRN_N_20210901/MapServer/WCSServer",
+        wcs_url="https://www.asris.csiro.au/ArcGIS/services/TERN/SOC_ACLEP_AU_TRN_N/MapServer/WCSServer",
         coverage_id="1",
         variable=Variable(name="soc", units="%", data_type=DataType.CONTINUOUS,
                           valid_range=(0, 60),
@@ -367,7 +367,7 @@ class AustraliaAWCConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="australia_awc",
         display_name="Australia Available Water Capacity (SLGA/TERN)",
-        wcs_url="https://www.asris.csiro.au/arcgis/services/TERN/AWC_000_200_EV_N_P_AU_TRN_N_20210901/MapServer/WCSServer",
+        wcs_url="https://www.asris.csiro.au/ArcGIS/services/TERN/AWC_ACLEP_AU_TRN_N/MapServer/WCSServer",
         coverage_id="1",
         variable=Variable(name="awc", units="mm", data_type=DataType.CONTINUOUS,
                           valid_range=(0, 500),

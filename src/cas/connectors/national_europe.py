@@ -2746,64 +2746,6 @@ class GreeceGeologyConnector(NationalWCSConnector):
 #  ICELAND — additional layers
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("iceland_lc")
-class IcelandLCConnector(NationalWCSConnector):
-    slug = "iceland_lc"
-    display_name = "Iceland Land Cover (NLSI)"
-    base_url = "https://gis.lmi.is/geoserver/wms"
-    protocol = "wcs"
-    _config = NationalDatasetConfig(
-        slug="iceland_lc",
-        display_name="Iceland Land Cover (Nytjaland/NLSI)",
-        wcs_url="https://gis.lmi.is/geoserver/wms",
-        coverage_id="IS_50V:Nytjaland",
-        variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
-                          description="Icelandic land use/cover classification"),
-        resolution_m=50, category="land_cover",
-        bbox=BoundingBox(min_lon=-24.5, min_lat=63.3, max_lon=-13.5, max_lat=66.5),
-        license="Open (LMI)", citation="NLSI/LMI, Nytjaland",
-    )
-
-
-@register("iceland_geology")
-class IcelandGeologyConnector(NationalWCSConnector):
-    slug = "iceland_geology"
-    display_name = "Iceland Geological Map (ISOR)"
-    base_url = "https://gis.lmi.is/geoserver/wms"
-    protocol = "wcs"
-    _config = NationalDatasetConfig(
-        slug="iceland_geology",
-        display_name="Iceland Geological Map 1:600k (ISOR/NLSI)",
-        wcs_url="https://gis.lmi.is/geoserver/wms",
-        coverage_id="IS_50V:Jardfraedikort",
-        variable=Variable(name="geology", units="class", data_type=DataType.CATEGORICAL,
-                          description="Icelandic geological units (volcanic, sedimentary)"),
-        resolution_m=500, category="geology",
-        bbox=BoundingBox(min_lon=-24.5, min_lat=63.3, max_lon=-13.5, max_lat=66.5),
-        license="Open (LMI)", citation="ISOR/NLSI, Geological Map of Iceland",
-    )
-
-
-@register("iceland_soil")
-class IcelandSoilConnector(NationalWCSConnector):
-    slug = "iceland_soil"
-    display_name = "Iceland Soil Erosion (AUI)"
-    base_url = "https://gis.lmi.is/geoserver/wms"
-    protocol = "wcs"
-    _config = NationalDatasetConfig(
-        slug="iceland_soil",
-        display_name="Iceland Soil Erosion Map (AUI/NLSI)",
-        wcs_url="https://gis.lmi.is/geoserver/wms",
-        coverage_id="IS_50V:Jardvegsrof",
-        variable=Variable(name="soil_erosion", units="class", data_type=DataType.CATEGORICAL,
-                          description="Icelandic soil erosion severity classification"),
-        resolution_m=50, category="soil",
-        bbox=BoundingBox(min_lon=-24.5, min_lat=63.3, max_lon=-13.5, max_lat=66.5),
-        license="Open (LMI)",
-        citation="AUI/NLSI, Jardvegsrof (Soil Erosion Map of Iceland)",
-    )
-
-
 # ═══════════════════════════════════════════════════════════════════════
 
 @register("portugal_geology")

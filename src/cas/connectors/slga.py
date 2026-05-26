@@ -37,39 +37,39 @@ WCS_BASE = "https://www.asris.csiro.au/ArcGIS/services/TERN"
 
 SLGA_VARIABLES: dict[str, tuple[str, Variable]] = {
     "clay": (
-        "CLY_percent_NAT",
+        "CLY_ACLEP_AU_NAT_C",
         Variable(name="clay", units="%", data_type=DataType.CONTINUOUS, valid_range=(0, 100)),
     ),
     "sand": (
-        "SND_percent_NAT",
+        "SND_ACLEP_AU_NAT_C",
         Variable(name="sand", units="%", data_type=DataType.CONTINUOUS, valid_range=(0, 100)),
     ),
     "silt": (
-        "SLT_percent_NAT",
+        "SLT_ACLEP_AU_NAT_C",
         Variable(name="silt", units="%", data_type=DataType.CONTINUOUS, valid_range=(0, 100)),
     ),
     "soc": (
-        "SOC_percent_NAT",
+        "SOC_ACLEP_AU_NAT_C_V1",
         Variable(name="soc", units="%", data_type=DataType.CONTINUOUS, valid_range=(0, 50),
                  description="Soil organic carbon"),
     ),
     "bd": (
-        "BDW_NAT",
+        "BDW_ACLEP_AU_NAT_C",
         Variable(name="bd", units="g/cm3", data_type=DataType.CONTINUOUS, valid_range=(0.5, 2.5),
                  description="Bulk density whole earth"),
     ),
     "ph": (
-        "pHc_NAT",
+        "PHC_ACLEP_AU_NAT_C",
         Variable(name="ph", units="pH", data_type=DataType.CONTINUOUS, valid_range=(3, 10),
                  description="pH (CaCl2)"),
     ),
     "awc": (
-        "AWC_NAT",
+        "AWC_ACLEP_AU_NAT_C",
         Variable(name="awc", units="mm/m", data_type=DataType.CONTINUOUS, valid_range=(0, 300),
                  description="Available water capacity"),
     ),
     "ecec": (
-        "ECE_NAT",
+        "ECE_ACLEP_AU_NAT_C",
         Variable(name="ecec", units="meq/100g", data_type=DataType.CONTINUOUS, valid_range=(0, 100),
                  description="Effective cation exchange capacity"),
     ),
@@ -84,7 +84,7 @@ SLGA_VARIABLES: dict[str, tuple[str, Variable]] = {
                  description="Total phosphorus"),
     ),
     "depth": (
-        "DES_NAT",
+        "DES_ACLEP_AU_NAT_C_V1",
         Variable(name="depth", units="m", data_type=DataType.CONTINUOUS, valid_range=(0, 10),
                  description="Depth of soil"),
     ),
