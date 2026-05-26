@@ -169,7 +169,7 @@ class NationalWCSConnector(BaseConnector):
 
         try:
             async with httpx.AsyncClient(
-                timeout=60, follow_redirects=True,
+                timeout=60, follow_redirects=True, verify=False,
                 headers={
                     "User-Agent": "Mozilla/5.0 (CAS/0.1) AppleWebKit/537.36",
                     "Referer": cfg.wcs_url,
@@ -224,7 +224,9 @@ class NationalWCSConnector(BaseConnector):
                     resp.status_code >= 400
                     or ("xml" in content_type and "tiff" not in content_type)
                 )
-                if still_failed and "/rest/services/" in cfg.wcs_url.lower() and "mapserver" in cfg.wcs_url.lower():
+                arcgis_url = cfg.wcs_url.lower()
+                has_arcgis_server = ("mapserver" in arcgis_url or "imageserver" in arcgis_url) and "/services/" in arcgis_url
+                if still_failed and has_arcgis_server:
                     export_url = cfg.wcs_url
                     for suffix in ("/WMSServer", "/WCSServer"):
                         if export_url.endswith(suffix):
@@ -232,7 +234,10 @@ class NationalWCSConnector(BaseConnector):
                     if "/rest/services/" not in export_url.lower():
                         import re as _re
                         export_url = _re.sub(r"(?i)/services/", "/rest/services/", export_url, count=1)
-                    export_url += "/export"
+                    if "imageserver" in export_url.lower():
+                        export_url += "/exportImage"
+                    else:
+                        export_url += "/export"
                     export_params = {
                         "bbox": f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}",
                         "bboxSR": "4326", "imageSR": "4326",
