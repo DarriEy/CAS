@@ -198,6 +198,26 @@ class NationalWCSConnector(BaseConnector):
                         if resp.status_code == 200 and "xml" not in content_type and "html" not in content_type:
                             break
 
+                still_failed = (
+                    resp.status_code >= 400
+                    or ("xml" in content_type and "tiff" not in content_type)
+                )
+                if still_failed and "/arcgis/" in cfg.wcs_url.lower() and "mapserver" in cfg.wcs_url.lower():
+                    export_url = cfg.wcs_url
+                    for suffix in ("/WMSServer", "/WCSServer"):
+                        if export_url.endswith(suffix):
+                            export_url = export_url[: -len(suffix)]
+                    import re as _re
+                    export_url = _re.sub(r"(?i)/services/", "/rest/services/", export_url, count=1) + "/export"
+                    export_params = {
+                        "bbox": f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}",
+                        "bboxSR": "4326", "imageSR": "4326",
+                        "size": "500,500", "format": "png", "f": "image",
+                    }
+                    resp = await client.get(export_url, params=export_params)
+                    content_type = resp.headers.get("content-type", "")
+                    still_failed = resp.status_code >= 400
+
                 if resp.status_code != 200:
                     raise DataFormatError(cfg.slug, f"WCS returned {resp.status_code}")
                 if "xml" in content_type and "tiff" not in content_type:
