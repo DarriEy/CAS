@@ -1365,7 +1365,7 @@ class FranceLCConnector(NationalWCSConnector):
         slug="france_lc",
         display_name="France OCS GE Land Cover (IGN Geoplateforme)",
         wcs_url="https://data.geopf.fr/wms-r/wms",
-        coverage_id="ADEME_EPCI_lineaire-haie-a-stock",
+        coverage_id="LANDCOVER.CHA12_FR",
         variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
                           description="French national land cover change map (OCS GE)"),
         resolution_m=10, category="land_cover",
