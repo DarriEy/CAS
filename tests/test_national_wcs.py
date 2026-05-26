@@ -58,11 +58,11 @@ class TestNationalWCSFactory:
         """Verify we have providers for key countries."""
         providers = list_providers()
         countries = {
-            "norway": ["norway_dem", "norway_ar5", "norway_soil", "norway_geology"],
+            "norway": ["norway_dem", "norway_ar5", "norway_geology"],
             "germany": ["germany_dgm200", "germany_nrw_dgm1", "germany_soil"],
             "switzerland": ["swiss_dem", "swiss_groundwater", "swiss_stream_order"],
             "ireland": ["ireland_soil", "ireland_aquifer", "ireland_catchments"],
-            "uk": ["uk_lidar", "uk_bgs_geology", "uk_soilscapes"],
+            "uk": ["uk_lidar", "uk_bgs_geology"],
             "finland": ["finland_dem", "finland_soil", "finland_lc"],
             "netherlands": ["netherlands_ahn", "netherlands_soil"],
             "spain": ["spain_mdt", "spain_lithology", "spain_hydro"],

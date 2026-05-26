@@ -55,6 +55,7 @@ class NationalDatasetConfig:
     auth_token_env: str = ""
     nodata_value: float | None = None
     use_wms: bool = False
+    default_time: str = ""
 
 
 
@@ -136,16 +137,25 @@ class NationalWCSConnector(BaseConnector):
                 **cfg.extra_params,
             }
         elif cfg.protocol_version == "2.0.1":
+            if cfg.crs != "EPSG:4326":
+                from pyproj import Transformer
+                t = Transformer.from_crs("EPSG:4326", cfg.crs, always_xy=True)
+                x0, y0 = t.transform(bbox[0], bbox[1])
+                x1, y1 = t.transform(bbox[2], bbox[3])
+                subsets = [f"x({x0},{x1})", f"y({y0},{y1})"]
+            else:
+                subsets = [f"Long({bbox[0]},{bbox[2]})", f"Lat({bbox[1]},{bbox[3]})"]
+            if time_range:
+                subsets.append(f'time("{time_range.start.strftime("%Y-%m-%dT%H:%M:%SZ")}")')
+            elif cfg.default_time:
+                subsets.append(f'time("{cfg.default_time}")')
             params = {
                 "service": "WCS",
                 "version": "2.0.1",
                 "request": "GetCoverage",
                 "CoverageId": cfg.coverage_id,
                 "format": cfg.output_format if cfg.output_format != "GeoTIFF" else "image/tiff",
-                "subset": [
-                    f"Long({bbox[0]},{bbox[2]})",
-                    f"Lat({bbox[1]},{bbox[3]})",
-                ],
+                "subset": subsets,
                 **cfg.extra_params,
             }
         else:

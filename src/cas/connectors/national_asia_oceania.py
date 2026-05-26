@@ -46,6 +46,8 @@ class AustraliaDEALCConnector(NationalWCSConnector):
         protocol_version="2.0.1",
         bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
         license="CC-BY 4.0", citation="DEA, Geoscience Australia Land Cover",
+        crs="EPSG:3577",
+        default_time="2023-01-01T00:00:00Z",
     )
 
 
@@ -88,6 +90,7 @@ class AustraliaWaterObsConnector(NationalWCSConnector):
         resolution_m=25, category="hydrology",
         bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
         license="CC-BY 4.0", citation="DEA, Water Observations from Space",
+        crs="EPSG:3577",
     )
 
 
@@ -109,6 +112,8 @@ class AustraliaFracCoverConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
         license="CC-BY 4.0",
         citation="DEA, Fractional Cover (Landsat)",
+        crs="EPSG:3577",
+        default_time="2023-01-01T00:00:00Z",
     )
 
 
@@ -128,6 +133,8 @@ class AustraliaMangroveConnector(NationalWCSConnector):
         resolution_m=25, category="land_cover",
         bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
         license="CC-BY 4.0", citation="DEA, Mangrove Canopy Cover",
+        crs="EPSG:3577",
+        default_time="2023-01-01T00:00:00Z",
     )
 
 

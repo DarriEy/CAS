@@ -965,6 +965,7 @@ class DEAAfricaDEMConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=-26, min_lat=-35, max_lon=58, max_lat=38),
         license="CC-BY 4.0",
         citation="Digital Earth Africa, SRTM-derived slope/MRVBF",
+        crs="EPSG:3857",
     )
 
 
@@ -2581,6 +2582,7 @@ class DEAAfricaFCConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=-26, min_lat=-35, max_lon=58, max_lat=38),
         license="CC-BY 4.0",
         citation="Digital Earth Africa, Fractional Cover (Landsat)",
+        crs="EPSG:3857",
     )
 
 
@@ -2602,6 +2604,7 @@ class DEAAfricaWaterConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=-26, min_lat=-35, max_lon=58, max_lat=38),
         license="CC-BY 4.0",
         citation="Digital Earth Africa, Water Observations from Space",
+        crs="EPSG:3857",
     )
 
 
