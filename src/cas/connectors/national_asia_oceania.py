@@ -39,13 +39,13 @@ class AustraliaDEALCConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="australia_dea_lc", display_name="Australia DEA Land Cover 25m (Landsat)",
         wcs_url="https://ows.dea.ga.gov.au",
-        coverage_id="s2_ls_combined",
+        coverage_id="ga_ls_landcover_c3",
         variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
                           description="Annual land cover from Landsat (FAO LCCS v2, 1988-present)"),
         resolution_m=25, category="land_cover",
+        protocol_version="2.0.1",
         bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
         license="CC-BY 4.0", citation="DEA, Geoscience Australia Land Cover",
-        use_wms=True,
     )
 
 
@@ -96,14 +96,13 @@ class AustraliaWaterObsConnector(NationalWCSConnector):
         slug="australia_water_obs",
         display_name="Australia Water Observations from Space (DEA WOfS)",
         wcs_url="https://ows.dea.ga.gov.au",
-        coverage_id="s2_ls_combined", protocol_version="2.0.1",
+        coverage_id="wofs_filtered_summary", protocol_version="2.0.1",
         variable=Variable(name="water_frequency", units="%", data_type=DataType.CONTINUOUS,
                           valid_range=(0, 100),
                           description="Water presence frequency from Landsat — controls surface water dynamics"),
         resolution_m=25, category="hydrology",
         bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
         license="CC-BY 4.0", citation="DEA, Water Observations from Space",
-        use_wms=True,
     )
 
 
@@ -117,7 +116,7 @@ class AustraliaFracCoverConnector(NationalWCSConnector):
         slug="australia_frac_cover",
         display_name="Australia Fractional Cover 25m (DEA Landsat)",
         wcs_url="https://ows.dea.ga.gov.au",
-        coverage_id="s2_ls_combined", protocol_version="2.0.1",
+        coverage_id="ga_ls_fc_3", protocol_version="2.0.1",
         variable=Variable(name="fractional_cover", units="%", data_type=DataType.CONTINUOUS,
                           valid_range=(0, 100),
                           description="Photosynthetic/non-photosynthetic veg and bare soil fractions"),
@@ -125,7 +124,6 @@ class AustraliaFracCoverConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
         license="CC-BY 4.0",
         citation="DEA, Fractional Cover (Landsat)",
-        use_wms=True,
     )
 
 
@@ -139,13 +137,12 @@ class AustraliaMangroveConnector(NationalWCSConnector):
         slug="australia_mangrove",
         display_name="Australia Mangrove Canopy Cover 25m (DEA)",
         wcs_url="https://ows.dea.ga.gov.au",
-        coverage_id="s2_ls_combined", protocol_version="2.0.1",
+        coverage_id="ga_ls_mangrove_cover_cyear_3", protocol_version="2.0.1",
         variable=Variable(name="mangrove_cover", units="class", data_type=DataType.CATEGORICAL,
                           description="Mangrove canopy cover extent (annual, Landsat)"),
         resolution_m=25, category="land_cover",
         bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
         license="CC-BY 4.0", citation="DEA, Mangrove Canopy Cover",
-        use_wms=True,
     )
 
 

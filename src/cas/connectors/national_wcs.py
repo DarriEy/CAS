@@ -141,7 +141,7 @@ class NationalWCSConnector(BaseConnector):
                 "version": "2.0.1",
                 "request": "GetCoverage",
                 "CoverageId": cfg.coverage_id,
-                "format": "image/tiff",
+                "format": cfg.output_format if cfg.output_format != "GeoTIFF" else "image/geotiff",
                 "subset": [
                     f"Long({bbox[0]},{bbox[2]})",
                     f"Lat({bbox[1]},{bbox[3]})",
@@ -168,7 +168,13 @@ class NationalWCSConnector(BaseConnector):
                 params["token"] = token
 
         try:
-            async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+            async with httpx.AsyncClient(
+                timeout=60, follow_redirects=True,
+                headers={
+                    "User-Agent": "Mozilla/5.0 (CAS/0.1) AppleWebKit/537.36",
+                    "Referer": cfg.wcs_url,
+                },
+            ) as client:
                 resp = await client.get(cfg.wcs_url, params=params, headers=headers)
                 content_type = resp.headers.get("content-type", "")
 
@@ -215,8 +221,10 @@ class NationalWCSConnector(BaseConnector):
                     for suffix in ("/WMSServer", "/WCSServer"):
                         if export_url.endswith(suffix):
                             export_url = export_url[: -len(suffix)]
-                    import re as _re
-                    export_url = _re.sub(r"(?i)/services/", "/rest/services/", export_url, count=1) + "/export"
+                    if "/rest/services/" not in export_url.lower():
+                        import re as _re
+                        export_url = _re.sub(r"(?i)/services/", "/rest/services/", export_url, count=1)
+                    export_url += "/export"
                     export_params = {
                         "bbox": f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}",
                         "bboxSR": "4326", "imageSR": "4326",
