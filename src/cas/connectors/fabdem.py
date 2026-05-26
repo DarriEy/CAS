@@ -49,7 +49,7 @@ ELEVATION_VAR = Variable(
 BRISTOL_BASE = "https://data.bris.ac.uk/datasets/s5hqmjcdj8yo2ibzi9b4ew3sn"
 
 
-@register("fabdem")
+# @register("fabdem")  # Data now distributed as ZIP archives, needs connector redesign
 class FABDEMConnector(BaseConnector):
     slug = "fabdem"
     display_name = "FABDEM 30m"
