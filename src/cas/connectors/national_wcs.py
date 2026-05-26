@@ -141,7 +141,7 @@ class NationalWCSConnector(BaseConnector):
                 "version": "2.0.1",
                 "request": "GetCoverage",
                 "CoverageId": cfg.coverage_id,
-                "format": cfg.output_format if cfg.output_format != "GeoTIFF" else "image/geotiff",
+                "format": cfg.output_format if cfg.output_format != "GeoTIFF" else "image/tiff",
                 "subset": [
                     f"Long({bbox[0]},{bbox[2]})",
                     f"Lat({bbox[1]},{bbox[3]})",
@@ -190,6 +190,14 @@ class NationalWCSConnector(BaseConnector):
                         resp.status_code >= 400
                         or ("xml" in content_type and "tiff" not in content_type)
                     )
+                if failed and not cfg.use_wms and cfg.protocol_version == "2.0.1":
+                    for wcs_fmt in ("image/geotiff", "GeoTIFF"):
+                        params["format"] = wcs_fmt
+                        resp = await client.get(cfg.wcs_url, params=params, headers=headers)
+                        content_type = resp.headers.get("content-type", "")
+                        if resp.status_code == 200 and "xml" not in content_type:
+                            failed = False
+                            break
                 if failed and cfg.use_wms:
                     fallback_combos = [
                         (cfg.crs, "image/tiff"),
