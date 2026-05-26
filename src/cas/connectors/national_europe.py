@@ -1089,6 +1089,7 @@ class GermanyThuringiaDEMConnector(NationalWCSConnector):
         coverage_id="DGM2", variable=ELEV_VAR, resolution_m=2,
         bbox=BoundingBox(min_lon=9.9, min_lat=50.2, max_lon=12.7, max_lat=51.7),
         license="DL-DE/BY-2.0", citation="TLVermGeo, Digitales Geländemodell Thüringen",
+        use_wms=True,
     )
 
 
@@ -1648,12 +1649,13 @@ class FranceGeologyConnector(NationalWCSConnector):
         slug="france_geology",
         display_name="France Geological Map 1:1M (BRGM)",
         wcs_url="https://geoservices.brgm.fr/geologie",
-        coverage_id="GEOSERVICES_GEOLOGIE",
+        coverage_id="SCAN_F_GEOL1M",
         variable=Variable(name="geology", units="class", data_type=DataType.CATEGORICAL,
                           description="French geological/lithological classification 1:1M"),
         resolution_m=1000, category="geology",
         bbox=BoundingBox(min_lon=-5.2, min_lat=41.3, max_lon=9.6, max_lat=51.1),
         license="Open (BRGM)", citation="BRGM, Carte Géologique de la France",
+        use_wms=True,
     )
 
 
@@ -1698,6 +1700,7 @@ class EstoniaGeologyConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=21.8, min_lat=57.5, max_lon=28.2, max_lat=59.7),
         license="Estonian Open Data", citation="Maa-amet, Geological Map of Estonia",
         use_wms=True,
+        crs="EPSG:3301",
     )
 
 
