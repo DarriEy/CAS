@@ -73,6 +73,7 @@ class EstoniaDEMConnector(NationalWCSConnector):
         wcs_url="https://kaart.maaamet.ee/wms/fotokaart",
         coverage_id="MA-FOTOKAART", variable=ELEV_VAR,
         resolution_m=1,
+        crs="EPSG:3301",
         bbox=BoundingBox(min_lon=21.8, min_lat=57.5, max_lon=28.2, max_lat=59.7),
         license="Estonian Open Data License", citation="Maa-amet, Estonian Land Board",
         use_wms=True,
@@ -316,6 +317,7 @@ class GermanyNRWDGM1Connector(NationalWCSConnector):
         coverage_id="WCS_NW_DGM", variable=ELEV_VAR, resolution_m=1,
         bbox=BoundingBox(min_lon=5.9, min_lat=50.3, max_lon=9.5, max_lat=52.6),
         license="DL-DE/Zero", citation="Geobasis NRW, Digitales Geländemodell 1m",
+        crs="EPSG:25832",
         use_wms=True,
     )
 
@@ -1102,6 +1104,7 @@ class GermanyHessenDEMConnector(NationalWCSConnector):
         coverage_id="he_dgm", variable=ELEV_VAR, resolution_m=1,
         bbox=BoundingBox(min_lon=7.8, min_lat=49.4, max_lon=10.3, max_lat=51.7),
         license="DL-DE/Zero", citation="HVBG, Digitales Geländemodell Hessen",
+        crs="EPSG:25832",
         use_wms=True,
     )
 
@@ -1314,6 +1317,7 @@ class GermanyBBDEMConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=11.3, min_lat=51.4, max_lon=14.8, max_lat=53.6),
         license="DL-DE/Zero",
         citation="LGB Brandenburg, Digitales Geländemodell 1m",
+        crs="EPSG:25833",
         use_wms=True,
     )
 

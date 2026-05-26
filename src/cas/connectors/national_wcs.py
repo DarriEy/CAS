@@ -132,6 +132,7 @@ class NationalWCSConnector(BaseConnector):
                 "width": "500",
                 "height": "500",
                 "format": "image/geotiff",
+                "STYLES": "",
                 **cfg.extra_params,
             }
         elif cfg.protocol_version == "2.0.1":
@@ -169,18 +170,36 @@ class NationalWCSConnector(BaseConnector):
         try:
             async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
                 resp = await client.get(cfg.wcs_url, params=params, headers=headers)
-                if resp.status_code != 200:
-                    raise DataFormatError(cfg.slug, f"WCS returned {resp.status_code}")
                 content_type = resp.headers.get("content-type", "")
 
-                if "xml" in content_type and "tiff" not in content_type and cfg.use_wms:
-                    for fallback_fmt in ("image/tiff", "image/png"):
-                        params["format"] = fallback_fmt
+                failed = (
+                    resp.status_code >= 400
+                    or ("xml" in content_type and "tiff" not in content_type)
+                )
+                if failed and cfg.use_wms:
+                    fallback_combos = [
+                        (cfg.crs, "image/tiff"),
+                        (cfg.crs, "image/png"),
+                    ]
+                    if cfg.crs != "EPSG:4326":
+                        fallback_combos.append(("EPSG:4326", "image/tiff"))
+                        fallback_combos.append(("EPSG:4326", "image/png"))
+                    for fb_crs, fb_fmt in fallback_combos:
+                        params["format"] = fb_fmt
+                        params["SRS"] = fb_crs
+                        if fb_crs != "EPSG:4326":
+                            from pyproj import Transformer
+                            t = Transformer.from_crs("EPSG:4326", fb_crs, always_xy=True)
+                            x0, y0 = t.transform(bbox[0], bbox[1])
+                            x1, y1 = t.transform(bbox[2], bbox[3])
+                            params["BBOX"] = f"{x0},{y0},{x1},{y1}"
                         resp = await client.get(cfg.wcs_url, params=params, headers=headers)
                         content_type = resp.headers.get("content-type", "")
-                        if resp.status_code == 200 and "xml" not in content_type:
+                        if resp.status_code == 200 and "xml" not in content_type and "html" not in content_type:
                             break
 
+                if resp.status_code != 200:
+                    raise DataFormatError(cfg.slug, f"WCS returned {resp.status_code}")
                 if "xml" in content_type and "tiff" not in content_type:
                     raise DataFormatError(cfg.slug, f"WCS error: {resp.text[:300]}")
                 raster_bytes = resp.content
