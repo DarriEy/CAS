@@ -59,6 +59,26 @@ class NationalDatasetConfig:
 
 
 
+def _parse_wms_image(
+    data: bytes,
+    bbox: tuple[float, float, float, float],
+    crs: str = "EPSG:4326",
+):
+    """Convert a WMS GetMap PNG/JPEG response to raster array + transform."""
+    from io import BytesIO
+
+    import numpy as np
+    from PIL import Image
+    from rasterio.transform import from_bounds
+
+    img = Image.open(BytesIO(data))
+    arr = np.array(img)
+    if arr.ndim == 3:
+        arr = arr[:, :, 0]
+    transform = from_bounds(bbox[0], bbox[1], bbox[2], bbox[3], arr.shape[1], arr.shape[0])
+    return arr, transform, 0, crs
+
+
 class NationalWCSConnector(BaseConnector):
     """Base class for national WCS-based connectors."""
 
@@ -152,6 +172,15 @@ class NationalWCSConnector(BaseConnector):
                 if resp.status_code != 200:
                     raise DataFormatError(cfg.slug, f"WCS returned {resp.status_code}")
                 content_type = resp.headers.get("content-type", "")
+
+                if "xml" in content_type and "tiff" not in content_type and cfg.use_wms:
+                    for fallback_fmt in ("image/tiff", "image/png"):
+                        params["format"] = fallback_fmt
+                        resp = await client.get(cfg.wcs_url, params=params, headers=headers)
+                        content_type = resp.headers.get("content-type", "")
+                        if resp.status_code == 200 and "xml" not in content_type:
+                            break
+
                 if "xml" in content_type and "tiff" not in content_type:
                     raise DataFormatError(cfg.slug, f"WCS error: {resp.text[:300]}")
                 raster_bytes = resp.content
@@ -160,7 +189,13 @@ class NationalWCSConnector(BaseConnector):
         except Exception as e:
             raise DataFormatError(cfg.slug, f"WCS request failed: {e}") from e
 
-        raster_data, transform, nodata, src_crs = parse_geotiff(raster_bytes)
+        ct_lower = resp.headers.get("content-type", "").lower()
+        if "png" in ct_lower or "jpeg" in ct_lower:
+            raster_data, transform, nodata, src_crs = _parse_wms_image(
+                raster_bytes, bbox, cfg.crs,
+            )
+        else:
+            raster_data, transform, nodata, src_crs = parse_geotiff(raster_bytes)
         if cfg.nodata_value is not None:
             nodata = cfg.nodata_value
 
@@ -210,7 +245,7 @@ class GEBCOConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="gebco", display_name="GEBCO Global Bathymetry 500m",
         wcs_url="https://wms.gebco.net/mapserv",
-        coverage_id="gebco_latest",
+        coverage_id="GEBCO_Grid",
         variable=Variable(name="bathymetry", units="m", data_type=DataType.CONTINUOUS,
                           valid_range=(-11000, 9000),
                           description="Ocean/land elevation (bathymetry + topography)"),
