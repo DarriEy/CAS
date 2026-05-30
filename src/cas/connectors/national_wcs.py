@@ -81,16 +81,27 @@ class NationalDatasetConfig:
 
 
 _RETRYABLE_STATUS = (500, 502, 503, 504)
+# Connection-level drops that fail fast and are usually transient (server closed
+# the socket mid-handshake / before responding). Cheap to retry. Read timeouts are
+# deliberately NOT retried — they're slow and would bloat the health sweep.
+_RETRYABLE_EXC = (httpx.RemoteProtocolError, httpx.ConnectError)
 
 
 async def _get_with_retry(client, url, params, headers, retries=2, backoff=0.5):
-    """GET with a small retry on transient 5xx, to ride out flaky upstreams."""
-    resp = await client.get(url, params=params, headers=headers)
-    attempt = 0
-    while resp.status_code in _RETRYABLE_STATUS and attempt < retries:
-        await asyncio.sleep(backoff * (attempt + 1))
-        resp = await client.get(url, params=params, headers=headers)
-        attempt += 1
+    """GET with a small retry on transient 5xx or connection drops."""
+    resp = None
+    for attempt in range(retries + 1):
+        try:
+            resp = await client.get(url, params=params, headers=headers)
+        except _RETRYABLE_EXC:
+            if attempt == retries:
+                raise
+            await asyncio.sleep(backoff * (attempt + 1))
+            continue
+        if resp.status_code in _RETRYABLE_STATUS and attempt < retries:
+            await asyncio.sleep(backoff * (attempt + 1))
+            continue
+        return resp
     return resp
 
 

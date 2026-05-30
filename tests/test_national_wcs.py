@@ -115,6 +115,41 @@ class TestNationalWCSExtract:
         assert result.variable == "elevation"
 
     @pytest.mark.asyncio
+    async def test_extract_retries_transient_disconnect(self, test_geometry, monkeypatch):
+        """A transient 'server disconnected' on the first GET is retried, not surfaced."""
+        import httpx
+        from rasterio.transform import from_bounds
+
+        mock_raster = np.array([[400, 410], [390, 405]], dtype=np.float32)
+        mock_transform = from_bounds(-96.6, 39.0, -96.5, 39.1, 2, 2)
+
+        mock_response = MagicMock(spec=httpx.Response)
+        mock_response.status_code = 200
+        mock_response.headers = {"content-type": "image/tiff"}
+        mock_response.content = _make_mock_geotiff(mock_raster, mock_transform)
+
+        # First call drops the connection; the retry succeeds.
+        mock_client = AsyncMock()
+        mock_client.get = AsyncMock(side_effect=[
+            httpx.RemoteProtocolError("Server disconnected without sending a response."),
+            mock_response,
+        ])
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+
+        # Don't actually sleep during the backoff.
+        async def _no_sleep(*_a, **_k):
+            return None
+        monkeypatch.setattr("cas.connectors.national_wcs.asyncio.sleep", _no_sleep)
+
+        instance = get_connector("norway_dem")()
+        with patch("httpx.AsyncClient", return_value=mock_client):
+            result = await instance.extract(dataset_id="norway_dem:elevation", geometry=test_geometry)
+
+        assert result.provider == "norway_dem"
+        assert mock_client.get.await_count == 2  # failed once, retried once
+
+    @pytest.mark.asyncio
     @pytest.mark.parametrize("slug", ["finland_dem", "denmark_dem", "denmark_terrain", "germany_dgm200"])
     async def test_gated_connector_raises_before_request(self, slug, test_geometry, monkeypatch):
         """A credential-gated connector raises RegistrationRequiredError up front.
