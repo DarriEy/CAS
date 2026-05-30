@@ -114,6 +114,30 @@ class TestNationalWCSExtract:
         assert result.provider == "norway_dem"
         assert result.variable == "elevation"
 
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("slug", ["finland_dem", "denmark_dem", "denmark_terrain", "germany_dgm200"])
+    async def test_gated_connector_raises_before_request(self, slug, test_geometry, monkeypatch):
+        """A credential-gated connector raises RegistrationRequiredError up front.
+
+        Without this, a tokenless request hits the server and returns a bare
+        401/403 that surfaces as a confusing 'down' provider.
+        """
+        from cas.core.exceptions import RegistrationRequiredError
+
+        cls = get_connector(slug)
+        monkeypatch.delenv(cls._config.auth_token_env, raising=False)
+        instance = cls()
+
+        # Fail loudly if any HTTP call is attempted before the guard fires.
+        def _boom(*args, **kwargs):
+            raise AssertionError("network call attempted before credential check")
+
+        with patch("httpx.AsyncClient", _boom), pytest.raises(RegistrationRequiredError) as exc:
+            await instance.extract(dataset_id=f"{slug}:x", geometry=test_geometry)
+
+        assert exc.value.registration_url
+        assert cls._config.auth_token_env in exc.value.instructions
+
 
 def _make_mock_geotiff(data: np.ndarray, transform) -> bytes:
     from rasterio.io import MemoryFile

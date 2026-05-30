@@ -15,7 +15,7 @@ import httpx
 import structlog
 
 from cas.connectors.base import BaseConnector
-from cas.core.exceptions import DataFormatError
+from cas.core.exceptions import DataFormatError, RegistrationRequiredError
 from cas.core.models import (
     AggregationMethod,
     AttributeResult,
@@ -34,6 +34,24 @@ from cas.core.registry import register
 from cas.extract.zonal import compute_zonal_stats, geometry_to_bbox, parse_geotiff, rasterize_geometry
 
 logger = structlog.get_logger()
+
+# Registration details for credential-gated services, keyed by the env var
+# that holds the token. Used to raise a clear RegistrationRequiredError
+# *before* a tokenless request hits the server (and gets a bare 401/403).
+_REGISTRATION: dict[str, tuple[str, str]] = {
+    "CAS_MML_API_KEY": (
+        "https://www.maanmittauslaitos.fi/rajapinnat/api-avaimen-ohje",
+        "Register for a free API key, then:\n  export CAS_MML_API_KEY=your_key",
+    ),
+    "CAS_DATAFORSYNINGEN_TOKEN": (
+        "https://dataforsyningen.dk/",
+        "Create a user and API token, then:\n  export CAS_DATAFORSYNINGEN_TOKEN=your_token",
+    ),
+    "CAS_BKG_UUID": (
+        "https://gdz.bkg.bund.de/",
+        "Request a free UUID access token, then:\n  export CAS_BKG_UUID=your_uuid",
+    ),
+}
 
 
 @dataclass
@@ -119,6 +137,14 @@ class NationalWCSConnector(BaseConnector):
 
         import os
 
+        token = os.environ.get(cfg.auth_token_env, "") if cfg.auth_token_env else ""
+        if cfg.auth_token_env and not token:
+            url, instructions = _REGISTRATION.get(
+                cfg.auth_token_env,
+                ("", f"Set the {cfg.auth_token_env} environment variable."),
+            )
+            raise RegistrationRequiredError(cfg.slug, url, instructions)
+
         headers: dict[str, str] = {}
         params: dict = {}
 
@@ -172,10 +198,8 @@ class NationalWCSConnector(BaseConnector):
                 **cfg.extra_params,
             }
 
-        if cfg.auth_token_env:
-            token = os.environ.get(cfg.auth_token_env, "")
-            if token:
-                params["token"] = token
+        if token:
+            params["token"] = token
 
         try:
             async with httpx.AsyncClient(
