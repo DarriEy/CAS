@@ -14,7 +14,6 @@ import pytest
 
 from cas.monitor.reachability import check_all_reachability
 
-
 MAX_ALLOWED_FAILURES = 5
 
 

@@ -29,7 +29,6 @@ from cas.core.models import (
     TimeRange,
     Variable,
 )
-from cas.core.registry import register
 from cas.extract.zonal import geometry_to_bbox
 
 logger = structlog.get_logger()

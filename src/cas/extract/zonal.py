@@ -170,10 +170,7 @@ def geometry_to_bbox(geometry) -> tuple[float, float, float, float]:
         lon, lat = coords_raw[0], coords_raw[1]
         buf = 0.001
         return (lon - buf, lat - buf, lon + buf, lat + buf)
-    if gtype == "Polygon":
-        coords = coords_raw[0]
-    else:
-        coords = [c for ring in coords_raw for c in ring[0]]
+    coords = coords_raw[0] if gtype == "Polygon" else [c for ring in coords_raw for c in ring[0]]
     lons = [c[0] for c in coords]
     lats = [c[1] for c in coords]
     return (min(lons), min(lats), max(lons), max(lats))

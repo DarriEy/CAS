@@ -26,7 +26,7 @@ from cas.core.models import (
     Variable,
 )
 from cas.core.registry import register
-from cas.extract.zonal import geometry_to_bbox, compute_zonal_stats, parse_geotiff, rasterize_geometry
+from cas.extract.zonal import compute_zonal_stats, geometry_to_bbox, parse_geotiff, rasterize_geometry
 
 logger = structlog.get_logger()
 

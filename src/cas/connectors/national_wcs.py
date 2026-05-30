@@ -235,7 +235,8 @@ class NationalWCSConnector(BaseConnector):
                     or ("xml" in content_type and "tiff" not in content_type)
                 )
                 arcgis_url = cfg.wcs_url.lower()
-                has_arcgis_server = ("mapserver" in arcgis_url or "imageserver" in arcgis_url) and "/services/" in arcgis_url
+                is_arcgis = "mapserver" in arcgis_url or "imageserver" in arcgis_url
+                has_arcgis_server = is_arcgis and "/services/" in arcgis_url
                 if still_failed and has_arcgis_server:
                     export_url = cfg.wcs_url
                     for suffix in ("/WMSServer", "/WCSServer"):

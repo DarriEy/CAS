@@ -25,7 +25,6 @@ from cas.core.models import (
     TimeRange,
     Variable,
 )
-from cas.core.registry import register
 from cas.extract.zonal import compute_zonal_stats, rasterize_geometry
 
 logger = structlog.get_logger()
