@@ -30,4 +30,4 @@ def test_export_inventory_help():
 def test_health_help():
     result = CliRunner().invoke(cli, ["health", "--help"])
     assert result.exit_code == 0
-    assert "polygon" in result.output
+    assert "--strict" in result.output

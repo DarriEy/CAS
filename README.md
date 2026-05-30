@@ -273,7 +273,26 @@ class MyGatedConnector(BaseConnector):
 pip install -e ".[dev,stac]"
 ruff check src/ tests/
 mypy src/cas/ --ignore-missing-imports
-pytest tests/ -v
+pytest tests/ -v                       # unit tests (no network)
+```
+
+### End-to-end extraction checks
+
+Tests marked `network` run a real `extract()` against live upstream
+providers and are excluded from the default run. Each provider is tested
+over a **coverage-derived** test polygon — a small area inside the
+provider's own declared coverage (see `cas.monitor.test_geometry`), so
+country-specific connectors are exercised over data they actually serve
+rather than a single fixed point.
+
+```bash
+pytest tests/test_e2e_extract.py -m network -v          # sweep all providers
+pytest tests/test_e2e_extract.py -m network -k usgs_3dep # one provider
+
+cas health                  # CLI equivalent: end-to-end sweep + summary
+cas health -s usgs_3dep     # single provider
+cas health --strict         # exit non-zero if any provider is down
+cas verify                  # fast endpoint reachability only (no extraction)
 ```
 
 ## License

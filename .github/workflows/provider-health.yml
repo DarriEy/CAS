@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  health:
+  reachability:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,10 +24,24 @@ jobs:
         run: cas verify
         timeout-minutes: 2
 
-      - name: Health check (Central US polygon)
-        run: cas health --polygon central_us
-        timeout-minutes: 10
+  extract:
+    # End-to-end extraction sweep: a real extract() per provider over a
+    # coverage-derived test polygon (see cas.monitor.test_geometry).
+    # Informational — does not hard-fail on individual flaky upstreams; the
+    # summary line reports the healthy/degraded/down counts.
+    runs-on: ubuntu-latest
 
-      - name: Health check (Alps polygon)
-        run: cas health --polygon alps
-        timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -e ".[dev,stac]"
+
+      - name: End-to-end extraction health check
+        run: cas health
+        timeout-minutes: 20

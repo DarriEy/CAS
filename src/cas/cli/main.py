@@ -256,27 +256,51 @@ def verify(slug):
 
 
 @cli.command()
-@click.option("--polygon", default="central_us", help="Test polygon name")
-def health(polygon):
-    """Run health checks against all providers."""
+@click.option("--slug", "-s", default=None, help="Check a single provider by slug")
+@click.option("--strict", is_flag=True, help="Exit non-zero if any provider is down")
+def health(slug, strict):
+    """End-to-end extraction health check (real extract per provider)."""
     from cas.monitor.health import check_all_providers
 
     async def _run():
-        results = await check_all_providers(test_polygon_name=polygon)
-        for r in results:
+        slugs = [slug] if slug else None
+        results = await check_all_providers(slugs=slugs)
+
+        healthy = degraded = down = auth = 0
+        failures = []
+        for r in sorted(results, key=lambda r: r.provider):
             status_icon = {
-                "healthy": "OK",
+                "healthy": "OK  ",
                 "degraded": "WARN",
                 "down": "FAIL",
-                "unknown": "??",
+                "unknown": "AUTH",
             }[r.status]
+            if r.status == "healthy":
+                healthy += 1
+            elif r.status == "degraded":
+                degraded += 1
+            elif r.status == "unknown":
+                auth += 1
+            else:
+                down += 1
+                failures.append(r)
             line = (
-                f"  [{status_icon:4s}] {r.provider:25s}  "
-                f"{r.response_time_ms or 0:>5d}ms  "
+                f"  [{status_icon}] {r.provider:30s}  "
+                f"{r.response_time_ms or 0:>6d}ms  "
                 f"{r.datasets_available} datasets"
             )
             if r.error:
                 line += f"  ERROR: {r.error}"
             click.echo(line)
+
+        total = healthy + degraded + down + auth
+        click.echo(f"\n  {total} providers: {healthy} healthy, "
+                    f"{degraded} degraded, {auth} auth-gated, {down} down")
+
+        if strict and failures:
+            click.echo("\nDown providers:", err=True)
+            for r in failures:
+                click.echo(f"  {r.provider}: {r.error}", err=True)
+            raise SystemExit(1)
 
     asyncio.run(_run())
