@@ -104,20 +104,26 @@ class AustraliaFracCoverConnector(NationalWCSConnector):
         slug="australia_frac_cover",
         display_name="Australia Fractional Cover 25m (DEA Landsat)",
         wcs_url="https://ows.dea.ga.gov.au",
-        coverage_id="ga_ls_fc_3", protocol_version="2.0.1",
+        # Annual percentile summary (not per-scene ga_ls_fc_3, which needs an exact
+        # acquisition time and 400s for generic polygons). First band = pv_pc_10.
+        coverage_id="ga_ls_fc_pc_cyear_3", protocol_version="2.0.1",
         variable=Variable(name="fractional_cover", units="%", data_type=DataType.CONTINUOUS,
                           valid_range=(0, 100),
-                          description="Photosynthetic/non-photosynthetic veg and bare soil fractions"),
+                          description="Fractional cover percentiles (veg / non-veg / bare soil)"),
         resolution_m=25, category="land_cover",
         bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
         license="CC-BY 4.0",
         citation="DEA, Fractional Cover (Landsat)",
-        crs="EPSG:3577",
+        crs="EPSG:3577", output_format="image/geotiff",
         default_time="2023-01-01T00:00:00Z",
     )
 
 
-@register("australia_mangrove")
+# Disabled: ga_ls_mangrove_cover_cyear_3 is a sparse coastal-only product. DEA WCS
+# returns 404 "no data" (not a zero raster) for any polygon without mangroves — i.e.
+# almost all generic AU land polygons — so it cannot serve zonal extraction. It only
+# succeeds over actual mangrove pixels. Verified 2026-05-30.
+# @register("australia_mangrove")
 class AustraliaMangroveConnector(NationalWCSConnector):
     slug = "australia_mangrove"
     display_name = "Australia Mangrove Cover (DEA)"
@@ -133,7 +139,7 @@ class AustraliaMangroveConnector(NationalWCSConnector):
         resolution_m=25, category="land_cover",
         bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
         license="CC-BY 4.0", citation="DEA, Mangrove Canopy Cover",
-        crs="EPSG:3577",
+        crs="EPSG:3577", output_format="image/geotiff",
         default_time="2023-01-01T00:00:00Z",
     )
 
@@ -152,7 +158,7 @@ class IndiaSoilConnector(NationalWCSConnector):
         slug="india_soil",
         display_name="India Soil Map (NBSS&LUP / Bhuvan)",
         wcs_url="https://bhuvan-vec2.nrsc.gov.in/bhuvan/wms",
-        coverage_id="india_soil_nbss",
+        coverage_id="soil:SOIL_TEX_250K",
         variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
                           description="Indian soil classification"),
         resolution_m=500, category="soil",
@@ -172,7 +178,7 @@ class IndiaLULCConnector(NationalWCSConnector):
         slug="india_lulc",
         display_name="India Land Use/Land Cover (NRSC/Bhuvan)",
         wcs_url="https://bhuvan-vec2.nrsc.gov.in/bhuvan/wms",
-        coverage_id="india_lulc_50k",
+        coverage_id="sisdp_phase2:lulc_phase2_india",
         variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
                           description="Indian land use/land cover classification"),
         resolution_m=50, category="land_cover",

@@ -705,12 +705,12 @@ class SwedenLCConnector(NationalWCSConnector):
 class SwedenSoilConnector(NationalWCSConnector):
     slug = "sweden_soil"
     display_name = "Sweden Soil Map (SGU)"
-    base_url = "https://resource.sgu.se/service/wms/130/jordarter-25-100-tusen"
+    base_url = "https://maps3.sgu.se/geoserver/jord/ows"
     protocol = "wcs"
     _config = NationalDatasetConfig(
         slug="sweden_soil", display_name="Sweden Quaternary Deposits (SGU)",
-        wcs_url="https://resource.sgu.se/service/wms/130/jordarter-25-100-tusen",
-        coverage_id="jordarter",
+        wcs_url="https://maps3.sgu.se/geoserver/jord/ows",
+        coverage_id="jord:SE.GOV.SGU.JORD.YTLAGER_JY1.25K",
         variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
                           description="Swedish quaternary deposits (1:25k-1:100k)"),
         resolution_m=25, category="soil",
@@ -960,12 +960,12 @@ class DEAAfricaDEMConnector(NationalWCSConnector):
         slug="dea_africa_dem",
         display_name="Digital Earth Africa SRTM Derivatives 30m",
         wcs_url="https://ows.digitalearth.africa/wcs",
-        coverage_id="dem_srtm_deriv", variable=ELEV_VAR, resolution_m=30,
+        coverage_id="srtm_deriv", variable=ELEV_VAR, resolution_m=30,
         protocol_version="2.0.1",
         bbox=BoundingBox(min_lon=-26, min_lat=-35, max_lon=58, max_lat=38),
         license="CC-BY 4.0",
         citation="Digital Earth Africa, SRTM-derived slope/MRVBF",
-        crs="EPSG:3857",
+        crs="EPSG:6933",
     )
 
 
@@ -1284,7 +1284,7 @@ class GermanyMVDEMConnector(NationalWCSConnector):
         display_name="Mecklenburg-Vorpommern (Germany) DGM 1m",
         wcs_url="https://www.geodaten-mv.de/dienste/dgm_wcs",
         coverage_id="mv_dgm", variable=ELEV_VAR, resolution_m=1,
-        protocol_version="2.0.1",
+        protocol_version="2.0.1", crs="EPSG:25833",
         bbox=BoundingBox(min_lon=10.6, min_lat=53.1, max_lon=14.4, max_lat=54.7),
         license="DL-DE/Zero",
         citation="LAiV M-V, Digitales Geländemodell Mecklenburg-Vorpommern",
@@ -1336,7 +1336,10 @@ class GermanyHamburgDEMConnector(NationalWCSConnector):
 #  FRANCE — land cover
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("france_lc")
+# Disabled: data.geopf.fr serves WMS 1.3.0 only, but the shared WMS path emits
+# 1.1.1 (VersionNegotiationFailed). Layer LANDCOVER.CHA12_FR is valid — re-enable
+# once NationalWCSConnector supports a configurable WMS version (CRS= + 1.3.0 axis order).
+# @register("france_lc")
 class FranceLCConnector(NationalWCSConnector):
     slug = "france_lc"
     display_name = "France OCS GE Land Cover"
@@ -1995,7 +1998,10 @@ class DenmarkTerrainConnector(NationalWCSConnector):
 #  UK — WFD catchments
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("uk_wfd_catchments")
+# Disabled: EA GeoServer cannot locate the backing store for this layer on any
+# endpoint variant (GetMap → IllegalStateException "Could not locate a layer").
+# Server-side breakage; not fixable client-side. Verified 2026-05-30.
+# @register("uk_wfd_catchments")
 class UKWFDCatchmentsConnector(NationalWCSConnector):
     slug = "uk_wfd_catchments"
     display_name = "UK WFD River Catchments (EA)"
@@ -2543,7 +2549,10 @@ class CroatiaDEMConnector(NationalWCSConnector):
     )
 
 
-@register("hungary_dem")
+# Disabled: GetCoverage backend is dead (the public proxy forwards to an
+# unreachable localhost:8085 GeoServer → HTTP 404), and the only advertised
+# coverage is a single ~10 km tile, not national. Verified 2026-05-30.
+# @register("hungary_dem")
 class HungaryDEMConnector(NationalWCSConnector):
     slug = "hungary_dem"
     display_name = "Hungary DEM 5m"
@@ -2574,7 +2583,7 @@ class DEAAfricaFCConnector(NationalWCSConnector):
         slug="dea_africa_fc",
         display_name="Digital Earth Africa Fractional Cover 30m",
         wcs_url="https://ows.digitalearth.africa/wcs",
-        coverage_id="fc_ls", protocol_version="2.0.1",
+        coverage_id="fc_ls_summary_annual", protocol_version="2.0.1",
         variable=Variable(name="fractional_cover", units="%", data_type=DataType.CONTINUOUS,
                           valid_range=(0, 100),
                           description="Vegetation fractional cover (bare, green, non-green)"),
@@ -2582,7 +2591,7 @@ class DEAAfricaFCConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=-26, min_lat=-35, max_lon=58, max_lat=38),
         license="CC-BY 4.0",
         citation="Digital Earth Africa, Fractional Cover (Landsat)",
-        crs="EPSG:3857",
+        crs="EPSG:6933", default_time="2022-01-01",
     )
 
 

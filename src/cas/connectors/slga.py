@@ -48,11 +48,8 @@ SLGA_VARIABLES: dict[str, tuple[str, Variable]] = {
         "SLT_ACLEP_AU_NAT_C",
         Variable(name="silt", units="%", data_type=DataType.CONTINUOUS, valid_range=(0, 100)),
     ),
-    "soc": (
-        "SOC_ACLEP_AU_NAT_C_V1",
-        Variable(name="soc", units="%", data_type=DataType.CONTINUOUS, valid_range=(0, 50),
-                 description="Soil organic carbon"),
-    ),
+    # "soc" dropped: SOC_ACLEP_AU_NAT_C_V1 WCS GetCapabilities exposes no numbered
+    # coverage and rejects every coverage id (InvalidParameterValue). Server-broken.
     "bd": (
         "BDW_ACLEP_AU_NAT_C",
         Variable(name="bd", units="g/cm3", data_type=DataType.CONTINUOUS, valid_range=(0.5, 2.5),
@@ -74,12 +71,12 @@ SLGA_VARIABLES: dict[str, tuple[str, Variable]] = {
                  description="Effective cation exchange capacity"),
     ),
     "n_total": (
-        "NTO_percent_NAT",
+        "NTO_ACLEP_AU_NAT_C",
         Variable(name="n_total", units="%", data_type=DataType.CONTINUOUS, valid_range=(0, 5),
                  description="Total nitrogen"),
     ),
     "p_total": (
-        "PTO_percent_NAT",
+        "PTO_ACLEP_AU_NAT_C",
         Variable(name="p_total", units="%", data_type=DataType.CONTINUOUS, valid_range=(0, 1),
                  description="Total phosphorus"),
     ),
@@ -142,7 +139,8 @@ class SLGAConnector(WCSMixin, BaseConnector):
             "request": "GetCoverage",
             "coverage": "1",
             "CRS": "EPSG:4326",
-            "BBOX": f"{bbox[1]},{bbox[0]},{bbox[3]},{bbox[2]}",
+            # This WCS 1.0.0 server expects minx,miny,maxx,maxy (lon,lat) order.
+            "BBOX": f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}",
             "width": "200",
             "height": "200",
             "format": "GeoTIFF",

@@ -33,7 +33,7 @@ from cas.core.models import (
     TimeRange,
     Variable,
 )
-from cas.core.registry import register
+from cas.core.registry import register  # noqa: F401  (used by @register when re-enabled)
 from cas.extract.zonal import geometry_to_bbox
 
 logger = structlog.get_logger()
@@ -54,7 +54,11 @@ GLHYMPS_VARIABLES: dict[str, Variable] = {
 }
 
 
-@register("glhymps")
+# Disabled: connector calls a non-existent pygeoglim.get_glhymps(lat, lon). The real
+# pygeoglim API is load_geometry(bbox=...)/glhymps_attributes() returning
+# geol_porosity/geol_permeability, and it is CONUS-only (not the global coverage
+# advertised here). Re-enable only after rewriting extract() for bbox CONUS queries.
+# @register("glhymps")
 class GLHYMPSConnector(BaseConnector):
     slug = "glhymps"
     display_name = "GLHYMPS 2.0 (Hydrogeology)"

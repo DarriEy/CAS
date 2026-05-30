@@ -429,7 +429,9 @@ class ETOPO2022Connector(NationalWCSConnector):
 #  MORE COUNTRY FILL-INS — second/third layers
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("south_korea_soil")
+# Disabled: RDA GeoServer removed; soil.rda.go.kr returns an HTML portal stub
+# for all OGC requests (no raster body to parse). Verified 2026-05-30.
+# @register("south_korea_soil")
 class SouthKoreaSoilConnector(NationalWCSConnector):
     slug = "south_korea_soil"
     display_name = "South Korea Soil Map (RDA)"

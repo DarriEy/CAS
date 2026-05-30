@@ -82,12 +82,13 @@ class ArgentinaSoilConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="argentina_soil", display_name="Argentina Soil Map 1:500k (INTA GeoINTA)",
         wcs_url="https://geo-backend.inta.gob.ar/geoserver/ows",
-        coverage_id="suelos_argentina_1_500",
+        coverage_id="geonode:suelos_argentina_1_500",
         variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
                           description="Argentine soil classification 1:500,000"),
         resolution_m=500, category="soil",
         bbox=BoundingBox(min_lon=-74, min_lat=-56, max_lon=-53, max_lat=-21),
         license="Open (INTA)", citation="INTA, GeoINTA Suelos",
+        use_wms=True,
     )
 
 
@@ -247,12 +248,13 @@ class USGSGeologyConnector(NationalWCSConnector):
         slug="usgs_geology",
         display_name="USGS State Geologic Map Compilation (SGMC)",
         wcs_url="https://mrdata.usgs.gov/services/sgmc",
-        coverage_id="0",
+        coverage_id="sgmc2",
         variable=Variable(name="geology", units="class", data_type=DataType.CATEGORICAL,
                           description="US state geologic map compilation — lithology and age"),
         resolution_m=250, category="geology",
         bbox=BoundingBox(min_lon=-180, min_lat=17, max_lon=-64, max_lat=72),
         license="Public Domain", citation="USGS, State Geologic Map Compilation (SGMC)",
+        use_wms=True,
     )
 
 
