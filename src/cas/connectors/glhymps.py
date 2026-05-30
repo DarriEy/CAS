@@ -11,7 +11,9 @@ Controls: baseflow generation, groundwater recharge, subsurface storage.
 
 from __future__ import annotations
 
+import asyncio
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 import structlog
 
@@ -35,6 +37,8 @@ from cas.core.registry import register
 from cas.extract.zonal import geometry_to_bbox
 
 logger = structlog.get_logger()
+
+_glhymps_pool = ThreadPoolExecutor(max_workers=1)
 
 GLHYMPS_VARIABLES: dict[str, Variable] = {
     "permeability": Variable(
@@ -109,7 +113,10 @@ class GLHYMPSConnector(BaseConnector):
         center_lat = (bbox[1] + bbox[3]) / 2
 
         try:
-            result = get_glhymps(center_lat, center_lon)
+            loop = asyncio.get_running_loop()
+            result = await loop.run_in_executor(
+                _glhymps_pool, get_glhymps, center_lat, center_lon,
+            )
             if var_key == "permeability":
                 value = result.get("logK_Ferr_", result.get("logK_Ice_", None))
             else:

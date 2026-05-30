@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import math
 import time
 
 import structlog
@@ -31,7 +32,6 @@ from cas.extract.zonal import compute_zonal_stats, rasterize_geometry
 logger = structlog.get_logger()
 
 STAC_URL = "https://planetarycomputer.microsoft.com/api/stac/v1"
-COLLECTION = "io-lulc-annual-v02"
 
 HANSEN_LAYERS = {
     "treecover2000": {
@@ -102,10 +102,12 @@ class HansenForestConnector(STACMixin, BaseConnector):
         ds_info = HANSEN_LAYERS[layer_key]
         bbox = self._geometry_to_bbox(geometry)
 
-        lat = int((bbox[1] + bbox[3]) / 2)
-        lon = int((bbox[0] + bbox[2]) / 2)
-        lat_tile = f"{abs(lat):02d}{'N' if lat >= 0 else 'S'}"
-        lon_tile = f"{abs(lon // 10 * 10):03d}{'E' if lon >= 0 else 'W'}"
+        center_lat = (bbox[1] + bbox[3]) / 2
+        center_lon = (bbox[0] + bbox[2]) / 2
+        lat_upper = int(math.ceil(center_lat / 10)) * 10
+        lon_left = int(math.floor(center_lon / 10)) * 10
+        lat_tile = f"{abs(lat_upper):02d}{'N' if lat_upper >= 0 else 'S'}"
+        lon_tile = f"{abs(lon_left):03d}{'E' if lon_left >= 0 else 'W'}"
 
         asset_name = ds_info["asset"]
         cog_url = (

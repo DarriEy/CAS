@@ -32,7 +32,7 @@ from cas.core.models import (
     Variable,
 )
 from cas.core.registry import register
-from cas.extract.zonal import geometry_to_bbox, compute_zonal_stats, parse_geotiff, rasterize_geometry
+from cas.extract.zonal import compute_zonal_stats, geometry_to_bbox, parse_geotiff, rasterize_geometry
 
 logger = structlog.get_logger()
 
@@ -78,17 +78,18 @@ class EEAImageServerConnector(BaseConnector):
 
         try:
             async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
-                resp = await client.get(
-                    export_url,
-                    params={
-                        "bbox": f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}",
-                        "bboxSR": "4326",
-                        "imageSR": "4326",
-                        "size": "500,500",
-                        "format": "tiff",
-                        "f": "json",
-                    },
-                )
+                is_cat = self._variable.data_type == DataType.CATEGORICAL
+                params = {
+                    "bbox": f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}",
+                    "bboxSR": "4326",
+                    "imageSR": "4326",
+                    "size": "500,500",
+                    "format": "tiff",
+                    "f": "json",
+                }
+                if is_cat:
+                    params["interpolation"] = "RSP_NearestNeighbor"
+                resp = await client.get(export_url, params=params)
                 resp.raise_for_status()
                 data = resp.json()
                 href = data.get("href")

@@ -93,11 +93,7 @@ class NOAACCAPConnector(STACMixin, BaseConnector):
             asset_key = asset_keys[0] if asset_keys else "data"
 
         cog_href = item["assets"][asset_key].get("href", "")
-        try:
-            import planetary_computer
-            cog_href = planetary_computer.sign(cog_href)
-        except ImportError:
-            pass
+        cog_href = self._sign_planetary_computer(cog_href)
 
         try:
             raster_data, transform, nodata, src_crs = await self._read_cog_window(

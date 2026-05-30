@@ -118,7 +118,10 @@ class DynamicWorldConnector(BaseConnector):
             ) from exc
 
         try:
-            credentials = ee.ServiceAccountCredentials("", key_file=sa_key)
+            import json
+            with open(sa_key) as f:
+                sa_email = json.load(f).get("client_email", "")
+            credentials = ee.ServiceAccountCredentials(sa_email, key_file=sa_key)
             ee.Initialize(credentials)
         except Exception as e:
             raise RegistrationRequiredError(
@@ -154,7 +157,8 @@ class DynamicWorldConnector(BaseConnector):
             maxPixels=1e7,
         )
 
-        histogram = stats.getInfo().get("label", {})
+        stats_info = stats.getInfo()
+        histogram = (stats_info or {}).get("label", {})
 
         if not histogram:
             return AttributeResult(

@@ -63,7 +63,7 @@ FLOOD_LAYERS = {
 }
 
 
-@register("global_flood_hazard")
+# @register("global_flood_hazard")  # Disabled: all layers use same STAC collection+asset, returning identical data
 class GlobalFloodHazardConnector(STACMixin, BaseConnector):
     slug = "global_flood_hazard"
     display_name = "Global Flood Hazard (Deltares/JRC)"
@@ -137,11 +137,7 @@ class GlobalFloodHazardConnector(STACMixin, BaseConnector):
         if not cog_href:
             raise DataFormatError(self.slug, "STAC asset has no href")
 
-        try:
-            import planetary_computer
-            cog_href = planetary_computer.sign(cog_href)
-        except ImportError:
-            pass
+        cog_href = self._sign_planetary_computer(cog_href)
 
         try:
             raster_data, transform, nodata, src_crs = await self._read_cog_window(

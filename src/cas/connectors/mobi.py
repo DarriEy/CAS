@@ -110,16 +110,17 @@ class MoBIConnector(STACMixin, BaseConnector):
 
         item = self._select_best_item(items)
         asset_key = ds_info["asset"]
-        if asset_key not in item.get("assets", {}):
-            asset_keys = list(item.get("assets", {}).keys())
-            asset_key = asset_keys[0] if asset_keys else ds_info["asset"]
+        assets = item.get("assets", {})
+        if asset_key not in assets:
+            asset_keys = list(assets.keys())
+            if not asset_keys:
+                raise DataFormatError(self.slug, "STAC item has no assets")
+            asset_key = asset_keys[0]
 
-        cog_href = item["assets"][asset_key].get("href", "")
-        try:
-            import planetary_computer
-            cog_href = planetary_computer.sign(cog_href)
-        except ImportError:
-            pass
+        cog_href = assets[asset_key].get("href", "")
+        if not cog_href:
+            raise DataFormatError(self.slug, "STAC asset has no href")
+        cog_href = self._sign_planetary_computer(cog_href)
 
         try:
             raster_data, transform, nodata, src_crs = await self._read_cog_window(

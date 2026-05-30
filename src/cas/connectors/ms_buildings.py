@@ -42,7 +42,7 @@ class MSBuildingsConnector(STACMixin, BaseConnector):
     slug = "ms_buildings"
     display_name = "MS Building Footprints (Global)"
     base_url = STAC_URL
-    protocol = "stac_cog"
+    protocol = "rest"
 
     async def list_datasets(self) -> list[Dataset]:
         return [Dataset(
@@ -52,7 +52,7 @@ class MSBuildingsConnector(STACMixin, BaseConnector):
             variables=[BUILDING_VAR], resolution_m=1, crs="EPSG:4326",
             bbox=BoundingBox(min_lon=-180, min_lat=-90, max_lon=180, max_lat=90),
             temporal=TemporalExtent(temporal_type=TemporalType.STATIC),
-            protocol=Protocol.STAC_COG, license="ODbL",
+            protocol=Protocol.REST, license="ODbL",
             citation="Microsoft, Global ML Building Footprints",
         )]
 
@@ -77,15 +77,7 @@ class MSBuildingsConnector(STACMixin, BaseConnector):
             )
 
         item = self._select_best_item(items)
-        data_asset = item.get("assets", {}).get("data", {})
         building_count = item.get("properties", {}).get("table:row_count")
-
-        try:
-            import planetary_computer
-            if data_asset.get("href"):
-                data_asset["href"] = planetary_computer.sign(data_asset["href"])
-        except ImportError:
-            pass
 
         elapsed_ms = int((time.monotonic() - start_time) * 1000)
 

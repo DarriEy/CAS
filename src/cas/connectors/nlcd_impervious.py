@@ -28,7 +28,7 @@ from cas.core.models import (
     Variable,
 )
 from cas.core.registry import register
-from cas.extract.zonal import geometry_to_bbox, compute_zonal_stats, parse_geotiff, rasterize_geometry
+from cas.extract.zonal import compute_zonal_stats, geometry_to_bbox, parse_geotiff, rasterize_geometry
 
 logger = structlog.get_logger()
 
@@ -48,7 +48,7 @@ class NLCDImperviousConnector(BaseConnector):
     slug = "nlcd_impervious"
     display_name = "NLCD Imperviousness (US)"
     base_url = WMS_URL
-    protocol = "wcs"
+    protocol = "rest"
 
     async def list_datasets(self) -> list[Dataset]:
         return [
@@ -62,7 +62,7 @@ class NLCDImperviousConnector(BaseConnector):
                 crs="EPSG:5070",
                 bbox=BoundingBox(min_lon=-130, min_lat=22, max_lon=-64, max_lat=52),
                 temporal=TemporalExtent(temporal_type=TemporalType.ANNUAL),
-                protocol=Protocol.WCS,
+                protocol=Protocol.REST,
                 license="Public Domain",
                 citation="USGS MRLC, NLCD Impervious Surface",
             )
@@ -93,7 +93,7 @@ class NLCDImperviousConnector(BaseConnector):
             "width": "500",
             "height": "500",
             "srs": "EPSG:4326",
-            "format": "image/geotiff",
+            "format": "image/tiff",
         }
 
         try:

@@ -42,8 +42,10 @@ PC_COLLECTION = "io-lulc-annual-v02"
 ESRI_CLASSES = {
     1: "No data",
     2: "Water",
+    3: "Trees",
     4: "Flooded vegetation",
     5: "Crops",
+    6: "Scrub/shrub",
     7: "Built area",
     8: "Bare ground",
     9: "Snow/ice",
@@ -117,11 +119,7 @@ class EsriLULCConnector(STACMixin, BaseConnector):
                     if asset_key not in item.get("assets", {}):
                         asset_key = list(item.get("assets", {}).keys())[0]
                     cog_href = item["assets"][asset_key]["href"]
-                    try:
-                        import planetary_computer
-                        cog_href = planetary_computer.sign(cog_href)
-                    except ImportError:
-                        pass
+                    cog_href = self._sign_planetary_computer(cog_href)
                     raster_data, transform, nodata, src_crs = await self._read_cog_window(
                         cog_url=cog_href, bbox=bbox, geometry=geometry,
                     )

@@ -80,11 +80,7 @@ class FIAForestConnector(STACMixin, BaseConnector):
         cog_href = item["assets"].get("data", {}).get("href", "")
         if not cog_href:
             raise DataFormatError(self.slug, "No data asset")
-        try:
-            import planetary_computer
-            cog_href = planetary_computer.sign(cog_href)
-        except ImportError:
-            pass
+        cog_href = self._sign_planetary_computer(cog_href)
         try:
             raster_data, transform, nodata, src_crs = await self._read_cog_window(
                 cog_url=cog_href, bbox=bbox, geometry=geometry,
@@ -104,7 +100,7 @@ class FIAForestConnector(STACMixin, BaseConnector):
             quality = QualityFlag.MISSING
         return AttributeResult(
             dataset_id=dataset_id, variable="forest_group",
-            value=value, units="class_fraction",
+            value=value, units="class",
             aggregation=AggregationMethod.DISTRIBUTION,
             quality=quality, coverage_fraction=coverage,
             pixel_count=pixel_count, provider=self.slug,

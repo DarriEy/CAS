@@ -58,7 +58,7 @@ class MODISSnowConnector(STACMixin, BaseConnector):
                 resolution_m=500,
                 crs="EPSG:4326",
                 bbox=BoundingBox(min_lon=-180, min_lat=-90, max_lon=180, max_lat=90),
-                temporal=TemporalExtent(temporal_type=TemporalType.DAILY),
+                temporal=TemporalExtent(temporal_type=TemporalType.CLIMATOLOGY),
                 protocol=Protocol.STAC_COG,
                 license="NASA (open)",
                 citation="Hall & Riggs, MODIS/Terra Snow Cover 8-Day (MOD10A2 v061)",
@@ -107,11 +107,7 @@ class MODISSnowConnector(STACMixin, BaseConnector):
         if not cog_href:
             raise DataFormatError(self.slug, "STAC asset has no href")
 
-        try:
-            import planetary_computer
-            cog_href = planetary_computer.sign(cog_href)
-        except ImportError:
-            pass
+        cog_href = self._sign_planetary_computer(cog_href)
 
         try:
             raster_data, transform, nodata, src_crs = await self._read_cog_window(

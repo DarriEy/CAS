@@ -113,11 +113,7 @@ class USGSLCMAPConnector(STACMixin, BaseConnector):
         if not cog_href:
             raise DataFormatError(self.slug, "No href")
 
-        try:
-            import planetary_computer
-            cog_href = planetary_computer.sign(cog_href)
-        except ImportError:
-            pass
+        cog_href = self._sign_planetary_computer(cog_href)
 
         try:
             raster_data, transform, nodata, src_crs = await self._read_cog_window(

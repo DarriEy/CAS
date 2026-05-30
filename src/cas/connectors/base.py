@@ -81,6 +81,22 @@ class BaseConnector(ABC):
         except Exception:
             return False
 
+    # ── Planetary Computer signing ───────────────────────────────────
+
+    @staticmethod
+    def _sign_planetary_computer(href: str) -> str:
+        """Sign a Planetary Computer URL. Raises ConnectorError if the package is missing."""
+        try:
+            import planetary_computer
+
+            return planetary_computer.sign(href)  # type: ignore[no-any-return]
+        except ImportError:
+            raise ConnectorError(
+                "planetary_computer",
+                "The 'planetary-computer' package is required for this provider.\n"
+                "Install it with: pip install 'cas[stac]'",
+            ) from None
+
     # ── Built-in HTTP helpers ───────────────────────────────────────
 
     _RETRYABLE = (

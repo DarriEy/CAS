@@ -149,16 +149,10 @@ class SLGAConnector(WCSMixin, BaseConnector):
         }
 
         try:
-            import httpx
-
-            async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
-                resp = await client.get(wcs_url, params=params)
-                if resp.status_code != 200:
-                    raise DataFormatError(self.slug, f"WCS returned {resp.status_code}")
-                content_type = resp.headers.get("content-type", "")
-                if "xml" in content_type or "html" in content_type:
-                    raise DataFormatError(self.slug, f"WCS error: {resp.text[:300]}")
-                raster_bytes = resp.content
+            raster_bytes = await self._get_bytes(wcs_url, params=params)
+            content_type_check = raster_bytes[:5]
+            if content_type_check.startswith(b"<?xml") or content_type_check.startswith(b"<html"):
+                raise DataFormatError(self.slug, f"WCS error: {raster_bytes[:300].decode(errors='replace')}")
         except DataFormatError:
             raise
         except Exception as e:

@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import time
 
-import httpx
 import structlog
 
 from cas.connectors.base import BaseConnector
@@ -78,33 +77,38 @@ class SSURGOHSGConnector(BaseConnector):
         aoi_wkt = _bbox_to_wkt(bbox)
 
         try:
-            async with httpx.AsyncClient(timeout=60) as client:
-                mukey_query = (
-                    f"SELECT mukey FROM SDA_Get_Mukey_from_intersection_with_WktWgs84('{aoi_wkt}')"
-                )
-                resp1 = await client.post(SDA_URL, json={"query": mukey_query, "format": "JSON+COLUMNNAME"})
-                resp1.raise_for_status()
-                mukey_data = resp1.json()
+            mukey_query = (
+                f"SELECT mukey FROM SDA_Get_Mukey_from_intersection_with_WktWgs84('{aoi_wkt}')"
+            )
+            resp1 = await self.client.post(
+                "/Tabular/post.rest",
+                json={"query": mukey_query, "format": "JSON+COLUMNNAME"},
+            )
+            resp1.raise_for_status()
+            mukey_data = resp1.json()
 
-                mukey_table = mukey_data.get("Table", [])
-                if len(mukey_table) < 2:
-                    raise DataFormatError(self.slug, "No map units found")
+            mukey_table = mukey_data.get("Table", [])
+            if len(mukey_table) < 2:
+                raise DataFormatError(self.slug, "No map units found")
 
-                mukeys = [str(r[0]) for r in mukey_table[1:]]
-                mukey_list = ",".join(mukeys)
+            mukeys = [str(r[0]) for r in mukey_table[1:]]
+            mukey_list = ",".join(mukeys)
 
-                hsg_query = f"""
-                SELECT c.hydgrp, SUM(c.comppct_r) AS total_pct
-                FROM component c
-                WHERE c.mukey IN ({mukey_list})
-                AND c.hydgrp IS NOT NULL
-                AND c.comppct_r > 0
-                GROUP BY c.hydgrp
-                ORDER BY total_pct DESC
-                """
-                resp2 = await client.post(SDA_URL, json={"query": hsg_query, "format": "JSON+COLUMNNAME"})
-                resp2.raise_for_status()
-                data = resp2.json()
+            hsg_query = f"""
+            SELECT c.hydgrp, SUM(c.comppct_r) AS total_pct
+            FROM component c
+            WHERE c.mukey IN ({mukey_list})
+            AND c.hydgrp IS NOT NULL
+            AND c.comppct_r > 0
+            GROUP BY c.hydgrp
+            ORDER BY total_pct DESC
+            """
+            resp2 = await self.client.post(
+                "/Tabular/post.rest",
+                json={"query": hsg_query, "format": "JSON+COLUMNNAME"},
+            )
+            resp2.raise_for_status()
+            data = resp2.json()
 
         except DataFormatError:
             raise

@@ -84,7 +84,7 @@ TERRAIN_LAYERS = {
 }
 
 
-@register("terrain_derivatives")
+# @register("terrain_derivatives")  # Disabled: OpenLandMap S3 data retired
 class TerrainDerivativesConnector(STACMixin, BaseConnector):
     slug = "terrain_derivatives"
     display_name = "Global Terrain Derivatives 250m (MERIT DEM)"

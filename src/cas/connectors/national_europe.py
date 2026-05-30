@@ -62,7 +62,7 @@ class DenmarkDEMConnector(NationalWCSConnector):
     )
 
 
-@register("estonia_dem")
+# @register("estonia_dem")  # Disabled: URL/coverage_id point to aerial photo service, not DEM
 class EstoniaDEMConnector(NationalWCSConnector):
     slug = "estonia_dem"
     display_name = "Estonia DEM 1m"
@@ -117,7 +117,7 @@ class NetherlandsAHNConnector(NationalWCSConnector):
     )
 
 
-@register("italy_tinitaly")
+# @register("italy_tinitaly")  # Disabled: tinitaly.pi.ingv.it unreachable
 class ItalyTINITALYConnector(NationalWCSConnector):
     slug = "italy_tinitaly"
     display_name = "Italy TINITALY 10m"
@@ -162,7 +162,7 @@ class PolandNMTConnector(NationalWCSConnector):
         variable=ELEV_VAR, resolution_m=1,
         bbox=BoundingBox(min_lon=14.1, min_lat=49.0, max_lon=24.2, max_lat=54.9),
         license="Open (Poland)", citation="GUGiK, Numeryczny Model Terenu",
-        crs="EPSG:28992",
+        crs="EPSG:2180",
         use_wms=True,
     )
 
@@ -1522,7 +1522,7 @@ class NorwayGeologyConnector(NationalWCSConnector):
 #  ITALY — DEM slope/aspect derivatives
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("italy_slope")
+# @register("italy_slope")  # Disabled: tinitaly.pi.ingv.it unreachable
 class ItalySlopeConnector(NationalWCSConnector):
     slug = "italy_slope"
     display_name = "Italy Slope (TINITALY)"
@@ -1542,7 +1542,7 @@ class ItalySlopeConnector(NationalWCSConnector):
     )
 
 
-@register("italy_aspect")
+# @register("italy_aspect")  # Disabled: tinitaly.pi.ingv.it unreachable
 class ItalyAspectConnector(NationalWCSConnector):
     slug = "italy_aspect"
     display_name = "Italy Aspect (TINITALY)"
@@ -1562,7 +1562,7 @@ class ItalyAspectConnector(NationalWCSConnector):
     )
 
 
-@register("italy_hillshade")
+# @register("italy_hillshade")  # Disabled: tinitaly.pi.ingv.it unreachable
 class ItalyHillshadeConnector(NationalWCSConnector):
     slug = "italy_hillshade"
     display_name = "Italy Hillshade (TINITALY)"
@@ -1582,7 +1582,7 @@ class ItalyHillshadeConnector(NationalWCSConnector):
     )
 
 
-@register("italy_skyview")
+# @register("italy_skyview")  # Disabled: tinitaly.pi.ingv.it unreachable
 class ItalySkyviewConnector(NationalWCSConnector):
     slug = "italy_skyview"
     display_name = "Italy Sky-View Factor (TINITALY)"
@@ -1960,7 +1960,7 @@ class SpainQuaternaryConnector(NationalWCSConnector):
         resolution_m=1000, category="geology",
         bbox=BoundingBox(min_lon=-18.2, min_lat=27.6, max_lon=4.4, max_lat=43.8),
         license="Open (IGME)", citation="IGME, Mapa Geológico del Cuaternario 1:1M",
-        crs="EPSG:28992",
+        crs="EPSG:25830",
         use_wms=True,
     )
 

@@ -184,7 +184,8 @@ class CORINELandCoverConnector(STACMixin, BaseConnector):
 
         token = os.environ.get("CAS_COPERNICUS_TOKEN", "")
         if token:
-            cog_href = f"{cog_href}?token={token}"
+            sep = "&" if "?" in cog_href else "?"
+            cog_href = f"{cog_href}{sep}token={token}"
 
         try:
             raster_data, transform, nodata, src_crs = await self._read_cog_window(

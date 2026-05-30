@@ -41,7 +41,7 @@ BDTICM_VAR = Variable(
 )
 
 
-@register("depth_to_bedrock")
+# @register("depth_to_bedrock")  # Disabled: bdticm not available in SoilGrids v2.0 REST API
 class DepthToBedrockConnector(BaseConnector):
     slug = "depth_to_bedrock"
     display_name = "Depth to Bedrock (SoilGrids)"

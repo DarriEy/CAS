@@ -133,11 +133,7 @@ class JRCGlobalSurfaceWaterConnector(STACMixin, BaseConnector):
                     if asset_key not in item.get("assets", {}):
                         asset_key = list(item.get("assets", {}).keys())[0]
                     cog_href = item["assets"][asset_key]["href"]
-                    try:
-                        import planetary_computer
-                        cog_href = planetary_computer.sign(cog_href)
-                    except ImportError:
-                        pass
+                    cog_href = self._sign_planetary_computer(cog_href)
                     raster_data, transform, nodata, src_crs = await self._read_cog_window(
                         cog_url=cog_href, bbox=bbox, geometry=geometry,
                     )

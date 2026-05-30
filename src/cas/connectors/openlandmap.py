@@ -8,11 +8,10 @@ Replaces the previous WCS approach (OpenGeoHub GeoServer is offline).
 
 from __future__ import annotations
 
-import os
+import asyncio
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-import numpy as np
 import structlog
 
 from cas.connectors.base import BaseConnector
@@ -36,7 +35,7 @@ from cas.extract.zonal import compute_zonal_stats, geometry_to_bbox, rasterize_g
 
 logger = structlog.get_logger()
 
-S3_BASE = "https://s3.openlandmap.org/arco"
+S3_BASE = "https://s3.eu-central-1.wasabisys.com/arco"
 
 OLM_VARIABLES: dict[str, tuple[str, Variable]] = {
     "sand": (
@@ -44,9 +43,9 @@ OLM_VARIABLES: dict[str, tuple[str, Variable]] = {
         Variable(name="sand", units="%", data_type=DataType.CONTINUOUS, valid_range=(0, 100)),
     ),
     "clay": (
-        "clay.tot_iso.11277.2020.wpct_m_30m_b0cm..20cm_20000101_20021231_eu_epsg.3035_v20251028.tif",
-        Variable(name="clay", units="%", data_type=DataType.CONTINUOUS, valid_range=(0, 100),
-                 description="Clay content (EU 30m only)"),
+        "https://s3.opengeohub.org/global-soil/global_soil_props_v20250523/"
+        "clay.tot_iso.11277.2020.wpct_m_120m_b0cm..30cm_20200101_20221231_g_epsg.4326_v20250523.tif",
+        Variable(name="clay", units="%", data_type=DataType.CONTINUOUS, valid_range=(0, 100)),
     ),
     "bd": (
         "bulkdens.fineearth_usda.4a1h_m_250m_b0cm_19500101_20171231_go_epsg.4326_v0.2.tif",
@@ -89,13 +88,12 @@ def _read_cog_window(cog_url: str, bbox: tuple[float, float, float, float]):
         "VSI_CACHE_SIZE": "5000000",
     }
 
-    with rasterio.Env(**gdal_env):
-        with rasterio.open(f"/vsicurl/{cog_url}") as src:
-            window = from_bounds(bbox[0], bbox[1], bbox[2], bbox[3], src.transform)
-            data = src.read(1, window=window)
-            transform = src.window_transform(window)
-            nodata = src.nodata
-            crs = src.crs
+    with rasterio.Env(**gdal_env), rasterio.open(f"/vsicurl/{cog_url}") as src:
+        window = from_bounds(bbox[0], bbox[1], bbox[2], bbox[3], src.transform)
+        data = src.read(1, window=window)
+        transform = src.window_transform(window)
+        nodata = src.nodata
+        crs = src.crs
     return data, transform, nodata, crs
 
 
@@ -103,7 +101,7 @@ def _read_cog_window(cog_url: str, bbox: tuple[float, float, float, float]):
 class OpenLandMapConnector(BaseConnector):
     slug = "openlandmap"
     display_name = "OpenLandMap"
-    base_url = S3_BASE
+    base_url = "https://s3.eu-central-1.wasabisys.com"
     protocol = "rest"
 
     async def list_datasets(self) -> list[Dataset]:
@@ -140,11 +138,10 @@ class OpenLandMapConnector(BaseConnector):
             raise DataFormatError(self.slug, f"Unknown variable: {var_key}")
 
         filename, var_meta = OLM_VARIABLES[var_key]
-        cog_url = f"{S3_BASE}/{filename}"
+        cog_url = filename if filename.startswith("http") else f"{S3_BASE}/{filename}"
         bbox = geometry_to_bbox(geometry)
 
-        import asyncio
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         try:
             raster_data, transform, nodata, src_crs = await loop.run_in_executor(
                 _thread_pool, _read_cog_window, cog_url, bbox
