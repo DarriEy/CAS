@@ -49,8 +49,14 @@ LAND_ANCHORS: list[tuple[float, float]] = [
     (110.00, 30.00),   # China
 ]
 
-# Maximum half-width of a test polygon, in degrees (~1 km at the equator).
-_MAX_HALF_SIZE = 0.005
+# Half-width bounds for a test polygon, in degrees (~1 km / ~5.5 km at the
+# equator). The polygon is scaled up for coarse-resolution providers so it
+# always spans several pixels — a fixed ~1 km square rounds to zero pixels
+# for, e.g., a 5 km biomass product ("width and height must be > 0").
+_MIN_HALF_SIZE = 0.005
+_MAX_HALF_SIZE = 0.05
+_DEG_PER_M = 1.0 / 111_320.0  # rough degrees-per-metre at the equator
+_MIN_PIXELS_ACROSS = 6        # ensure the test window covers >= ~6 pixels
 
 
 def _point_in_bbox(lon: float, lat: float, bbox: BoundingBox) -> bool:
@@ -71,19 +77,27 @@ def _square(center_lon: float, center_lat: float, half: float) -> Geometry:
     )
 
 
-def coverage_test_geometry(bbox: BoundingBox) -> Geometry:
+def coverage_test_geometry(bbox: BoundingBox, resolution_m: float | None = None) -> Geometry:
     """Return a small test polygon guaranteed to lie inside ``bbox``.
 
     Prefers a curated land anchor within coverage; otherwise uses the
-    bbox centroid.  The polygon is sized to the coverage extent and
-    clamped so it never spills outside ``bbox``.
+    bbox centroid.  The polygon is sized to span at least a few pixels of
+    the provider's ``resolution_m`` (so coarse products don't produce a
+    zero-pixel request) and clamped so it never spills outside ``bbox``.
     """
     width = bbox.max_lon - bbox.min_lon
     height = bbox.max_lat - bbox.min_lat
 
-    # Keep the polygon comfortably inside coverage even for narrow bboxes.
-    half = min(_MAX_HALF_SIZE, width * 0.1, height * 0.1)
-    half = max(half, 1e-4)  # never degenerate to a point
+    # Start from the baseline ~1 km half-width, then grow it to cover at
+    # least a few pixels for coarse-resolution providers.
+    half = _MIN_HALF_SIZE
+    if resolution_m:
+        half = max(half, (_MIN_PIXELS_ACROSS / 2.0) * resolution_m * _DEG_PER_M)
+    half = min(half, _MAX_HALF_SIZE)
+
+    # Never let the polygon exceed the coverage extent; never degenerate.
+    half = min(half, width * 0.4, height * 0.4)
+    half = max(half, 1e-4)
 
     # Default to the bbox centroid; override with the first land anchor inside.
     center_lon = (bbox.min_lon + bbox.max_lon) / 2.0

@@ -67,7 +67,7 @@ async def check_provider(provider_slug: str) -> HealthCheckResult:
                 )
 
             first_ds = datasets[0]
-            test_geom = coverage_test_geometry(first_ds.bbox)
+            test_geom = coverage_test_geometry(first_ds.bbox, first_ds.resolution_m)
             result = await conn.extract(
                 dataset_id=first_ds.id,
                 geometry=test_geom,
