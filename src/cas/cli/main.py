@@ -99,7 +99,7 @@ def extract(geometry, datasets, start, end, aggregation, output):
         aggregation=agg,
     )
 
-    async def _run():
+    async def _run_single():
         response = await run_extract(request)
         result_json = response.model_dump_json(indent=2)
         if output:
@@ -109,7 +109,7 @@ def extract(geometry, datasets, start, end, aggregation, output):
         else:
             click.echo(result_json)
 
-    asyncio.run(_run())
+    asyncio.run(_run_single())
 
 
 @cli.command()
@@ -170,7 +170,7 @@ def export_inventory(output):
                 datasets = []
 
             ds = datasets[0] if datasets else None
-            entry = {
+            entry: dict[str, object] = {
                 "slug": slug,
                 "name": cls.display_name,
                 "protocol": cls.protocol,

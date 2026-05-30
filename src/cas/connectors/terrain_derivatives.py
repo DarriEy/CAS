@@ -31,7 +31,7 @@ logger = structlog.get_logger()
 
 OLM_BASE = "https://s3.eu-central-1.wasabisys.com/openlandmap"
 
-TERRAIN_LAYERS = {
+TERRAIN_LAYERS: dict[str, dict] = {
     "slope": {
         "url": f"{OLM_BASE}/layers250m/dtm_slope_merit.dem_m_250m_s0..0cm_2017_v1.0.tif",
         "variable": Variable(

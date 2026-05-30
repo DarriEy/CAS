@@ -175,7 +175,7 @@ async def batch_extract(request: BatchAttributeRequest) -> BatchAttributeRespons
                 warnings=[str(resp)],
                 elapsed_ms=0,
             ))
-        else:
+        elif isinstance(resp, AttributeResponse):
             valid_responses.append(resp)
 
     elapsed_ms = int((time.monotonic() - start_time) * 1000)

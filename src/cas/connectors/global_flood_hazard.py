@@ -31,7 +31,7 @@ logger = structlog.get_logger()
 
 STAC_URL = "https://planetarycomputer.microsoft.com/api/stac/v1"
 
-FLOOD_LAYERS = {
+FLOOD_LAYERS: dict[str, dict] = {
     "fluvial_undefended_100yr": {
         "collection": "deltares-floods",
         "asset": "data",

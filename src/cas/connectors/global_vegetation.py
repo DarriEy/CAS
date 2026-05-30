@@ -31,7 +31,7 @@ logger = structlog.get_logger()
 
 OLM_BASE = "https://s3.eu-central-1.wasabisys.com/openlandmap"
 
-VEG_LAYERS = {
+VEG_LAYERS: dict[str, dict] = {
     "ndvi_annual_mean": {
         "url": f"{OLM_BASE}/layers250m/veg_ndvi_modis.mod13a2_m_250m_s0..0cm_2000..2022_v1.0.tif",
         "variable": Variable(

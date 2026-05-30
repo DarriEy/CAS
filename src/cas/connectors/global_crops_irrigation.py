@@ -31,7 +31,7 @@ logger = structlog.get_logger()
 
 OLM_BASE = "https://s3.eu-central-1.wasabisys.com/openlandmap"
 
-CROP_LAYERS = {
+CROP_LAYERS: dict[str, dict] = {
     "cropland_extent": {
         "url": f"{OLM_BASE}/layers250m/lcv_cropland.extent_glad.gfsad_p_250m_s0..0cm_2015_v1.0.tif",
         "variable": Variable(

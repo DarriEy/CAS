@@ -31,7 +31,7 @@ logger = structlog.get_logger()
 
 OLM_BASE = "https://s3.eu-central-1.wasabisys.com/openlandmap"
 
-IMPERV_LAYERS = {
+IMPERV_LAYERS: dict[str, dict] = {
     "built_up_area": {
         "url": f"{OLM_BASE}/layers250m/lcv_built.up_esa.cci_p_250m_s0..0cm_2018_v1.0.tif",
         "variable": Variable(

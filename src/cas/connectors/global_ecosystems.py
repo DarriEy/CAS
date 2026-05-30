@@ -31,7 +31,7 @@ logger = structlog.get_logger()
 
 OLM_BASE = "https://s3.eu-central-1.wasabisys.com/openlandmap"
 
-ECO_LAYERS = {
+ECO_LAYERS: dict[str, dict] = {
     "peatland": {
         "url": f"{OLM_BASE}/layers1km/lcv_peatland.prob_cifor_p_1km_s0..0cm_2010_v1.0.tif",
         "variable": Variable(

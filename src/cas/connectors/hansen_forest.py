@@ -33,7 +33,7 @@ logger = structlog.get_logger()
 
 STAC_URL = "https://planetarycomputer.microsoft.com/api/stac/v1"
 
-HANSEN_LAYERS = {
+HANSEN_LAYERS: dict[str, dict] = {
     "treecover2000": {
         "asset": "treecover2000",
         "variable": Variable(

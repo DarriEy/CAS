@@ -31,7 +31,7 @@ logger = structlog.get_logger()
 
 OLM_BASE = "https://s3.eu-central-1.wasabisys.com/openlandmap"
 
-WATER_LAYERS = {
+WATER_LAYERS: dict[str, dict] = {
     "water_occurrence": {
         "url": f"{OLM_BASE}/layers250m/lcv_water.occurance_jrc.surfacewater_p_250m_s0..0cm_1984..2019_v1.0.tif",
         "variable": Variable(

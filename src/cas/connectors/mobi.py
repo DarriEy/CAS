@@ -33,7 +33,7 @@ logger = structlog.get_logger()
 STAC_URL = "https://planetarycomputer.microsoft.com/api/stac/v1"
 COLLECTION = "mobi"
 
-MOBI_LAYERS = {
+MOBI_LAYERS: dict[str, dict] = {
     "species_richness": {
         "asset": "RSR",
         "variable": Variable(

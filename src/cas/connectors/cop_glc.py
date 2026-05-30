@@ -32,7 +32,7 @@ logger = structlog.get_logger()
 STAC_URL = "https://planetarycomputer.microsoft.com/api/stac/v1"
 COLLECTION = "cop-dem-glo-30"  # placeholder — actual collection ID below
 
-GLC_DATASETS = {
+GLC_DATASETS: dict[str, dict] = {
     "discrete_classification": {
         "asset": "discrete_classification",
         "variable": Variable(

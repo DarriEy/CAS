@@ -31,7 +31,7 @@ logger = structlog.get_logger()
 
 OLM_BASE = "https://s3.eu-central-1.wasabisys.com/openlandmap/layers250m"
 
-HYDRAULIC_LAYERS = {
+HYDRAULIC_LAYERS: dict[str, dict] = {
     "ksat_0cm": {
         "url": f"{OLM_BASE}/sol_ksat_usda.rosetta3_m_250m_b0..0cm_1950..2017_v0.1.tif",
         "variable": Variable(

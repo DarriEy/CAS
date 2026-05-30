@@ -32,7 +32,7 @@ logger = structlog.get_logger()
 
 STAC_URL = "https://planetarycomputer.microsoft.com/api/stac/v1"
 
-GHSL_LAYERS = {
+GHSL_LAYERS: dict[str, dict] = {
     "built_surface": {
         "collection": "jrc-ghsl-built-s-r2023a",
         "asset": "built_surface",

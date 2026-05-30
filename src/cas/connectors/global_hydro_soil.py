@@ -31,7 +31,7 @@ logger = structlog.get_logger()
 
 OLM_BASE = "https://s3.eu-central-1.wasabisys.com/openlandmap"
 
-HYDRO_SOIL_LAYERS = {
+HYDRO_SOIL_LAYERS: dict[str, dict] = {
     "hsg": {
         "url": f"{OLM_BASE}/layers250m/sol_hsg_usda_c_250m_s0..0cm_1950..2017_v0.1.tif",
         "variable": Variable(

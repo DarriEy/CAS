@@ -31,7 +31,7 @@ logger = structlog.get_logger()
 
 OLM_BASE = "https://s3.eu-central-1.wasabisys.com/openlandmap"
 
-SOIL_PROP_LAYERS = {
+SOIL_PROP_LAYERS: dict[str, dict] = {
     "soil_depth": {
         "url": f"{OLM_BASE}/layers250m/sol_depth.bedrock_usda.stats_cm_250m_s0..0cm_1950..2017_v0.1.tif",
         "variable": Variable(

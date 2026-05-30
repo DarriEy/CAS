@@ -98,7 +98,7 @@ class EsriLULCConnector(STACMixin, BaseConnector):
         raster_data = None
         transform = None
         nodata = None
-        src_crs = "EPSG:4326"
+        src_crs: object = "EPSG:4326"
         provenance = ""
 
         # Provider first: Esri ImageServer exportImage
@@ -118,7 +118,7 @@ class EsriLULCConnector(STACMixin, BaseConnector):
                     asset_key = "data"
                     if asset_key not in item.get("assets", {}):
                         asset_key = list(item.get("assets", {}).keys())[0]
-                    cog_href = item["assets"][asset_key]["href"]
+                    cog_href = str(item["assets"][asset_key]["href"])
                     cog_href = self._sign_planetary_computer(cog_href)
                     raster_data, transform, nodata, src_crs = await self._read_cog_window(
                         cog_url=cog_href, bbox=bbox, geometry=geometry,

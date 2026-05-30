@@ -31,7 +31,7 @@ logger = structlog.get_logger()
 
 OLM_BASE = "https://s3.eu-central-1.wasabisys.com/openlandmap"
 
-GLACIER_LAYERS = {
+GLACIER_LAYERS: dict[str, dict] = {
     "glacier_cover": {
         "url": f"{OLM_BASE}/layers1km/lcv_glacier.cover_rgi6.0_p_1km_s0..0cm_2017_v1.0.tif",
         "variable": Variable(
