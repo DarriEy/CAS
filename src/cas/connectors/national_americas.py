@@ -27,7 +27,8 @@ class CanadaHRDEMConnector(NationalWCSConnector):
         coverage_id="dsm", variable=ELEV_VAR, resolution_m=2,
         bbox=BoundingBox(min_lon=-141, min_lat=41.7, max_lon=-52.6, max_lat=83.1),
         license="Open Government Licence - Canada", citation="NRCan, High Resolution DEM",
-        use_wms=True,
+        # Server's WMS 1.1.1 handler crashes (ignores SRS=); only 1.3.0 (CRS=) works.
+        use_wms=True, wms_version="1.3.0",
     )
 
 
@@ -351,7 +352,9 @@ class BrazilBiomesConnector(NationalWCSConnector):
     )
 
 
-@register("peru_soil")
+# Disabled: geoservicios.midagri.gob.pe refuses TCP connections from the CI/US
+# vantage (no response on 80/443) — host down or geo-restricted. Verified 2026-05-30.
+# @register("peru_soil")
 class PeruSoilConnector(NationalWCSConnector):
     slug = "peru_soil"
     display_name = "Peru Soil Map (MIDAGRI)"
@@ -374,7 +377,9 @@ class PeruSoilConnector(NationalWCSConnector):
 #  US — additional datasets
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("us_nass_cropscape")
+# Disabled: the CDLService endpoint is an Axis2 SOAP/REST service, not a WCS
+# (GetCapabilities → SOAP fault "Operation not found"). Duplicates usda_cdl.
+# @register("us_nass_cropscape")
 class USCropscapeConnector(NationalWCSConnector):
     slug = "us_nass_cropscape"
     display_name = "US CropScape 30m (NASS)"
@@ -413,7 +418,9 @@ class USNEDSlopeConnector(NationalWCSConnector):
     )
 
 
-@register("us_gap_lc")
+# Disabled: the entire sciencebase.gov /arcgis/ ArcGIS Server is offline (every
+# REST/WCS path hangs; site root responds). Backend decommissioned. Verified 2026-05-30.
+# @register("us_gap_lc")
 class USGAPLCConnector(NationalWCSConnector):
     slug = "us_gap_lc"
     display_name = "US GAP Land Cover 30m"

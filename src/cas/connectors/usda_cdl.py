@@ -24,7 +24,7 @@ from cas.core.models import (
     TimeRange,
     Variable,
 )
-from cas.core.registry import register
+from cas.core.registry import register  # noqa: F401  (used by @register when re-enabled)
 from cas.extract.zonal import compute_zonal_stats, geometry_to_bbox, parse_geotiff, rasterize_geometry
 
 logger = structlog.get_logger()
@@ -56,7 +56,11 @@ CROP_VAR = Variable(
 )
 
 
-@register("usda_cdl")
+# Disabled: CropScape's polygon-clipping endpoints (GetCDLFile / GetCDLStat?bbox=)
+# hang server-side even with correct EPSG:5070 coords; only county-FIPS / point
+# endpoints respond, which can't do arbitrary-polygon zonal stats. Re-enable by
+# rewriting against the USDA CDL COGs on Microsoft Planetary Computer (STAC). 2026-05-30.
+# @register("usda_cdl")
 class USDAcroplandConnector(BaseConnector):
     slug = "usda_cdl"
     display_name = "USDA CDL (Cropland)"

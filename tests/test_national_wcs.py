@@ -66,7 +66,7 @@ class TestNationalWCSFactory:
             "finland": ["finland_dem", "finland_soil", "finland_lc"],
             "netherlands": ["netherlands_ahn", "netherlands_soil"],
             "spain": ["spain_mdt", "spain_lithology", "spain_hydro"],
-            "denmark": ["denmark_dem", "denmark_soil", "denmark_geology"],
+            "denmark": ["denmark_dem", "denmark_terrain"],
             "australia": ["australia_dem", "australia_dea_lc"],
         }
         for country, expected in countries.items():

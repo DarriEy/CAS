@@ -149,7 +149,9 @@ class SpainMDTConnector(NationalWCSConnector):
     )
 
 
-@register("poland_nmt")
+# Disabled: mapy.geoportal.gov.pl refuses TCP connections from non-PL IPs (CI/US
+# vantage) — likely geo-restricted. Re-enable if running from an EU IP. 2026-05-30.
+# @register("poland_nmt")
 class PolandNMTConnector(NationalWCSConnector):
     slug = "poland_nmt"
     display_name = "Poland NMT 1m"
@@ -1057,7 +1059,10 @@ class ScotlandLCConnector(NationalWCSConnector):
 #  DENMARK SOIL
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("denmark_soil")
+# Disabled: GEUS GeoServer (data.geus.dk) WAF blocks all data delivery — every
+# GetMap/GetCoverage returns HTML 403/502 regardless of layer/CRS/format, though
+# GetCapabilities works. Affects all four GEUS layers below. Verified 2026-05-30.
+# @register("denmark_soil")
 class DenmarkSoilConnector(NationalWCSConnector):
     slug = "denmark_soil"
     display_name = "Denmark Soil Map (GEUS)"
@@ -1206,7 +1211,9 @@ class NorwayVegetationConnector(NationalWCSConnector):
 #  GERMANY — additional state DEMs
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("germany_sachsen_anhalt_dem")
+# Disabled: WCS GetCoverage is broken server-side — GetCapabilities/DescribeCoverage
+# return 200, but every in-extent GetCoverage returns a bare 500. Verified 2026-05-30.
+# @register("germany_sachsen_anhalt_dem")
 class GermanySachsenAnhaltDEMConnector(NationalWCSConnector):
     slug = "germany_sachsen_anhalt_dem"
     display_name = "Germany Sachsen-Anhalt DGM1 1m"
@@ -1336,10 +1343,7 @@ class GermanyHamburgDEMConnector(NationalWCSConnector):
 #  FRANCE — land cover
 # ═══════════════════════════════════════════════════════════════════════
 
-# Disabled: data.geopf.fr serves WMS 1.3.0 only, but the shared WMS path emits
-# 1.1.1 (VersionNegotiationFailed). Layer LANDCOVER.CHA12_FR is valid — re-enable
-# once NationalWCSConnector supports a configurable WMS version (CRS= + 1.3.0 axis order).
-# @register("france_lc")
+@register("france_lc")
 class FranceLCConnector(NationalWCSConnector):
     slug = "france_lc"
     display_name = "France OCS GE Land Cover"
@@ -1355,7 +1359,7 @@ class FranceLCConnector(NationalWCSConnector):
         resolution_m=10, category="land_cover",
         bbox=BoundingBox(min_lon=-5.2, min_lat=41.3, max_lon=9.6, max_lat=51.1),
         license="Open Licence (Etalab)", citation="IGN, OCS GE (Geoplateforme)",
-        use_wms=True,
+        use_wms=True, wms_version="1.3.0",
     )
 
 
@@ -1410,7 +1414,8 @@ class FinlandLCConnector(NationalWCSConnector):
 #  DENMARK — geology/groundwater
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("denmark_geology")
+# Disabled: GEUS GeoServer WAF blocks all data delivery (see denmark_soil note).
+# @register("denmark_geology")
 class DenmarkGeologyConnector(NationalWCSConnector):
     slug = "denmark_geology"
     display_name = "Denmark Groundwater (GEUS)"
@@ -1429,7 +1434,8 @@ class DenmarkGeologyConnector(NationalWCSConnector):
     )
 
 
-@register("denmark_nitrate")
+# Disabled: GEUS GeoServer WAF blocks all data delivery (see denmark_soil note).
+# @register("denmark_nitrate")
 class DenmarkNitrateConnector(NationalWCSConnector):
     slug = "denmark_nitrate"
     display_name = "Denmark Groundwater Nitrate (GEUS)"
@@ -1449,7 +1455,8 @@ class DenmarkNitrateConnector(NationalWCSConnector):
     )
 
 
-@register("denmark_water_supply")
+# Disabled: GEUS GeoServer WAF blocks all data delivery (see denmark_soil note).
+# @register("denmark_water_supply")
 class DenmarkWaterSupplyConnector(NationalWCSConnector):
     slug = "denmark_water_supply"
     display_name = "Denmark Water Supply Areas (GEUS)"
@@ -1680,18 +1687,20 @@ class EstoniaGeologyConnector(NationalWCSConnector):
 class UKSoilscapesConnector(NationalWCSConnector):
     slug = "uk_soilscapes"
     display_name = "UK Soilscapes (Cranfield)"
-    base_url = "https://www.landis.org.uk/arcgis/rest/services/UKSoilObservatory/Soilscapes_Cranfield/MapServer/WMSServer"
+    base_url = "https://www.landis.org.uk/arcgis/services/UKSoilObservatory/Soilscapes_Cranfield/MapServer/WMSServer"
     protocol = "wcs"
     _config = NationalDatasetConfig(
         slug="uk_soilscapes",
         display_name="UK Soilscapes Soil Map (Cranfield/LandIS)",
-        wcs_url="https://www.landis.org.uk/arcgis/rest/services/UKSoilObservatory/Soilscapes_Cranfield/MapServer/WMSServer",
+        # OGC services path (not /rest/services/, which returns the HTML service page).
+        wcs_url="https://www.landis.org.uk/arcgis/services/UKSoilObservatory/Soilscapes_Cranfield/MapServer/WMSServer",
         coverage_id="0",
         variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
                           description="UK soil landscape classification (27 types)"),
         resolution_m=100, category="soil",
         bbox=BoundingBox(min_lon=-8.6, min_lat=49.8, max_lon=2.0, max_lat=60.9),
         license="Open (LandIS)", citation="Cranfield University, Soilscapes",
+        use_wms=True,
     )
 
 
@@ -2621,7 +2630,8 @@ class DEAAfricaWaterConnector(NationalWCSConnector):
 #  EASTERN EUROPE — soil & land cover
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("poland_soil")
+# Disabled: mapy.geoportal.gov.pl refuses TCP from non-PL IPs (see poland_nmt note).
+# @register("poland_soil")
 class PolandSoilConnector(NationalWCSConnector):
     slug = "poland_soil"
     display_name = "Poland Soil Map (PIG)"

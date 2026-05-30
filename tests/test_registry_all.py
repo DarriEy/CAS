@@ -19,7 +19,7 @@ class TestAllProviders:
 
     def test_provider_count(self):
         providers = list_providers()
-        assert len(providers) >= 220, f"Expected 220+ providers, got {len(providers)}"
+        assert len(providers) >= 200, f"Expected 200+ providers, got {len(providers)}"
 
     def test_all_providers_have_required_attributes(self):
         for slug in list_providers():

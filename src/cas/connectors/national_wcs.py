@@ -8,6 +8,7 @@ This avoids duplicating the same WCS GetCoverage / WMS GetMap logic across 20+ f
 
 from __future__ import annotations
 
+import asyncio
 import time
 from dataclasses import dataclass, field
 
@@ -73,9 +74,50 @@ class NationalDatasetConfig:
     auth_token_env: str = ""
     nodata_value: float | None = None
     use_wms: bool = False
+    wms_version: str = "1.1.1"
     default_time: str = ""
 
 
+
+
+_RETRYABLE_STATUS = (500, 502, 503, 504)
+
+
+async def _get_with_retry(client, url, params, headers, retries=2, backoff=0.5):
+    """GET with a small retry on transient 5xx, to ride out flaky upstreams."""
+    resp = await client.get(url, params=params, headers=headers)
+    attempt = 0
+    while resp.status_code in _RETRYABLE_STATUS and attempt < retries:
+        await asyncio.sleep(backoff * (attempt + 1))
+        resp = await client.get(url, params=params, headers=headers)
+        attempt += 1
+    return resp
+
+
+def _wms_params(version: str, layers: str, crs: str, fmt: str,
+                bbox: tuple[float, float, float, float], extra: dict) -> dict:
+    """Build WMS GetMap params for the given version.
+
+    WMS 1.1.1 uses ``SRS=`` with min_x,min_y,max_x,max_y order. WMS 1.3.0 uses
+    ``CRS=`` and, for geographic CRSs like EPSG:4326, lat,lon axis order. ``bbox``
+    is (min_lon, min_lat, max_lon, max_lat) for 4326, or projected min/max for a
+    projected ``crs``.
+    """
+    if version == "1.3.0":
+        crs_key = "CRS"
+        if crs.upper() == "EPSG:4326":
+            bbox_str = f"{bbox[1]},{bbox[0]},{bbox[3]},{bbox[2]}"
+        else:
+            bbox_str = f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}"
+    else:
+        crs_key = "SRS"
+        bbox_str = f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}"
+    return {
+        "service": "WMS", "version": version, "request": "GetMap",
+        "layers": layers, crs_key: crs, "BBOX": bbox_str,
+        "width": "500", "height": "500", "format": fmt, "STYLES": "",
+        **extra,
+    }
 
 
 def _parse_wms_image(
@@ -149,19 +191,9 @@ class NationalWCSConnector(BaseConnector):
         params: dict = {}
 
         if cfg.use_wms:
-            params = {
-                "service": "WMS",
-                "version": "1.1.1",
-                "request": "GetMap",
-                "layers": cfg.coverage_id,
-                "SRS": cfg.crs,
-                "BBOX": f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}",
-                "width": "500",
-                "height": "500",
-                "format": "image/geotiff",
-                "STYLES": "",
-                **cfg.extra_params,
-            }
+            params = _wms_params(
+                cfg.wms_version, cfg.coverage_id, cfg.crs, "image/geotiff", bbox, cfg.extra_params,
+            )
         elif cfg.protocol_version == "2.0.1":
             if cfg.crs != "EPSG:4326":
                 from pyproj import Transformer
@@ -209,7 +241,7 @@ class NationalWCSConnector(BaseConnector):
                     "Referer": cfg.wcs_url,
                 },
             ) as client:
-                resp = await client.get(cfg.wcs_url, params=params, headers=headers)
+                resp = await _get_with_retry(client, cfg.wcs_url, params, headers)
                 content_type = resp.headers.get("content-type", "")
 
                 failed = (
@@ -241,14 +273,18 @@ class NationalWCSConnector(BaseConnector):
                         fallback_combos.append(("EPSG:4326", "image/tiff"))
                         fallback_combos.append(("EPSG:4326", "image/png"))
                     for fb_crs, fb_fmt in fallback_combos:
-                        params["format"] = fb_fmt
-                        params["SRS"] = fb_crs
+                        fb_bbox = bbox
                         if fb_crs != "EPSG:4326":
                             from pyproj import Transformer
                             t = Transformer.from_crs("EPSG:4326", fb_crs, always_xy=True)
                             x0, y0 = t.transform(bbox[0], bbox[1])
                             x1, y1 = t.transform(bbox[2], bbox[3])
-                            params["BBOX"] = f"{x0},{y0},{x1},{y1}"
+                            fb_bbox = (x0, y0, x1, y1)
+                        params = _wms_params(
+                            cfg.wms_version, cfg.coverage_id, fb_crs, fb_fmt, fb_bbox, cfg.extra_params,
+                        )
+                        if token:
+                            params["token"] = token
                         resp = await client.get(cfg.wcs_url, params=params, headers=headers)
                         content_type = resp.headers.get("content-type", "")
                         if resp.status_code == 200 and "xml" not in content_type and "html" not in content_type:
