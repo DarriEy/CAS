@@ -1,0 +1,67 @@
+site_name: CAS — Community Attribute Service
+site_description: Harmonized passthrough access to global geospatial attribute datasets
+site_url: https://darriey.github.io/CAS/
+repo_url: https://github.com/DarriEy/CAS
+repo_name: DarriEy/CAS
+copyright: Copyright &copy; 2024-2026 CAS Contributors — MIT License
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.instant
+    - content.code.copy
+    - content.code.annotate
+    - search.suggest
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+nav:
+  - Home: index.md
+  - Quick Start: quickstart.md
+  - HTTP API: api.md
+  - Python SDK: sdk.md
+  - CLI: cli.md
+  - Provider Catalog: catalog.md
+  - Architecture: architecture.md
+  - SDK Reference: reference.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - tables
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            show_source: false
+            show_root_heading: true
+            members_order: source
+            docstring_style: numpy
+            separate_signature: true
+            show_signature_annotations: true

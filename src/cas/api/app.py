@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, Query, Response
+from fastapi import Depends, FastAPI, HTTPException, Query, Response
 
 from cas.api.metrics import PROVIDER_FAILURES, render_latest
 from cas.api.middleware import register_middleware
@@ -19,6 +19,10 @@ from cas.core.models import (
     BatchAttributeRequest,
     BatchAttributeResponse,
     Dataset,
+    DatasetListResponse,
+    ProviderDetail,
+    ProviderListResponse,
+    ProviderSummary,
 )
 from cas.core.registry import discover, get_connector, list_providers
 
@@ -98,6 +102,7 @@ def create_app() -> FastAPI:
 
     @app.get(
         "/api/v1/datasets",
+        response_model=DatasetListResponse,
         tags=["catalog"],
         summary="List available datasets (paginated)",
         dependencies=secured,
@@ -120,8 +125,21 @@ def create_app() -> FastAPI:
             "datasets": page,
         }
 
+    def _provider_summary(slug: str) -> ProviderSummary | None:
+        try:
+            cls = get_connector(slug)
+        except Exception:
+            return None
+        return ProviderSummary(
+            slug=slug,
+            name=cls.display_name,
+            protocol=str(cls.protocol),
+            base_url=cls.base_url,
+        )
+
     @app.get(
         "/api/v1/providers",
+        response_model=ProviderListResponse,
         tags=["catalog"],
         summary="List registered providers (paginated)",
         dependencies=secured,
@@ -130,17 +148,7 @@ def create_app() -> FastAPI:
         limit: int = Query(100, ge=1, le=1000),
         offset: int = Query(0, ge=0),
     ):
-        all_providers = []
-        for slug in list_providers():
-            try:
-                connector_cls = get_connector(slug)
-                all_providers.append({
-                    "slug": slug,
-                    "display_name": connector_cls.display_name,
-                    "protocol": connector_cls.protocol,
-                })
-            except Exception:
-                continue
+        all_providers = [s for s in (_provider_summary(slug) for slug in list_providers()) if s]
         page = all_providers[offset : offset + limit]
         return {
             "total": len(all_providers),
@@ -149,6 +157,25 @@ def create_app() -> FastAPI:
             "count": len(page),
             "providers": page,
         }
+
+    @app.get(
+        "/api/v1/providers/{slug}",
+        response_model=ProviderDetail,
+        tags=["catalog"],
+        summary="One provider with full dataset metadata",
+        dependencies=secured,
+    )
+    async def get_provider(slug: str):
+        summary = _provider_summary(slug)
+        if summary is None:
+            raise HTTPException(status_code=404, detail=f"Unknown provider '{slug}'")
+        return ProviderDetail(
+            slug=summary.slug,
+            name=summary.name,
+            protocol=summary.protocol,
+            base_url=summary.base_url,
+            datasets=await _datasets_for(slug),
+        )
 
     @app.get("/metrics", tags=["ops"], summary="Prometheus metrics exposition")
     async def metrics():
