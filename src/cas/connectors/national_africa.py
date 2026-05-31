@@ -7,19 +7,18 @@ cloud-data platform — the regional analogue of Microsoft Planetary Computer.
 Its OWS endpoint exposes a stable WCS catalogue; every ``coverage_id`` below was
 taken verbatim from the live ``GetCapabilities`` response.
 
-These layers add genuinely new attribute categories for Africa (cropland extent
-and NDVI climatology) rather than duplicating the global datasets that already
-cover the continent. Both coverages are served on DEA's equal-area EPSG:6933
-grid (x/y axes), and each carries a ``time`` axis so a ``default_time`` matching
-the coverage's DescribeCoverage is required.
+These layers add genuinely new attribute categories for Africa (cropland extent,
+NDVI climatology, mangrove extent) rather than duplicating the global datasets
+that already cover the continent. ``crop_mask`` and ``ndvi_climatology_ls`` are
+served on DEA's equal-area EPSG:6933 grid (x/y axes) while ``gmw`` is EPSG:4326
+(lat/lon) — each connector's ``crs`` is set to its DescribeCoverage value, and
+the time-axis coverages carry a ``default_time`` matching an available slice.
 
-Two other DEA coverages were evaluated and deferred:
-- ``dem_srtm`` — would only duplicate the existing global DEMs.
-- ``gmw`` (Global Mangrove Watch) — extracts correctly at coastal points (e.g.
-  the Rufiji/Niger/Bijagos deltas) but the coverage-aware health geometry picks
-  an inland anchor where the server returns WCS 400, so it reads as ``down`` in
-  the sweep. Needs a coastal-aware test anchor (or graceful 400→empty handling)
-  before it can ship without tripping health-regression alerts.
+Mangroves only exist on coastlines, so ``dea_africa_mangroves`` sets a
+``health_anchor`` at the Rufiji Delta (Tanzania); without it the coverage-aware
+health geometry picks an inland anchor where the server returns WCS 400 and the
+provider reads as ``down``. (``dem_srtm`` was also evaluated and dropped — it
+would only duplicate the existing global DEMs.)
 
 The four pre-existing DEA connectors (``dea_africa_dem`` slope, ``dea_africa_fc``,
 ``dea_africa_lc``, ``dea_africa_water``) live in ``national_europe.py`` for
@@ -96,6 +95,38 @@ class DEAAfricaNDVIConnector(NationalWCSConnector):
         citation="Digital Earth Africa, NDVI Climatology (Landsat)",
         crs="EPSG:6933",
         default_time="1984-01-01",
+    )
+
+
+# ── Mangrove extent (Global Mangrove Watch via DEA) ──
+@register("dea_africa_mangroves")
+class DEAAfricaMangrovesConnector(NationalWCSConnector):
+    slug = "dea_africa_mangroves"
+    display_name = "DEA Africa Mangroves"
+    base_url = _DEA_BASE
+    protocol = "wcs"
+    _config = NationalDatasetConfig(
+        slug="dea_africa_mangroves",
+        display_name="Digital Earth Africa Mangroves (Global Mangrove Watch)",
+        wcs_url=_DEA_WCS,
+        coverage_id="gmw",
+        protocol_version="2.0.1",
+        variable=Variable(
+            name="mangrove_extent",
+            units="class",
+            data_type=DataType.CATEGORICAL,
+            description="Mangrove presence (Global Mangrove Watch via DEA Africa)",
+        ),
+        resolution_m=25,
+        category="vegetation",
+        bbox=_AFRICA_BBOX,
+        license="CC-BY 4.0",
+        citation="Bunting et al., Global Mangrove Watch; via Digital Earth Africa",
+        crs="EPSG:4326",
+        default_time="2017-01-01",
+        # Mangroves are coastal; sample the Rufiji Delta (Tanzania) where the
+        # coverage actually has data, not the generic inland land anchor.
+        health_anchor=(39.35, -7.90),
     )
 
 

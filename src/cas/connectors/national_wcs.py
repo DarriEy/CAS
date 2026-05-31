@@ -78,8 +78,6 @@ class NationalDatasetConfig:
     default_time: str = ""
 
 
-
-
 _RETRYABLE_STATUS = (500, 502, 503, 504)
 # Connection-level drops that fail fast and are usually transient (server closed
 # the socket mid-handshake / before responding). Cheap to retry. Read timeouts are
@@ -105,8 +103,9 @@ async def _get_with_retry(client, url, params, headers, retries=2, backoff=0.5):
     return resp
 
 
-def _wms_params(version: str, layers: str, crs: str, fmt: str,
-                bbox: tuple[float, float, float, float], extra: dict) -> dict:
+def _wms_params(
+    version: str, layers: str, crs: str, fmt: str, bbox: tuple[float, float, float, float], extra: dict
+) -> dict:
     """Build WMS GetMap params for the given version.
 
     WMS 1.1.1 uses ``SRS=`` with min_x,min_y,max_x,max_y order. WMS 1.3.0 uses
@@ -124,9 +123,16 @@ def _wms_params(version: str, layers: str, crs: str, fmt: str,
         crs_key = "SRS"
         bbox_str = f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}"
     return {
-        "service": "WMS", "version": version, "request": "GetMap",
-        "layers": layers, crs_key: crs, "BBOX": bbox_str,
-        "width": "500", "height": "500", "format": fmt, "STYLES": "",
+        "service": "WMS",
+        "version": version,
+        "request": "GetMap",
+        "layers": layers,
+        crs_key: crs,
+        "BBOX": bbox_str,
+        "width": "500",
+        "height": "500",
+        "format": fmt,
+        "STYLES": "",
         **extra,
     }
 
@@ -168,8 +174,7 @@ class NationalWCSConnector(BaseConnector):
                 provider=cfg.slug,
                 name=f"{cfg.display_name}",
                 description=(
-                    f"{cfg.display_name} ({cfg.resolution_m}m)"
-                    f" — {cfg.variable.description or cfg.variable.name}"
+                    f"{cfg.display_name} ({cfg.resolution_m}m) — {cfg.variable.description or cfg.variable.name}"
                 ),
                 variables=[cfg.variable],
                 resolution_m=cfg.resolution_m,
@@ -214,16 +219,23 @@ class NationalWCSConnector(BaseConnector):
             wms_bbox = bbox
             if cfg.crs.upper() != "EPSG:4326":
                 from pyproj import Transformer
+
                 t = Transformer.from_crs("EPSG:4326", cfg.crs, always_xy=True)
                 x0, y0 = t.transform(bbox[0], bbox[1])
                 x1, y1 = t.transform(bbox[2], bbox[3])
                 wms_bbox = (x0, y0, x1, y1)
             params = _wms_params(
-                cfg.wms_version, cfg.coverage_id, cfg.crs, "image/geotiff", wms_bbox, cfg.extra_params,
+                cfg.wms_version,
+                cfg.coverage_id,
+                cfg.crs,
+                "image/geotiff",
+                wms_bbox,
+                cfg.extra_params,
             )
         elif cfg.protocol_version == "2.0.1":
             if cfg.crs != "EPSG:4326":
                 from pyproj import Transformer
+
                 t = Transformer.from_crs("EPSG:4326", cfg.crs, always_xy=True)
                 x0, y0 = t.transform(bbox[0], bbox[1])
                 x1, y1 = t.transform(bbox[2], bbox[3])
@@ -262,7 +274,9 @@ class NationalWCSConnector(BaseConnector):
 
         try:
             async with httpx.AsyncClient(
-                timeout=60, follow_redirects=True, verify=False,
+                timeout=60,
+                follow_redirects=True,
+                verify=False,
                 headers={
                     "User-Agent": "Mozilla/5.0 (CAS/0.1) AppleWebKit/537.36",
                     "Referer": cfg.wcs_url,
@@ -271,18 +285,12 @@ class NationalWCSConnector(BaseConnector):
                 resp = await _get_with_retry(client, cfg.wcs_url, params, headers)
                 content_type = resp.headers.get("content-type", "")
 
-                failed = (
-                    resp.status_code >= 400
-                    or ("xml" in content_type and "tiff" not in content_type)
-                )
+                failed = resp.status_code >= 400 or ("xml" in content_type and "tiff" not in content_type)
                 if failed and not cfg.use_wms and cfg.protocol_version == "1.0.0":
                     params["BBOX"] = f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}"
                     resp = await client.get(cfg.wcs_url, params=params, headers=headers)
                     content_type = resp.headers.get("content-type", "")
-                    failed = (
-                        resp.status_code >= 400
-                        or ("xml" in content_type and "tiff" not in content_type)
-                    )
+                    failed = resp.status_code >= 400 or ("xml" in content_type and "tiff" not in content_type)
                 if failed and not cfg.use_wms and cfg.protocol_version == "2.0.1":
                     for wcs_fmt in ("image/geotiff", "GeoTIFF"):
                         params["format"] = wcs_fmt
@@ -303,12 +311,18 @@ class NationalWCSConnector(BaseConnector):
                         fb_bbox = bbox
                         if fb_crs != "EPSG:4326":
                             from pyproj import Transformer
+
                             t = Transformer.from_crs("EPSG:4326", fb_crs, always_xy=True)
                             x0, y0 = t.transform(bbox[0], bbox[1])
                             x1, y1 = t.transform(bbox[2], bbox[3])
                             fb_bbox = (x0, y0, x1, y1)
                         params = _wms_params(
-                            cfg.wms_version, cfg.coverage_id, fb_crs, fb_fmt, fb_bbox, cfg.extra_params,
+                            cfg.wms_version,
+                            cfg.coverage_id,
+                            fb_crs,
+                            fb_fmt,
+                            fb_bbox,
+                            cfg.extra_params,
                         )
                         if token:
                             params["token"] = token
@@ -317,10 +331,7 @@ class NationalWCSConnector(BaseConnector):
                         if resp.status_code == 200 and "xml" not in content_type and "html" not in content_type:
                             break
 
-                still_failed = (
-                    resp.status_code >= 400
-                    or ("xml" in content_type and "tiff" not in content_type)
-                )
+                still_failed = resp.status_code >= 400 or ("xml" in content_type and "tiff" not in content_type)
                 arcgis_url = cfg.wcs_url.lower()
                 is_arcgis = "mapserver" in arcgis_url or "imageserver" in arcgis_url
                 has_arcgis_server = is_arcgis and "/services/" in arcgis_url
@@ -331,6 +342,7 @@ class NationalWCSConnector(BaseConnector):
                             export_url = export_url[: -len(suffix)]
                     if "/rest/services/" not in export_url.lower():
                         import re as _re
+
                         export_url = _re.sub(r"(?i)/services/", "/rest/services/", export_url, count=1)
                     if "imageserver" in export_url.lower():
                         export_url += "/exportImage"
@@ -338,11 +350,14 @@ class NationalWCSConnector(BaseConnector):
                         export_url += "/export"
                     export_params = {
                         "bbox": f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}",
-                        "bboxSR": "4326", "imageSR": "4326",
+                        "bboxSR": "4326",
+                        "imageSR": "4326",
                         # Keep the request coarse: scale-cached ArcGIS services (e.g.
                         # BGR soil) render nothing below ~44 m/px, and 100 px over the
                         # small test window stays above that while giving ample samples.
-                        "size": "100,100", "format": "png", "f": "image",
+                        "size": "100,100",
+                        "format": "png",
+                        "f": "image",
                     }
                     resp = await client.get(export_url, params=export_params)
                     content_type = resp.headers.get("content-type", "")
@@ -371,7 +386,9 @@ class NationalWCSConnector(BaseConnector):
         )
         if is_image:
             raster_data, transform, nodata, src_crs = _parse_wms_image(
-                raster_bytes, bbox, cfg.crs,
+                raster_bytes,
+                bbox,
+                cfg.crs,
             )
         else:
             raster_data, transform, nodata, src_crs = parse_geotiff(raster_bytes)
@@ -391,8 +408,11 @@ class NationalWCSConnector(BaseConnector):
         is_categorical = cfg.variable.data_type == DataType.CATEGORICAL
         agg = AggregationMethod.DISTRIBUTION if is_categorical else AggregationMethod.MEAN
         value, coverage, pixel_count = compute_zonal_stats(
-            raster_data=raster_data, mask=mask, nodata=nodata,
-            aggregation=agg, data_type=cfg.variable.data_type,
+            raster_data=raster_data,
+            mask=mask,
+            nodata=nodata,
+            aggregation=agg,
+            data_type=cfg.variable.data_type,
         )
 
         elapsed_ms = int((time.monotonic() - start_time) * 1000)
@@ -401,10 +421,16 @@ class NationalWCSConnector(BaseConnector):
             quality = QualityFlag.MISSING
 
         return AttributeResult(
-            dataset_id=dataset_id, variable=cfg.variable.name, value=value,
-            units=cfg.variable.units, aggregation=agg,
-            quality=quality, coverage_fraction=coverage, pixel_count=pixel_count,
-            provider=cfg.slug, elapsed_ms=elapsed_ms,
+            dataset_id=dataset_id,
+            variable=cfg.variable.name,
+            value=value,
+            units=cfg.variable.units,
+            aggregation=agg,
+            quality=quality,
+            coverage_fraction=coverage,
+            pixel_count=pixel_count,
+            provider=cfg.slug,
+            elapsed_ms=elapsed_ms,
             provenance=f"WCS: {cfg.coverage_id}",
         )
 
@@ -412,7 +438,9 @@ class NationalWCSConnector(BaseConnector):
 ELEV_VAR = Variable(name="elevation", units="m", data_type=DataType.CONTINUOUS, valid_range=(-500, 9000))
 
 BATHY_VAR = Variable(
-    name="elevation", units="m", data_type=DataType.CONTINUOUS,
+    name="elevation",
+    units="m",
+    data_type=DataType.CONTINUOUS,
     valid_range=(-11000, 9000),
     description="Combined land elevation and ocean depth",
 )
@@ -422,6 +450,7 @@ BATHY_VAR = Variable(
 #  GEBCO BATHYMETRY
 # ═══════════════════════════════════════════════════════════════════════
 
+
 @register("gebco")
 class GEBCOConnector(NationalWCSConnector):
     slug = "gebco"
@@ -429,13 +458,19 @@ class GEBCOConnector(NationalWCSConnector):
     base_url = "https://wms.gebco.net/mapserv"
     protocol = "wcs"
     _config = NationalDatasetConfig(
-        slug="gebco", display_name="GEBCO Global Bathymetry 500m",
+        slug="gebco",
+        display_name="GEBCO Global Bathymetry 500m",
         wcs_url="https://wms.gebco.net/mapserv",
         coverage_id="GEBCO_Grid",
-        variable=Variable(name="bathymetry", units="m", data_type=DataType.CONTINUOUS,
-                          valid_range=(-11000, 9000),
-                          description="Ocean/land elevation (bathymetry + topography)"),
-        resolution_m=500, category="elevation",
+        variable=Variable(
+            name="bathymetry",
+            units="m",
+            data_type=DataType.CONTINUOUS,
+            valid_range=(-11000, 9000),
+            description="Ocean/land elevation (bathymetry + topography)",
+        ),
+        resolution_m=500,
+        category="elevation",
         bbox=BoundingBox(min_lon=-180, min_lat=-90, max_lon=180, max_lat=90),
         license="Open (GEBCO)",
         citation="GEBCO Compilation Group 2024, GEBCO 2024 Grid",
@@ -446,6 +481,7 @@ class GEBCOConnector(NationalWCSConnector):
 # ═══════════════════════════════════════════════════════════════════════
 #  GLOBAL PERMAFROST
 # ═══════════════════════════════════════════════════════════════════════
+
 
 @register("permafrost")
 class PermafrostConnector(NationalWCSConnector):
@@ -458,18 +494,25 @@ class PermafrostConnector(NationalWCSConnector):
         display_name="Global Permafrost Zonation Index 1km (U Zurich)",
         wcs_url="https://geoserver.geo.uzh.ch/cryogis/wms",
         coverage_id="cryogis:Permafrost-Global-PFI",
-        variable=Variable(name="permafrost_index", units="index", data_type=DataType.CONTINUOUS,
-                          valid_range=(0, 1),
-                          description="Permafrost zonation probability index"),
-        resolution_m=1000, category="cryosphere",
+        variable=Variable(
+            name="permafrost_index",
+            units="index",
+            data_type=DataType.CONTINUOUS,
+            valid_range=(0, 1),
+            description="Permafrost zonation probability index",
+        ),
+        resolution_m=1000,
+        category="cryosphere",
         bbox=BoundingBox(min_lon=-180, min_lat=-90, max_lon=180, max_lat=90),
-        license="Open", citation="Obu et al. 2019, Global Permafrost Zonation Index",
+        license="Open",
+        citation="Obu et al. 2019, Global Permafrost Zonation Index",
     )
 
 
 # ═══════════════════════════════════════════════════════════════════════
 #  GLOBAL — Ramsar wetlands
 # ═══════════════════════════════════════════════════════════════════════
+
 
 @register("ramsar_wetlands")
 class RamsarWetlandsConnector(NationalWCSConnector):
@@ -482,9 +525,14 @@ class RamsarWetlandsConnector(NationalWCSConnector):
         display_name="Ramsar Convention Wetland Sites (Global)",
         wcs_url="https://rsis.ramsar.org/geoserver/wms",
         coverage_id="ramsar_sdi:Ramsar_centroids_published",
-        variable=Variable(name="ramsar_site", units="class", data_type=DataType.CATEGORICAL,
-                          description="Ramsar Convention designated wetland locations"),
-        resolution_m=1000, category="hydrology",
+        variable=Variable(
+            name="ramsar_site",
+            units="class",
+            data_type=DataType.CATEGORICAL,
+            description="Ramsar Convention designated wetland locations",
+        ),
+        resolution_m=1000,
+        category="hydrology",
         bbox=BoundingBox(min_lon=-180, min_lat=-90, max_lon=180, max_lat=90),
         license="Open (Ramsar Convention)",
         citation="Ramsar Convention Secretariat, Ramsar Sites Information Service",
@@ -499,11 +547,15 @@ class ETOPO2022Connector(NationalWCSConnector):
     base_url = "https://gis.ngdc.noaa.gov/arcgis/services/DEM_mosaics/DEM_global_mosaic/ImageServer/WCSServer"
     protocol = "wcs"
     _config = NationalDatasetConfig(
-        slug="etopo_2022", display_name="ETOPO 2022 60s Global Relief (NOAA/NCEI)",
+        slug="etopo_2022",
+        display_name="ETOPO 2022 60s Global Relief (NOAA/NCEI)",
         wcs_url="https://gis.ngdc.noaa.gov/arcgis/services/DEM_mosaics/DEM_global_mosaic/ImageServer/WCSServer",
-        coverage_id="DEM_global_mosaic", variable=BATHY_VAR, resolution_m=1852,
+        coverage_id="DEM_global_mosaic",
+        variable=BATHY_VAR,
+        resolution_m=1852,
         bbox=BoundingBox(min_lon=-180, min_lat=-90, max_lon=180, max_lat=90),
-        license="Open (NOAA)", citation="NOAA NCEI, ETOPO 2022 Global Relief Model",
+        license="Open (NOAA)",
+        citation="NOAA NCEI, ETOPO 2022 Global Relief Model",
         use_wms=True,
     )
 
@@ -511,6 +563,7 @@ class ETOPO2022Connector(NationalWCSConnector):
 # ═══════════════════════════════════════════════════════════════════════
 #  MORE COUNTRY FILL-INS — second/third layers
 # ═══════════════════════════════════════════════════════════════════════
+
 
 # Disabled: RDA GeoServer removed; soil.rda.go.kr returns an HTML portal stub
 # for all OGC requests (no raster body to parse). Verified 2026-05-30.
@@ -525,12 +578,16 @@ class SouthKoreaSoilConnector(NationalWCSConnector):
         display_name="South Korea Detailed Soil Map (RDA)",
         wcs_url="https://soil.rda.go.kr/geoserver/wms",
         coverage_id="rda:soil_detail",
-        variable=Variable(name="soil_type", units="class", data_type=DataType.CATEGORICAL,
-                          description="South Korean detailed soil classification"),
-        resolution_m=25, category="soil",
+        variable=Variable(
+            name="soil_type",
+            units="class",
+            data_type=DataType.CATEGORICAL,
+            description="South Korean detailed soil classification",
+        ),
+        resolution_m=25,
+        category="soil",
         bbox=BoundingBox(min_lon=124.6, min_lat=33.1, max_lon=131.9, max_lat=38.6),
         license="Open (RDA)",
         citation="Rural Development Administration, Korea Soil Map",
         use_wms=True,
     )
-
