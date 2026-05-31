@@ -45,6 +45,12 @@ stac = [
     "pystac-client>=0.7",
     "planetary-computer>=1.0",
 ]
+climate = [
+    "xarray>=2024.0",
+    "zarr>=2.18",
+    "fsspec>=2024.0",
+    "adlfs>=2024.0",
+]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",

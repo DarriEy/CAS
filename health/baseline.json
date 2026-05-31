@@ -1,11 +1,11 @@
 {
   "generated_at": "2026-05-31T03:17:41.983885+00:00",
   "summary": {
-    "healthy": 197,
+    "healthy": 198,
     "degraded": 11,
     "unknown": 12,
     "down": 0,
-    "total": 220
+    "total": 221
   },
   "providers": [
     {
@@ -1631,6 +1631,14 @@
       "datasets_available": 0,
       "test_value": null,
       "error": "auth-gated: [tandem_x] Registration required. Register at: https://sso.eoc.dlr.de/pwm-tdmdem90\nFree registration required (DLR).\n1. Register at: https://sso.eoc.dlr.de/pwm-"
+    },
+    {
+      "provider": "terraclimate",
+      "status": "healthy",
+      "response_time_ms": 0,
+      "datasets_available": 11,
+      "test_value": 58.495,
+      "error": null
     },
     {
       "provider": "uk_agri_land_class",

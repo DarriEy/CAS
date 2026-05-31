@@ -4,7 +4,7 @@ Harmonized access to global geospatial attribute datasets (DEM, soil, land cover
 
 CAS is **not a data warehouse** — it's a QC layer and one-stop-shop that pulls from upstream providers on-demand, validates responses, and returns harmonized results.
 
-CAS ships **224 active providers** spanning DEM/elevation, soil, land cover, hydrology, vegetation/canopy, geology, and biodiversity — including global/flagship datasets plus **172 national/regional providers across 38 countries** (incl. MapBiomas land cover for Amazonia, Chaco, Pampa, Bolivia, Colombia, Peru, Paraguay, Uruguay and Venezuela in South America, and Indonesia in South-East Asia). Every provider listed below is registered in the runtime connector registry and exercised by the end-to-end health sweep; run `cas providers` to see the live list.
+CAS ships **225 active providers** spanning DEM/elevation, soil, land cover, hydrology, vegetation/canopy, climate/water-balance, geology, and biodiversity — including global/flagship datasets plus **172 national/regional providers across 38 countries** (incl. MapBiomas land cover for Amazonia, Chaco, Pampa, Bolivia, Colombia, Peru, Paraguay, Uruguay and Venezuela in South America, and Indonesia in South-East Asia). Every provider listed below is registered in the runtime connector registry and exercised by the end-to-end health sweep; run `cas providers` to see the live list.
 
 **Status**: Alpha (v0.1.0)
 
@@ -63,7 +63,7 @@ GET  /docs                     — Interactive OpenAPI docs
 
 The endpoints are typed with Pydantic response models, so `/openapi.json` and
 `/docs` are a complete, always-in-sync description of the service. The full
-224-provider catalog is discoverable over HTTP: list `GET /api/v1/providers`,
+225-provider catalog is discoverable over HTTP: list `GET /api/v1/providers`,
 then drill into `GET /api/v1/providers/{slug}` for resolution, bbox, license,
 citation, and variables.
 
@@ -165,7 +165,7 @@ Geometry in → CAS engine → fan out to providers → server-side subset → z
 
 ## Implemented Providers
 
-CAS registers **224 active providers**. The tables below list the headline global/flagship
+CAS registers **225 active providers**. The tables below list the headline global/flagship
 datasets per category; the national breadth (172 country/region-specific providers across 38 countries)
 is summarized in [National providers by country](#national-providers-by-country). The complete
 machine-readable catalog (resolution, bbox, license, variables) lives in
@@ -246,6 +246,12 @@ EEA High-Resolution Layers (tree/leaf/woody/grassland), and Norway vegetation/la
 National bedrock, lithology, and quaternary geology for Belgium, Estonia, Greece,
 Norway, Portugal, and Spain.
 
+### Climate / Water Balance
+
+`terraclimate` (global ~4 km monthly TerraClimate via Planetary Computer, Zarr datacube):
+potential & actual evapotranspiration, climatic water deficit, soil moisture, precipitation,
+runoff, Palmer Drought Severity Index, temperature, plus a derived UNEP aridity index.
+
 ### Biodiversity / Ecology & other
 
 `biodiversity` (global Biodiversity Intactness), `mobi` (US biodiversity importance),
@@ -253,7 +259,7 @@ Norway, Portugal, and Spain.
 
 ### National providers by country
 
-172 of the 224 providers are country/region-specific (DEM, soil, land cover, hydrology, geology),
+172 of the 225 providers are country/region-specific (DEM, soil, land cover, hydrology, geology),
 across 38 countries, plus trinational MapBiomas land cover for Amazonia, Chaco and Pampa. Counts:
 
 | Country | Providers | Country | Providers |
