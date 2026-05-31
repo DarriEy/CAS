@@ -79,6 +79,42 @@ class TestExtractEngine:
         assert len(response.results) == 2
 
     @pytest.mark.asyncio
+    async def test_cross_provider_consistency_flags_divergence(self, sample_geometry):
+        """Two providers answering the same variable with divergent values
+        should surface a cross-provider consistency warning."""
+        def _elev_result(provider, value):
+            return AttributeResult(
+                dataset_id=f"{provider}:elevation",
+                variable="elevation",
+                value=value,
+                units="m",
+                aggregation=AggregationMethod.MEAN,
+                quality=QualityFlag.GOOD,
+                coverage_fraction=0.95,
+                pixel_count=100,
+                provider=provider,
+                elapsed_ms=50,
+            )
+
+        connectors = {
+            "dem_a": _make_mock_connector(_elev_result("dem_a", 100.0))[0],
+            "dem_b": _make_mock_connector(_elev_result("dem_b", 1000.0))[0],
+        }
+
+        with (
+            patch("cas.extract.engine.discover"),
+            patch("cas.extract.engine.get_connector", side_effect=connectors.get),
+        ):
+            request = AttributeRequest(
+                geometry=sample_geometry,
+                dataset_ids=["dem_a:elevation", "dem_b:elevation"],
+            )
+            response = await extract(request)
+
+        assert len(response.results) == 2
+        assert any("cross-provider mean" in w for w in response.warnings)
+
+    @pytest.mark.asyncio
     async def test_failed_extraction_produces_warning(self, sample_geometry):
         mock_instance = AsyncMock()
         mock_instance.extract = AsyncMock(side_effect=Exception("Provider down"))

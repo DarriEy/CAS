@@ -21,7 +21,7 @@ from cas.core.models import (
     BatchAttributeRequest,
     BatchAttributeResponse,
 )
-from cas.core.qc import validate_result
+from cas.core.qc import check_cross_provider_consistency, validate_result
 from cas.core.registry import discover, get_connector
 
 logger = structlog.get_logger()
@@ -98,6 +98,17 @@ async def extract(request: AttributeRequest) -> AttributeResponse:
                 if qc_warnings:
                     warnings.extend(qc_warnings)
                 results.append(result)
+
+    # Cross-provider consistency: when several providers answer the same
+    # variable (e.g. elevation from multiple DEMs), flag any that diverge from
+    # the cross-provider mean. Run once per distinct variable.
+    checked_variables: set[str] = set()
+    for r in results:
+        var_lower = r.variable.lower()
+        if var_lower in checked_variables:
+            continue
+        checked_variables.add(var_lower)
+        warnings.extend(check_cross_provider_consistency(results, r.variable))
 
     elapsed_ms = int((time.monotonic() - start_time) * 1000)
 
