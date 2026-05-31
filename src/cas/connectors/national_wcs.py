@@ -76,6 +76,10 @@ class NationalDatasetConfig:
     use_wms: bool = False
     wms_version: str = "1.1.1"
     default_time: str = ""
+    # Optional (lon, lat) the health check should sample instead of the generic
+    # land anchor — for layers whose data only exists in narrow locations
+    # (e.g. mangroves on coastlines) where the default anchor lands on nodata.
+    health_anchor: tuple[float, float] | None = None
 
 
 _RETRYABLE_STATUS = (500, 502, 503, 504)

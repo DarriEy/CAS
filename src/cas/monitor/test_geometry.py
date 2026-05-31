@@ -79,7 +79,11 @@ def _square(center_lon: float, center_lat: float, half: float) -> Geometry:
     )
 
 
-def coverage_test_geometry(bbox: BoundingBox, resolution_m: float | None = None) -> Geometry:
+def coverage_test_geometry(
+    bbox: BoundingBox,
+    resolution_m: float | None = None,
+    anchor: tuple[float, float] | None = None,
+) -> Geometry:
     """Return a small test polygon guaranteed to lie inside ``bbox``.
 
     Prefers a curated land anchor within coverage; otherwise uses the
@@ -101,13 +105,17 @@ def coverage_test_geometry(bbox: BoundingBox, resolution_m: float | None = None)
     half = min(half, width * 0.4, height * 0.4)
     half = max(half, 1e-4)
 
-    # Default to the bbox centroid; override with the first land anchor inside.
+    # Default to the bbox centroid; an explicit anchor wins (e.g. a coastal
+    # mangrove point), else the first curated land anchor inside the bbox.
     center_lon = (bbox.min_lon + bbox.max_lon) / 2.0
     center_lat = (bbox.min_lat + bbox.max_lat) / 2.0
-    for anchor_lon, anchor_lat in LAND_ANCHORS:
-        if _point_in_bbox(anchor_lon, anchor_lat, bbox):
-            center_lon, center_lat = anchor_lon, anchor_lat
-            break
+    if anchor is not None:
+        center_lon, center_lat = anchor
+    else:
+        for anchor_lon, anchor_lat in LAND_ANCHORS:
+            if _point_in_bbox(anchor_lon, anchor_lat, bbox):
+                center_lon, center_lat = anchor_lon, anchor_lat
+                break
 
     # Clamp the center so the square stays strictly within the bbox.
     center_lon = min(max(center_lon, bbox.min_lon + half), bbox.max_lon - half)
