@@ -69,7 +69,17 @@ async def check_provider(provider_slug: str) -> HealthCheckResult:
                 )
 
             first_ds = datasets[0]
-            test_geom = coverage_test_geometry(first_ds.bbox, first_ds.resolution_m)
+            # A connector may pin a curated on-land, in-coverage anchor when its
+            # declared bbox would otherwise sample nodata (e.g. a regional data
+            # mask narrower than its bounding box, or a coastal-only layer like
+            # mangroves). The anchor lives directly on the connector for COG
+            # connectors, or on its ``_config`` for the national WCS family.
+            anchor = getattr(conn, "health_anchor", None) or getattr(
+                getattr(conn, "_config", None), "health_anchor", None
+            )
+            test_geom = coverage_test_geometry(
+                first_ds.bbox, first_ds.resolution_m, anchor=anchor
+            )
             result = await conn.extract(
                 dataset_id=first_ds.id,
                 geometry=test_geom,

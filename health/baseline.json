@@ -1,11 +1,11 @@
 {
   "generated_at": "2026-05-31T03:17:41.983885+00:00",
   "summary": {
-    "healthy": 187,
+    "healthy": 197,
     "degraded": 11,
     "unknown": 12,
     "down": 0,
-    "total": 210
+    "total": 220
   },
   "providers": [
     {
@@ -998,6 +998,86 @@
       "response_time_ms": 4846,
       "datasets_available": 1,
       "test_value": 30.519028346589607,
+      "error": null
+    },
+    {
+      "provider": "mapbiomas_amazonia",
+      "status": "healthy",
+      "response_time_ms": 0,
+      "datasets_available": 1,
+      "test_value": 1.0,
+      "error": null
+    },
+    {
+      "provider": "mapbiomas_bolivia",
+      "status": "healthy",
+      "response_time_ms": 0,
+      "datasets_available": 1,
+      "test_value": 0.4344,
+      "error": null
+    },
+    {
+      "provider": "mapbiomas_chaco",
+      "status": "healthy",
+      "response_time_ms": 0,
+      "datasets_available": 1,
+      "test_value": 0.0007,
+      "error": null
+    },
+    {
+      "provider": "mapbiomas_colombia",
+      "status": "healthy",
+      "response_time_ms": 0,
+      "datasets_available": 1,
+      "test_value": 0.9624,
+      "error": null
+    },
+    {
+      "provider": "mapbiomas_indonesia",
+      "status": "healthy",
+      "response_time_ms": 0,
+      "datasets_available": 1,
+      "test_value": 0.6961,
+      "error": null
+    },
+    {
+      "provider": "mapbiomas_pampa",
+      "status": "healthy",
+      "response_time_ms": 0,
+      "datasets_available": 1,
+      "test_value": 0.0307,
+      "error": null
+    },
+    {
+      "provider": "mapbiomas_paraguay",
+      "status": "healthy",
+      "response_time_ms": 0,
+      "datasets_available": 1,
+      "test_value": 0.6361,
+      "error": null
+    },
+    {
+      "provider": "mapbiomas_peru",
+      "status": "healthy",
+      "response_time_ms": 0,
+      "datasets_available": 1,
+      "test_value": 0.7826,
+      "error": null
+    },
+    {
+      "provider": "mapbiomas_uruguay",
+      "status": "healthy",
+      "response_time_ms": 0,
+      "datasets_available": 1,
+      "test_value": 0.5798,
+      "error": null
+    },
+    {
+      "provider": "mapbiomas_venezuela",
+      "status": "healthy",
+      "response_time_ms": 0,
+      "datasets_available": 1,
+      "test_value": 0.9387,
       "error": null
     },
     {

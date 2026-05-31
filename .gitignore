@@ -20,3 +20,6 @@ venv/
 
 # Claude Code harness (session-local)
 .claude/
+
+# probe scratch
+.probe_results.txt
