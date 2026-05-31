@@ -37,6 +37,10 @@ class ExtractionError(CASError):
     """Extraction engine encountered an error."""
 
 
+class RequestLimitError(CASError):
+    """Request exceeds a configured limit (too many datasets, too many vertices)."""
+
+
 class QCError(CASError):
     """QC validation failed."""
 
