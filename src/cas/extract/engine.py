@@ -260,6 +260,15 @@ async def batch_extract(request: BatchAttributeRequest) -> BatchAttributeRespons
     Per-result caching deduplicates shared datasets across identical geometries.
     """
     discover()
+    # Validate the shared dataset list once, up front: a per-geometry
+    # RequestLimitError would otherwise be swallowed by the gather() below
+    # and surface as a 200-with-warnings instead of a 422 rejection.
+    settings = get_settings()
+    if len(request.dataset_ids) > settings.max_datasets_per_request:
+        raise RequestLimitError(
+            f"Too many datasets: {len(request.dataset_ids)} > "
+            f"limit {settings.max_datasets_per_request}"
+        )
     start_time = time.monotonic()
     request_id = uuid4().hex[:12]
     semaphore = asyncio.Semaphore(_MAX_CONCURRENT_GEOMETRIES)

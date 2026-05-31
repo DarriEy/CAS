@@ -5,12 +5,15 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
 
-from cas.api.app import create_app
-from cas.api.security import get_rate_limiter
-from cas.core.config import get_settings
-from cas.core.models import (
+pytest.importorskip("fastapi", reason="API tests require the [api] extra")
+
+from fastapi.testclient import TestClient  # noqa: E402
+
+from cas.api.app import create_app  # noqa: E402
+from cas.api.security import get_rate_limiter  # noqa: E402
+from cas.core.config import get_settings  # noqa: E402
+from cas.core.models import (  # noqa: E402
     AggregationMethod,
     AttributeResult,
     BoundingBox,

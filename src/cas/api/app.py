@@ -43,7 +43,9 @@ async def _datasets_for(slug: str) -> list[Dataset]:
         async with connector_cls() as conn:
             datasets = await conn.list_datasets()
     except Exception:
-        datasets = []
+        # Don't cache a transient provider failure — that would serve an
+        # empty catalog for the full TTL even after the provider recovers.
+        return []
     cache.set(slug, datasets)
     return datasets
 

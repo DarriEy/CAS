@@ -12,7 +12,6 @@ shared limiter (e.g. an ingress/gateway).
 from __future__ import annotations
 
 import time
-from collections import defaultdict
 
 from fastapi import Request
 
@@ -50,13 +49,15 @@ class FixedWindowRateLimiter:
 
     def __init__(self) -> None:
         # caller -> (window_start_monotonic, count)
-        self._windows: dict[str, tuple[float, int]] = defaultdict(lambda: (0.0, 0))
+        self._windows: dict[str, tuple[float, int]] = {}
 
     def check(self, caller: str, limit: int, now: float) -> None:
-        start, count = self._windows[caller]
-        if now - start >= _WINDOW_S:
+        entry = self._windows.get(caller)
+        if entry is None or now - entry[0] >= _WINDOW_S:
+            # First request from this caller, or a fresh window: anchor at now.
             self._windows[caller] = (now, 1)
             return
+        start, count = entry
         if count >= limit:
             raise RateLimitExceededError(retry_after=max(1, int(_WINDOW_S - (now - start))))
         self._windows[caller] = (start, count + 1)
