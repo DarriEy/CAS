@@ -239,7 +239,16 @@ class USGSNHDConnector(NationalWCSConnector):
     )
 
 
-@register("usgs_geology")
+# Disabled: mrdata.usgs.gov/services/sgmc is a *styled* WMS only (no WCS — a
+# WCS GetCapabilities 400s). Every GetMap format returns a colorized PNG of the
+# scanned 1:500k map, so the connector would read the red channel and report RGB
+# byte values as "geology classes" — meaningless categorical data, not SGMC
+# lithology codes. There is no class-coded raster/legend endpoint to key against.
+# Verified 2026-05-30.
+# Re-enable path: switch to a classified SGMC source (e.g. the SGMC geodatabase
+# rasterized to unit codes, or a feature service with a Generalized_Lith field)
+# and add a code->name legend, then restore @register.
+# @register("usgs_geology")
 class USGSGeologyConnector(NationalWCSConnector):
     slug = "usgs_geology"
     display_name = "USGS State Geologic Map (US)"

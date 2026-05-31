@@ -55,7 +55,14 @@ class AustraliaDEALCConnector(NationalWCSConnector):
 #  ASIA
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("taiwan_dem")
+# Disabled: NLSC's WMS does not serve true elevation. The configured
+# `NLSC_DEM20m` layer returns a blank single-value GIF, and the only DEM-ish
+# layer in GetCapabilities (`DDEM05`) returns RGBA shaded-relief imagery, not
+# elevation values — so any "elevation" extracted here would be RGB bytes, not
+# metres. No WCS/coverage endpoint exists. Verified 2026-05-30.
+# Re-enable path: if NLSC publishes a real elevation WCS/COG (or a token-gated
+# coverage), point coverage_id at it and restore @register.
+# @register("taiwan_dem")
 class TaiwanDEMConnector(NationalWCSConnector):
     slug = "taiwan_dem"
     display_name = "Taiwan DEM 20m"

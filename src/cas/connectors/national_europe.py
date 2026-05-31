@@ -1616,7 +1616,17 @@ class ItalySkyviewConnector(NationalWCSConnector):
 #  FRANCE — geology (BRGM)
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("france_geology")
+# Disabled: BRGM geoservices is a *styled* WMS of the scanned 1:1M geological
+# map. It rejects image/geotiff (msWMSLoadGetMapParams: Unsupported); the
+# image/tiff fallback returns a single-band float raster of RGB-derived pixel
+# values (a 0–255 "distribution" of scan colours), not classified geology codes.
+# It also renders nothing below ~0.2° bbox — larger than the health-check
+# polygon's 0.05° cap (test_geometry._MAX_HALF_SIZE) — so it can't be coaxed
+# healthy via resolution_m either. Verified 2026-05-30.
+# Re-enable path: use a class-coded BRGM source (e.g. the GeoServer WFS geol unit
+# features, or a rasterized lithology grid) with a code->name legend, then
+# restore @register.
+# @register("france_geology")
 class FranceGeologyConnector(NationalWCSConnector):
     slug = "france_geology"
     display_name = "France Geological Map (BRGM)"
@@ -1636,7 +1646,14 @@ class FranceGeologyConnector(NationalWCSConnector):
     )
 
 
-@register("france_lithology")
+# Disabled: same BRGM styled-WMS limitation as france_geology — image/geotiff is
+# rejected and the image/tiff fallback for LITHO_1M_SIMPLIFIEE returns an
+# all-nodata (-1.0) raster at every bbox/scale tested (the layer only renders as
+# a colorized PNG, never as classified data). No class-coded coverage endpoint.
+# Verified 2026-05-30.
+# Re-enable path: use a class-coded BRGM lithology source with a code->name
+# legend, then restore @register.
+# @register("france_lithology")
 class FranceLithologyConnector(NationalWCSConnector):
     slug = "france_lithology"
     display_name = "France Lithology (BRGM)"
