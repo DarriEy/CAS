@@ -99,6 +99,20 @@ class TestExtractEndpoint:
         assert err["request_id"]
         assert "Too many datasets" in err["message"]
 
+    def test_pydantic_validation_uses_error_envelope(self):
+        """A schema-invalid body returns the CAS envelope, not FastAPI's {detail}."""
+        with TestClient(create_app()) as client:
+            resp = client.post("/api/v1/extract", json={"geometry": VALID_BODY["geometry"]})
+        assert resp.status_code == 422
+        body = resp.json()
+        assert "error" in body and "detail" not in body
+        err = body["error"]
+        assert err["type"] == "validation_error"
+        assert err["request_id"]
+        # Structured per-field errors are preserved under "detail".
+        assert any("dataset_ids" in str(item.get("loc", "")) for item in err["detail"])
+        assert resp.headers["X-Request-ID"]
+
 
 class TestAuth:
     def test_missing_key_401_when_enabled(self, monkeypatch):

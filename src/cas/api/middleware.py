@@ -15,6 +15,8 @@ from uuid import uuid4
 
 import structlog
 from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -34,10 +36,23 @@ def _request_id(request: Request) -> str:
     return rid or "unknown"
 
 
-def _error_response(status_code: int, error_type: str, message: str, request_id: str) -> JSONResponse:
+def _error_response(
+    status_code: int,
+    error_type: str,
+    message: str,
+    request_id: str,
+    detail: object | None = None,
+) -> JSONResponse:
+    error: dict[str, object] = {
+        "type": error_type,
+        "message": message,
+        "request_id": request_id,
+    }
+    if detail is not None:
+        error["detail"] = detail
     return JSONResponse(
         status_code=status_code,
-        content={"error": {"type": error_type, "message": message, "request_id": request_id}},
+        content={"error": error},
         headers={REQUEST_ID_HEADER: request_id},
     )
 
@@ -83,6 +98,18 @@ def register_middleware(app: FastAPI) -> None:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    @app.exception_handler(RequestValidationError)
+    async def _on_validation(request: Request, exc: RequestValidationError):
+        # Re-shape FastAPI's default {"detail": [...]} into the CAS envelope,
+        # preserving the structured per-field errors under "detail".
+        return _error_response(
+            422,
+            "validation_error",
+            "Request validation failed",
+            _request_id(request),
+            detail=jsonable_encoder(exc.errors()),
+        )
 
     @app.exception_handler(RequestLimitError)
     async def _on_request_limit(request: Request, exc: RequestLimitError):
