@@ -4,6 +4,8 @@ Harmonized access to global geospatial attribute datasets (DEM, soil, land cover
 
 CAS is **not a data warehouse** — it's a QC layer and one-stop-shop that pulls from upstream providers on-demand, validates responses, and returns harmonized results.
 
+CAS ships **210 active providers** spanning DEM/elevation, soil, land cover, hydrology, vegetation/canopy, geology, and biodiversity — including global/flagship datasets plus **158 national providers across 34 countries**. Every provider listed below is registered in the runtime connector registry and exercised by the end-to-end health sweep; run `cas providers` to see the live list.
+
 **Status**: Alpha (v0.1.0)
 
 ## Quick Start
@@ -70,35 +72,118 @@ Geometry in → CAS engine → fan out to providers → server-side subset → z
 
 ## Implemented Providers
 
-### DEM / Elevation (10 providers)
+CAS registers **210 active providers**. The tables below list the headline global/flagship
+datasets per category; the national breadth (158 country-specific providers across 34 countries)
+is summarized in [National providers by country](#national-providers-by-country). The complete
+machine-readable catalog (resolution, bbox, license, variables) lives in
+`inventory/providers.yaml` and is regenerated with `cas export-inventory`. Get the live list any
+time with `cas providers`.
 
-| Provider | Resolution | Coverage | Access |
-|----------|-----------|----------|--------|
-| Copernicus DEM GLO-30 | 30m | Global | Open |
-| Copernicus DEM GLO-90 | 90m | Global | Open |
-| USGS 3DEP | 10m | US | Open |
-| NASADEM (SRTM) | 30m | 56S–60N | Open |
-| ALOS World 3D | 30m | Global | Open |
-| ArcticDEM | 10m | >50N | Open |
-| IslandsDEM | 10m | Iceland | Open |
-| OpenTopography | 30–90m | Global (7 DEMs) | API key (free) |
-| MERIT DEM | 90m | Global | Registration |
-| TanDEM-X | 90m | Global | Registration |
-| FABDEM | 30m | Global | Open (non-commercial) |
+Roughly by category: DEM/Elevation ~46, Soil ~46, Land Cover ~46, Hydrology/Water ~35,
+Vegetation/Canopy ~20, Geology ~7, plus Biodiversity/Ecology and other thematic layers.
 
-### Soil
+### DEM / Elevation — global & flagship
 
-| Provider | Resolution | Coverage | Access |
-|----------|-----------|----------|--------|
-| ISRIC SoilGrids 2.0 | 250m | Global | Open |
+| Provider | Slug | Resolution | Coverage | Access |
+|----------|------|-----------|----------|--------|
+| Copernicus DEM GLO-30 | `copernicus_dem` | 30m | Global | Open |
+| Copernicus DEM GLO-90 | `cop_dem_90` | 90m | Global | Open |
+| USGS 3DEP | `usgs_3dep` | 10m | US | Public domain |
+| NASADEM (SRTM) | `nasadem` | 30m | 56S–60N | Public domain |
+| ALOS World 3D | `alos_dem` | 30m | Global | JAXA (research) |
+| ASTER GDEM v3 | `aster_gdem` | 30m | Global | NASA Earthdata login |
+| ArcticDEM | `arctic_dem` | 10m | >50N | Open (PGC) |
+| REMA (Antarctica) | `rema` | 8m | <53S | Open (PGC) |
+| ETOPO 2022 (topo+bathy) | `etopo_2022` | ~2km | Global | Open (NOAA) |
+| GEBCO Bathymetry | `gebco` | 500m | Global | Open (GEBCO) |
+| OpenTopography | `opentopography` | 30–90m | Global | API key (free) |
+| MERIT DEM | `merit_dem` | 90m | Global | Registration (CC-BY-NC) |
+| TanDEM-X 90m | `tandem_x` | 90m | Global | Registration (DLR) |
 
-### Land Cover
+Plus ~32 national/regional DEMs (Australia, Canada HRDEM, Japan GSI, and most of Europe).
 
-| Provider | Resolution | Coverage | Access |
-|----------|-----------|----------|--------|
-| ESA WorldCover | 10m | Global | Open |
+### Soil — global & flagship
 
-See `inventory/providers.yaml` for the full catalog of planned providers.
+| Provider | Slug | Resolution | Coverage | Access |
+|----------|------|-----------|----------|--------|
+| ISRIC SoilGrids 2.0 | `isric_soilgrids` | 250m | Global | CC-BY-4.0 |
+| SoilGrids derived (OCS / WRB) | `soilgrids_derived` | 250m | Global | CC-BY-4.0 |
+| OpenLandMap | `openlandmap` | 250m | Global | CC-BY-SA-4.0 |
+| SSURGO / gNATSGO | `ssurgo`, `gnatsgo` | 30m | US | Public domain |
+| POLARIS | `polaris` | 30m | US | CC-BY-NC-4.0 |
+| SLGA | `slga` | 90m | Australia | CC-BY-4.0 |
+
+Plus ~40 national soil products (Germany soil-quality/texture/water/erosion suite, Ireland,
+France, Netherlands, Nordics, Brazil, India, Mexico, Argentina, and more).
+
+### Land Cover — global & flagship
+
+| Provider | Slug | Resolution | Coverage | Access |
+|----------|------|-----------|----------|--------|
+| ESA WorldCover | `esa_worldcover` | 10m | Global | CC-BY-4.0 |
+| ESA CCI Land Cover | `esa_cci_lc` | 300m | Global | ESA CCI |
+| Dynamic World | `dynamic_world` | 10m | Global | CC-BY-4.0 (GEE) |
+| Esri 10m LULC | `esri_lulc` | 10m | Global | CC-BY-4.0 |
+| Impact Observatory LULC | `io_lulc` | 10m | Global | CC-BY-4.0 |
+| Impact Observatory LULC (9-class) | `io_lulc_9class` | 10m | Global | CC-BY-4.0 |
+| MODIS MCD12Q1 | `modis_lc` | 500m | Global | Open (NASA) |
+| GHSL Human Settlement | `ghsl` | 100m | Global | CC-BY-4.0 |
+| MS Building Footprints | `ms_buildings` | ~1m | Global | ODbL |
+| CORINE Land Cover | `corine_lc` | 100m | Europe | Copernicus |
+| NLCD | `nlcd` | 30m | US | Public domain |
+
+Plus ~35 national/regional land-cover & cropland products (USDA CDL, NRCan, DEA Africa, and
+national maps for ~25 countries).
+
+### Hydrology / Water (~35)
+
+`merit_hydro` (global flow/accumulation), `jrc_gsw` (Global Surface Water), `modis_snow`,
+`permafrost` (global), `ramsar_wetlands`, plus national hydrography, groundwater, aquifer,
+flood, lake, catchment and runoff layers (USGS NHD/WBD, Switzerland rivers/glaciers, Ireland,
+UK, Spain, Belgium, Finland, Australia water observations).
+
+### Vegetation / Canopy (~20)
+
+`canopy_height` (ETH 10m), `hansen_forest` (Global Forest Change), `chloris_biomass`,
+`hgb_biomass`, `alos_fnf`, plus national forest height/volume/species, fractional cover,
+EEA High-Resolution Layers (tree/leaf/woody/grassland), and Norway vegetation/landslide layers.
+
+### Geology (~7)
+
+National bedrock, lithology, and quaternary geology for Belgium, Estonia, Greece,
+Norway, Portugal, and Spain.
+
+### Biodiversity / Ecology & other
+
+`biodiversity` (global Biodiversity Intactness), `mobi` (US biodiversity importance),
+`brazil_biomes`, `hrea` (electricity access), `mtbs` (US burn severity).
+
+### National providers by country
+
+158 of the 210 providers are country-specific (DEM, soil, land cover, hydrology, geology),
+across 34 countries. Counts:
+
+| Country | Providers | Country | Providers |
+|---------|:---------:|---------|:---------:|
+| Germany | 20 | Czechia | 2 |
+| USA | 18 | Denmark | 2 |
+| Ireland | 13 | Estonia | 2 |
+| Switzerland | 12 | India | 2 |
+| Australia | 10 | Lithuania | 2 |
+| UK | 10 | Mexico | 2 |
+| Norway | 9 | Portugal | 2 |
+| Belgium | 7 | Sweden | 2 |
+| Spain | 7 | Argentina | 1 |
+| Finland | 6 | Austria | 1 |
+| Canada | 5 | Colombia | 1 |
+| France | 3 | Ethiopia | 1 |
+| Netherlands | 5 | Greece | 1 |
+| Slovenia | 3 | Indonesia | 1 |
+| Brazil | 2 | Japan | 1 |
+| Croatia | 2 | Luxembourg, Nigeria, Peru | 1 each |
+
+Most European, North American, and Australian connectors are **open** (OGC WCS/WMS or
+STAC+COG). A handful require free registration — see below.
 
 ## Providers Requiring Registration
 
@@ -205,26 +290,15 @@ Access may be restricted by region. If you receive 403 errors:
 1. Check https://www.digitalearthafrica.org/ for current access policies
 2. DEA services may require access from African IP ranges or API registration
 
-### Sweden DEM/Soil (Lantmateriet)
+### NASA Earthdata (ASTER GDEM, MODIS)
 
-Swedish national elevation and soil data.
+Some NASA products (e.g. `aster_gdem`, MODIS via `modis_lc`) require a free Earthdata login.
 
-1. Register at https://www.lantmateriet.se/sv/geodata/vara-produkter/
-2. Generate an API key
-3. Set the key:
+1. Register at https://urs.earthdata.nasa.gov/
+2. Set credentials:
 ```bash
-export CAS_LANTMATERIET_API_KEY=your_key
-```
-
-### New Zealand LRIS (Landcare Research)
-
-New Zealand land resource data (soil, land cover).
-
-1. Register at https://lris.scinfo.org.nz/
-2. Create an API key from your account settings
-3. Set the key:
-```bash
-export CAS_LRIS_API_KEY=your_key
+export CAS_EARTHDATA_USER=your_username
+export CAS_EARTHDATA_PASSWORD=your_password
 ```
 
 ## Adding a Provider
