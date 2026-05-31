@@ -180,9 +180,7 @@ async def check_all_providers(
         slugs = list_providers()
 
     global_semaphore = asyncio.Semaphore(concurrency)
-    host_semaphores: dict[str, asyncio.Semaphore] = defaultdict(
-        lambda: asyncio.Semaphore(per_host_concurrency)
-    )
+    host_semaphores: dict[str, asyncio.Semaphore] = defaultdict(lambda: asyncio.Semaphore(per_host_concurrency))
 
     async def _bounded(slug: str) -> HealthCheckResult:
         # Acquire the global limit first, then the per-host limit, so a host

@@ -4,7 +4,7 @@ Harmonized access to global geospatial attribute datasets (DEM, soil, land cover
 
 CAS is **not a data warehouse** — it's a QC layer and one-stop-shop that pulls from upstream providers on-demand, validates responses, and returns harmonized results.
 
-CAS ships **210 active providers** spanning DEM/elevation, soil, land cover, hydrology, vegetation/canopy, geology, and biodiversity — including global/flagship datasets plus **158 national providers across 34 countries**. Every provider listed below is registered in the runtime connector registry and exercised by the end-to-end health sweep; run `cas providers` to see the live list.
+CAS ships **214 active providers** spanning DEM/elevation, soil, land cover, hydrology, vegetation/canopy, geology, and biodiversity — including global/flagship datasets plus **162 national/regional providers across 34 countries**. Every provider listed below is registered in the runtime connector registry and exercised by the end-to-end health sweep; run `cas providers` to see the live list.
 
 **Status**: Alpha (v0.1.0)
 
@@ -115,8 +115,8 @@ Geometry in → CAS engine → fan out to providers → server-side subset → z
 
 ## Implemented Providers
 
-CAS registers **210 active providers**. The tables below list the headline global/flagship
-datasets per category; the national breadth (158 country-specific providers across 34 countries)
+CAS registers **214 active providers**. The tables below list the headline global/flagship
+datasets per category; the national breadth (162 country/region-specific providers across 34 countries)
 is summarized in [National providers by country](#national-providers-by-country). The complete
 machine-readable catalog (resolution, bbox, license, variables) lives in
 `inventory/providers.yaml` and is regenerated with `cas export-inventory`. Get the live list any
@@ -203,7 +203,7 @@ Norway, Portugal, and Spain.
 
 ### National providers by country
 
-158 of the 210 providers are country-specific (DEM, soil, land cover, hydrology, geology),
+162 of the 214 providers are country/region-specific (DEM, soil, land cover, hydrology, geology),
 across 34 countries. Counts:
 
 | Country | Providers | Country | Providers |
@@ -327,7 +327,7 @@ export CAS_COPERNICUS_TOKEN=your_token
 
 ### Digital Earth Africa (DEA)
 
-Pan-African SRTM derivatives and ESA WorldCover via WCS.
+Pan-African SRTM derivatives, ESA WorldCover, fractional cover, water observations, cropland extent, and NDVI climatology via WCS.
 
 Access may be restricted by region. If you receive 403 errors:
 1. Check https://www.digitalearthafrica.org/ for current access policies

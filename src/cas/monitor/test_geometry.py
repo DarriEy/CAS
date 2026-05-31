@@ -26,27 +26,27 @@ from cas.core.models import BoundingBox, Geometry
 # country-specific provider coverage so regional connectors find data inside
 # their own bbox.
 LAND_ANCHORS: list[tuple[float, float]] = [
-    (-96.55, 39.05),   # central US (Kansas)
-    (8.23, 46.80),     # Switzerland / Alps
-    (10.74, 59.91),    # Norway (Oslo)
-    (-1.50, 52.50),    # United Kingdom (England)
-    (-8.00, 53.30),    # Ireland
-    (5.30, 52.10),     # Netherlands
-    (25.00, 62.00),    # Finland
-    (10.00, 51.00),    # Germany
-    (12.50, 42.00),    # Italy
-    (-3.70, 40.40),    # Spain (Madrid)
+    (-96.55, 39.05),  # central US (Kansas)
+    (8.23, 46.80),  # Switzerland / Alps
+    (10.74, 59.91),  # Norway (Oslo)
+    (-1.50, 52.50),  # United Kingdom (England)
+    (-8.00, 53.30),  # Ireland
+    (5.30, 52.10),  # Netherlands
+    (25.00, 62.00),  # Finland
+    (10.00, 51.00),  # Germany
+    (12.50, 42.00),  # Italy
+    (-3.70, 40.40),  # Spain (Madrid)
     (145.00, -37.00),  # Australia (Victoria)
-    (138.00, 36.00),   # Japan
+    (138.00, 36.00),  # Japan
     (172.50, -43.50),  # New Zealand
-    (-19.00, 64.50),   # Iceland
+    (-19.00, 64.50),  # Iceland
     (-64.00, -34.00),  # Argentina
     (-47.00, -15.50),  # Brazil
-    (37.00, -1.00),    # Kenya (East Africa)
-    (28.00, -26.00),   # South Africa
-    (77.50, 28.50),    # India
+    (37.00, -1.00),  # Kenya (East Africa)
+    (28.00, -26.00),  # South Africa
+    (77.50, 28.50),  # India
     (-114.00, 51.00),  # Canada (Alberta)
-    (110.00, 30.00),   # China
+    (110.00, 30.00),  # China
 ]
 
 # Half-width bounds for a test polygon, in degrees (~1 km / ~5.5 km at the
@@ -56,7 +56,7 @@ LAND_ANCHORS: list[tuple[float, float]] = [
 _MIN_HALF_SIZE = 0.005
 _MAX_HALF_SIZE = 0.05
 _DEG_PER_M = 1.0 / 111_320.0  # rough degrees-per-metre at the equator
-_MIN_PIXELS_ACROSS = 6        # ensure the test window covers >= ~6 pixels
+_MIN_PIXELS_ACROSS = 6  # ensure the test window covers >= ~6 pixels
 
 
 def _point_in_bbox(lon: float, lat: float, bbox: BoundingBox) -> bool:
@@ -67,17 +67,23 @@ def _square(center_lon: float, center_lat: float, half: float) -> Geometry:
     lon, lat = center_lon, center_lat
     return Geometry(
         type="Polygon",
-        coordinates=[[
-            [lon - half, lat - half],
-            [lon + half, lat - half],
-            [lon + half, lat + half],
-            [lon - half, lat + half],
-            [lon - half, lat - half],
-        ]],
+        coordinates=[
+            [
+                [lon - half, lat - half],
+                [lon + half, lat - half],
+                [lon + half, lat + half],
+                [lon - half, lat + half],
+                [lon - half, lat - half],
+            ]
+        ],
     )
 
 
-def coverage_test_geometry(bbox: BoundingBox, resolution_m: float | None = None) -> Geometry:
+def coverage_test_geometry(
+    bbox: BoundingBox,
+    resolution_m: float | None = None,
+    anchor: tuple[float, float] | None = None,
+) -> Geometry:
     """Return a small test polygon guaranteed to lie inside ``bbox``.
 
     Prefers a curated land anchor within coverage; otherwise uses the
@@ -99,13 +105,17 @@ def coverage_test_geometry(bbox: BoundingBox, resolution_m: float | None = None)
     half = min(half, width * 0.4, height * 0.4)
     half = max(half, 1e-4)
 
-    # Default to the bbox centroid; override with the first land anchor inside.
+    # Default to the bbox centroid; an explicit anchor wins (e.g. a coastal
+    # mangrove point), else the first curated land anchor inside the bbox.
     center_lon = (bbox.min_lon + bbox.max_lon) / 2.0
     center_lat = (bbox.min_lat + bbox.max_lat) / 2.0
-    for anchor_lon, anchor_lat in LAND_ANCHORS:
-        if _point_in_bbox(anchor_lon, anchor_lat, bbox):
-            center_lon, center_lat = anchor_lon, anchor_lat
-            break
+    if anchor is not None:
+        center_lon, center_lat = anchor
+    else:
+        for anchor_lon, anchor_lat in LAND_ANCHORS:
+            if _point_in_bbox(anchor_lon, anchor_lat, bbox):
+                center_lon, center_lat = anchor_lon, anchor_lat
+                break
 
     # Clamp the center so the square stays strictly within the bbox.
     center_lon = min(max(center_lon, bbox.min_lon + half), bbox.max_lon - half)
