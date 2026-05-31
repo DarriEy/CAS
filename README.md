@@ -51,11 +51,54 @@ uvicorn cas.api.app:create_app --factory --reload
 ```
 
 ```
-POST /api/v1/extract     — Extract attributes for a geometry
-GET  /api/v1/datasets    — List available datasets
-GET  /api/v1/providers   — List registered providers
-GET  /health             — Service health check
+POST /api/v1/extract        — Extract attributes for a geometry
+POST /api/v1/extract/batch  — Extract attributes for many geometries
+GET  /api/v1/datasets       — List available datasets (paginated)
+GET  /api/v1/providers      — List registered providers (paginated)
+GET  /health                — Liveness check + result-cache stats
+GET  /metrics               — Prometheus metrics exposition
+GET  /docs                  — Interactive OpenAPI docs
 ```
+
+`/datasets` and `/providers` accept `limit` (1–1000, default 100) and `offset`
+query params and return `{total, limit, offset, count, ...}`. Catalog responses
+are served from an in-memory metadata cache (TTL `CAS_METADATA_CACHE_TTL_S`).
+Every response carries an `X-Request-ID` header; errors use a consistent envelope:
+
+```json
+{"error": {"type": "request_limit", "message": "...", "request_id": "abc123"}}
+```
+
+### Configuration
+
+All runtime config is read from `CAS_`-prefixed environment variables. Hardening
+features are **off by default** — the same image runs internal or public depending
+only on env:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `CAS_PROVIDER_TIMEOUT_S` | `30` | Per-provider extraction deadline (slow upstream → warning) |
+| `CAS_REQUEST_TIMEOUT_S` | `120` | Whole-request backstop deadline |
+| `CAS_MAX_DATASETS_PER_REQUEST` | `50` | Reject oversized requests (422) |
+| `CAS_MAX_POLYGON_VERTICES` | `10000` | Reject overly complex geometries (422) |
+| `CAS_RESULT_CACHE_TTL_S` / `CAS_RESULT_CACHE_MAX_ENTRIES` | `600` / `10000` | Result cache tuning |
+| `CAS_METADATA_CACHE_TTL_S` | `3600` | Catalog cache TTL |
+| `CAS_CORS_ORIGINS` | `*` | Allowed origins (comma-separated or JSON) |
+| `CAS_AUTH_ENABLED` / `CAS_API_KEYS` | `false` / — | Require `X-API-Key` from a comma-separated allowlist |
+| `CAS_RATE_LIMIT_ENABLED` / `CAS_RATE_LIMIT_PER_MINUTE` | `false` / `60` | Per-caller fixed-window rate limit (per process) |
+
+### Deployment (Docker)
+
+```bash
+docker build -t cas-api .
+docker run -p 8000:8000 \
+  -e CAS_AUTH_ENABLED=true -e CAS_API_KEYS=key1,key2 \
+  -e CAS_RATE_LIMIT_ENABLED=true \
+  cas-api
+```
+
+The rate limiter is in-memory and per-process; for multi-replica deployments,
+enforce limits at the ingress/gateway instead.
 
 ## Architecture
 

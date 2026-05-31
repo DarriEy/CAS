@@ -125,6 +125,24 @@ class AttributeRequest(BaseModel):
     aggregation: AggregationMethod = AggregationMethod.MEAN
     target_crs: str = "EPSG:4326"
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[
+                            [-96.6, 39.0], [-96.5, 39.0],
+                            [-96.5, 39.1], [-96.6, 39.1], [-96.6, 39.0],
+                        ]],
+                    },
+                    "dataset_ids": ["isric_soilgrids:clay_0-5cm"],
+                    "aggregation": "mean",
+                }
+            ]
+        }
+    }
+
 
 class AttributeResult(BaseModel):
     dataset_id: str

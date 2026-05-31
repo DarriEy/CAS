@@ -13,24 +13,68 @@ from uuid import uuid4
 import structlog
 
 from cas.cache.results import ResultCache
-from cas.core.exceptions import ConnectorError, ExtractionError
+from cas.core.config import get_settings
+from cas.core.exceptions import ConnectorError, ExtractionError, RequestLimitError
 from cas.core.models import (
     AttributeRequest,
     AttributeResponse,
     AttributeResult,
     BatchAttributeRequest,
     BatchAttributeResponse,
+    Geometry,
 )
 from cas.core.qc import check_cross_provider_consistency, validate_result
 from cas.core.registry import discover, get_connector
 
 logger = structlog.get_logger()
 
-_result_cache = ResultCache()
+
+def _build_result_cache() -> ResultCache:
+    settings = get_settings()
+    return ResultCache(
+        default_ttl=settings.result_cache_ttl_s,
+        max_entries=settings.result_cache_max_entries,
+    )
+
+
+_result_cache = _build_result_cache()
 
 
 def get_result_cache() -> ResultCache:
     return _result_cache
+
+
+def _count_vertices(geometry: Geometry) -> int:
+    """Count coordinate pairs in a geometry (0 for a Point)."""
+    if geometry.is_point:
+        return 0
+
+    def _walk(seq: object) -> int:
+        if not isinstance(seq, (list, tuple)):
+            return 0
+        # A coordinate pair is [x, y] of numbers.
+        if seq and all(isinstance(c, (int, float)) for c in seq):
+            return 1
+        return sum(_walk(item) for item in seq)
+
+    return _walk(geometry.coordinates)
+
+
+def _validate_limits(request: AttributeRequest) -> None:
+    """Reject requests that exceed configured safety limits."""
+    settings = get_settings()
+    n_datasets = len(request.dataset_ids)
+    if n_datasets > settings.max_datasets_per_request:
+        raise RequestLimitError(
+            f"Too many datasets: {n_datasets} > "
+            f"limit {settings.max_datasets_per_request}"
+        )
+    n_vertices = _count_vertices(request.geometry)
+    if n_vertices > settings.max_polygon_vertices:
+        raise RequestLimitError(
+            f"Geometry too complex: {n_vertices} vertices > "
+            f"limit {settings.max_polygon_vertices}"
+        )
 
 
 async def extract(request: AttributeRequest) -> AttributeResponse:
@@ -40,6 +84,8 @@ async def extract(request: AttributeRequest) -> AttributeResponse:
     and applies QC validation.
     """
     discover()
+    _validate_limits(request)
+    settings = get_settings()
     start_time = time.monotonic()
     request_id = uuid4().hex[:12]
     geometry_hash = hashlib.sha256(
@@ -71,21 +117,24 @@ async def extract(request: AttributeRequest) -> AttributeResponse:
 
             logger.debug("cache_miss", dataset=ds_id)
             task = asyncio.create_task(
-                _extract_single(
+                _extract_with_timeout(
                     provider_slug=provider_slug,
                     dataset_id=ds_id,
                     request=request,
+                    timeout_s=settings.provider_timeout_s,
                 ),
                 name=f"extract:{ds_id}",
             )
             tasks.append((ds_id, task))
 
     if tasks:
-        raw_results = await asyncio.gather(
-            *[t for _, t in tasks], return_exceptions=True,
+        raw_results = await _gather_with_backstop(
+            tasks, timeout_s=settings.request_timeout_s, warnings=warnings,
         )
 
         for (ds_id, _), result in zip(tasks, raw_results):
+            if result is _UNFINISHED:
+                continue
             if isinstance(result, Exception):
                 warnings.append(f"{ds_id}: {result}")
                 logger.warning("extraction_failed", dataset=ds_id, error=str(result))
@@ -121,6 +170,64 @@ async def extract(request: AttributeRequest) -> AttributeResponse:
     )
 
 
+_UNFINISHED = object()
+"""Sentinel marking a task cancelled by the request backstop timeout."""
+
+
+async def _gather_with_backstop(
+    tasks: list[tuple[str, asyncio.Task]],
+    timeout_s: float,
+    warnings: list[str],
+) -> list[object]:
+    """Gather task results under a whole-request deadline.
+
+    Per-provider timeouts already bound each task, so this is a safety net.
+    On timeout, finished tasks keep their results; unfinished ones are
+    cancelled, recorded as warnings, and returned as ``_UNFINISHED``.
+    """
+    pending = [t for _, t in tasks]
+    try:
+        await asyncio.wait_for(
+            asyncio.gather(*pending, return_exceptions=True), timeout=timeout_s,
+        )
+    except TimeoutError:
+        for ds_id, task in tasks:
+            if not task.done():
+                task.cancel()
+                warnings.append(f"{ds_id}: request timeout after {timeout_s:.0f}s")
+                logger.warning("request_timeout", dataset=ds_id, timeout_s=timeout_s)
+
+    results: list[object] = []
+    for _, task in tasks:
+        if task.cancelled() or not task.done():
+            results.append(_UNFINISHED)
+            continue
+        exc = task.exception()
+        results.append(exc if exc is not None else task.result())
+    return results
+
+
+async def _extract_with_timeout(
+    provider_slug: str,
+    dataset_id: str,
+    request: AttributeRequest,
+    timeout_s: float,
+) -> AttributeResult:
+    """Run ``_extract_single`` under a per-provider deadline.
+
+    A timeout is converted to ``ExtractionError`` so it flows through the
+    engine's existing exception-to-warning path rather than aborting the request.
+    """
+    try:
+        return await asyncio.wait_for(
+            _extract_single(provider_slug, dataset_id, request), timeout=timeout_s,
+        )
+    except TimeoutError as e:
+        raise ExtractionError(
+            f"Extraction failed for {dataset_id}: timeout after {timeout_s:.0f}s"
+        ) from e
+
+
 async def _extract_single(
     provider_slug: str,
     dataset_id: str,
@@ -153,6 +260,15 @@ async def batch_extract(request: BatchAttributeRequest) -> BatchAttributeRespons
     Per-result caching deduplicates shared datasets across identical geometries.
     """
     discover()
+    # Validate the shared dataset list once, up front: a per-geometry
+    # RequestLimitError would otherwise be swallowed by the gather() below
+    # and surface as a 200-with-warnings instead of a 422 rejection.
+    settings = get_settings()
+    if len(request.dataset_ids) > settings.max_datasets_per_request:
+        raise RequestLimitError(
+            f"Too many datasets: {len(request.dataset_ids)} > "
+            f"limit {settings.max_datasets_per_request}"
+        )
     start_time = time.monotonic()
     request_id = uuid4().hex[:12]
     semaphore = asyncio.Semaphore(_MAX_CONCURRENT_GEOMETRIES)

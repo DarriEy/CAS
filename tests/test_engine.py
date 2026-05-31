@@ -10,9 +10,10 @@ from cas.core.models import (
     AggregationMethod,
     AttributeRequest,
     AttributeResult,
+    BatchAttributeRequest,
     QualityFlag,
 )
-from cas.extract.engine import extract
+from cas.extract.engine import batch_extract, extract
 
 
 @pytest.fixture
@@ -113,6 +114,78 @@ class TestExtractEngine:
 
         assert len(response.results) == 2
         assert any("cross-provider mean" in w for w in response.warnings)
+
+    @pytest.mark.asyncio
+    async def test_provider_timeout_becomes_warning(self, sample_geometry, monkeypatch):
+        """A provider exceeding the per-provider deadline is a warning, not a crash."""
+        import asyncio
+
+        from cas.core.config import get_settings
+
+        monkeypatch.setenv("CAS_PROVIDER_TIMEOUT_S", "0.05")
+        get_settings.cache_clear()
+
+        async def _slow_extract(*args, **kwargs):
+            await asyncio.sleep(5)
+
+        mock_instance = AsyncMock()
+        mock_instance.extract = _slow_extract
+        mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
+        mock_instance.__aexit__ = AsyncMock(return_value=None)
+        mock_cls = MagicMock(return_value=mock_instance)
+
+        try:
+            with (
+                patch("cas.extract.engine.discover"),
+                patch("cas.extract.engine.get_connector", return_value=mock_cls),
+            ):
+                request = AttributeRequest(
+                    geometry=sample_geometry,
+                    dataset_ids=["test_provider:slow_var"],
+                )
+                response = await extract(request)
+        finally:
+            get_settings.cache_clear()
+
+        assert len(response.results) == 0
+        assert any("timeout" in w for w in response.warnings)
+
+    @pytest.mark.asyncio
+    async def test_too_many_datasets_raises_request_limit(self, sample_geometry, monkeypatch):
+        from cas.core.config import get_settings
+        from cas.core.exceptions import RequestLimitError
+
+        monkeypatch.setenv("CAS_MAX_DATASETS_PER_REQUEST", "2")
+        get_settings.cache_clear()
+        try:
+            with patch("cas.extract.engine.discover"):
+                request = AttributeRequest(
+                    geometry=sample_geometry,
+                    dataset_ids=["p:a", "p:b", "p:c"],
+                )
+                with pytest.raises(RequestLimitError):
+                    await extract(request)
+        finally:
+            get_settings.cache_clear()
+
+    @pytest.mark.asyncio
+    async def test_batch_rejects_over_limit_datasets(self, sample_geometry, monkeypatch):
+        """An over-limit batch must raise (→ 422), not be swallowed into per-geometry warnings."""
+        from cas.core.config import get_settings
+        from cas.core.exceptions import RequestLimitError
+
+        monkeypatch.setenv("CAS_MAX_DATASETS_PER_REQUEST", "2")
+        get_settings.cache_clear()
+        try:
+            with patch("cas.extract.engine.discover"):
+                request = BatchAttributeRequest(
+                    geometries=[sample_geometry, sample_geometry],
+                    dataset_ids=["p:a", "p:b", "p:c"],
+                )
+                with pytest.raises(RequestLimitError):
+                    await batch_extract(request)
+        finally:
+            get_settings.cache_clear()
 
     @pytest.mark.asyncio
     async def test_failed_extraction_produces_warning(self, sample_geometry):
