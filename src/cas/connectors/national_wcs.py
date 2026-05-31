@@ -147,8 +147,12 @@ def _parse_wms_image(
     arr = np.array(img)
     if arr.ndim == 3:
         arr = arr[:, :, 0]
+    # The transform is built from the request bbox, which is always EPSG:4326
+    # degrees in this codebase — so the raster's CRS is 4326 regardless of the
+    # layer's native `crs`. Returning `crs` here would make rasterize_geometry
+    # reproject the geometry into metres against a degree transform (empty mask).
     transform = from_bounds(bbox[0], bbox[1], bbox[2], bbox[3], arr.shape[1], arr.shape[0])
-    return arr, transform, 0, crs
+    return arr, transform, 0, "EPSG:4326"
 
 
 class NationalWCSConnector(BaseConnector):
@@ -361,7 +365,10 @@ class NationalWCSConnector(BaseConnector):
             raster_data, transform, nodata, src_crs = parse_geotiff(raster_bytes)
         # WMS/WCS GeoTIFFs often omit the embedded CRS; fall back to the
         # configured CRS so the geometry is reprojected to the raster's grid.
-        if src_crs is None:
+        # Only when the raster is genuinely georeferenced — a non-georeferenced
+        # tiff returns the identity transform, and reprojecting the geometry into
+        # a metric CRS there would push it off-grid (regressing e.g. norway_dem).
+        if src_crs is None and transform is not None and not getattr(transform, "is_identity", False):
             src_crs = cfg.crs
         if cfg.nodata_value is not None:
             nodata = cfg.nodata_value
