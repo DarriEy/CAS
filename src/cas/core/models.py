@@ -198,3 +198,37 @@ class HealthCheckResult(BaseModel):
     test_value: float | None = None
     expected_range: tuple[float, float] | None = None
     error: str | None = None
+
+
+# ── Catalog API responses ───────────────────────────────────────────
+
+
+class ProviderSummary(BaseModel):
+    """Registry-level provider metadata (no upstream call required)."""
+
+    slug: str
+    name: str
+    protocol: str
+    base_url: str
+
+
+class ProviderDetail(ProviderSummary):
+    """A provider plus its full dataset metadata."""
+
+    datasets: list[Dataset] = Field(default_factory=list)
+
+
+class ProviderListResponse(BaseModel):
+    total: int
+    limit: int
+    offset: int
+    count: int
+    providers: list[ProviderSummary]
+
+
+class DatasetListResponse(BaseModel):
+    total: int
+    limit: int
+    offset: int
+    count: int
+    datasets: list[Dataset]

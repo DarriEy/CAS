@@ -51,14 +51,21 @@ uvicorn cas.api.app:create_app --factory --reload
 ```
 
 ```
-POST /api/v1/extract        — Extract attributes for a geometry
-POST /api/v1/extract/batch  — Extract attributes for many geometries
-GET  /api/v1/datasets       — List available datasets (paginated)
-GET  /api/v1/providers      — List registered providers (paginated)
-GET  /health                — Liveness check + result-cache stats
-GET  /metrics               — Prometheus metrics exposition
-GET  /docs                  — Interactive OpenAPI docs
+POST /api/v1/extract           — Extract attributes for a geometry
+POST /api/v1/extract/batch     — Extract attributes for many geometries
+GET  /api/v1/datasets          — List available datasets (paginated)
+GET  /api/v1/providers         — List registered providers (paginated)
+GET  /api/v1/providers/{slug}  — One provider with full dataset metadata
+GET  /health                   — Liveness check + result-cache stats
+GET  /metrics                  — Prometheus metrics exposition
+GET  /docs                     — Interactive OpenAPI docs
 ```
+
+The endpoints are typed with Pydantic response models, so `/openapi.json` and
+`/docs` are a complete, always-in-sync description of the service. The full
+214-provider catalog is discoverable over HTTP: list `GET /api/v1/providers`,
+then drill into `GET /api/v1/providers/{slug}` for resolution, bbox, license,
+citation, and variables.
 
 `/datasets` and `/providers` accept `limit` (1–1000, default 100) and `offset`
 query params and return `{total, limit, offset, count, ...}`. Catalog responses
@@ -99,6 +106,49 @@ docker run -p 8000:8000 \
 
 The rate limiter is in-memory and per-process; for multi-replica deployments,
 enforce limits at the ingress/gateway instead.
+
+## Python SDK
+
+`cas.client` is a typed wrapper over the HTTP API (ships with the core package,
+no extra needed). It returns the same `cas.core.models` types the service uses,
+and offers both a synchronous and an asynchronous client.
+
+```python
+from cas.client import CASClient
+
+with CASClient("http://localhost:8000") as cas:
+    # Discover the catalog over HTTP
+    for p in cas.providers(limit=1000).providers:
+        print(p.slug, p.protocol)
+
+    detail = cas.provider("copernicus_dem")   # full dataset metadata
+
+    # Extract (geometry accepts a GeoJSON geometry or Feature)
+    resp = cas.extract(
+        geometry={"type": "Point", "coordinates": [-96.5, 39.0]},
+        dataset_ids=["copernicus_dem:elevation", "isric_soilgrids:clay_0-5cm"],
+    )
+    for r in resp.results:
+        print(r.dataset_id, r.value, r.units, r.quality)
+```
+
+Non-2xx responses raise `cas.client.CASError`, carrying the parsed error
+envelope (`status_code`, `error_type`, `message`, `request_id`). An async
+`AsyncCASClient` mirrors the same methods.
+
+## Documentation
+
+Full documentation (quick start, HTTP API, SDK guide + reference, CLI, provider
+catalog, architecture) is built with MkDocs:
+
+```bash
+pip install -e ".[docs]"
+mkdocs serve        # http://localhost:8000
+mkdocs build        # static site → ./site
+```
+
+The site is published to GitHub Pages on every push to `main` via
+`.github/workflows/docs.yml`.
 
 ## Architecture
 
