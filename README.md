@@ -4,7 +4,7 @@ Harmonized access to global geospatial attribute datasets (DEM, soil, land cover
 
 CAS is **not a data warehouse** — it's a QC layer and one-stop-shop that pulls from upstream providers on-demand, validates responses, and returns harmonized results.
 
-CAS ships **217 active providers** spanning DEM/elevation, soil, land cover, hydrology, vegetation/canopy, geology, and biodiversity — including global/flagship datasets plus **165 national/regional providers across 34 countries** (incl. MapBiomas Amazonia, Chaco and Pampa land cover for South America). Every provider listed below is registered in the runtime connector registry and exercised by the end-to-end health sweep; run `cas providers` to see the live list.
+CAS ships **224 active providers** spanning DEM/elevation, soil, land cover, hydrology, vegetation/canopy, geology, and biodiversity — including global/flagship datasets plus **172 national/regional providers across 38 countries** (incl. MapBiomas land cover for Amazonia, Chaco, Pampa, Bolivia, Colombia, Peru, Paraguay, Uruguay and Venezuela in South America, and Indonesia in South-East Asia). Every provider listed below is registered in the runtime connector registry and exercised by the end-to-end health sweep; run `cas providers` to see the live list.
 
 **Status**: Alpha (v0.1.0)
 
@@ -63,7 +63,7 @@ GET  /docs                     — Interactive OpenAPI docs
 
 The endpoints are typed with Pydantic response models, so `/openapi.json` and
 `/docs` are a complete, always-in-sync description of the service. The full
-217-provider catalog is discoverable over HTTP: list `GET /api/v1/providers`,
+224-provider catalog is discoverable over HTTP: list `GET /api/v1/providers`,
 then drill into `GET /api/v1/providers/{slug}` for resolution, bbox, license,
 citation, and variables.
 
@@ -165,8 +165,8 @@ Geometry in → CAS engine → fan out to providers → server-side subset → z
 
 ## Implemented Providers
 
-CAS registers **217 active providers**. The tables below list the headline global/flagship
-datasets per category; the national breadth (165 country/region-specific providers across 34 countries)
+CAS registers **224 active providers**. The tables below list the headline global/flagship
+datasets per category; the national breadth (172 country/region-specific providers across 38 countries)
 is summarized in [National providers by country](#national-providers-by-country). The complete
 machine-readable catalog (resolution, bbox, license, variables) lives in
 `inventory/providers.yaml` and is regenerated with `cas export-inventory`. Get the live list any
@@ -253,8 +253,8 @@ Norway, Portugal, and Spain.
 
 ### National providers by country
 
-165 of the 217 providers are country/region-specific (DEM, soil, land cover, hydrology, geology),
-across 34 countries. Counts:
+172 of the 224 providers are country/region-specific (DEM, soil, land cover, hydrology, geology),
+across 38 countries, plus trinational MapBiomas land cover for Amazonia, Chaco and Pampa. Counts:
 
 | Country | Providers | Country | Providers |
 |---------|:---------:|---------|:---------:|
@@ -268,12 +268,15 @@ across 34 countries. Counts:
 | Belgium | 7 | Sweden | 2 |
 | Spain | 7 | Argentina | 1 |
 | Finland | 6 | Austria | 1 |
-| Canada | 5 | Colombia | 1 |
+| Canada | 5 | Colombia | 2 |
 | France | 3 | Ethiopia | 1 |
 | Netherlands | 5 | Greece | 1 |
-| Slovenia | 3 | Indonesia | 1 |
+| Slovenia | 3 | Indonesia | 2 |
 | Brazil | 2 | Japan | 1 |
-| Croatia | 2 | Luxembourg, Nigeria, Peru | 1 each |
+| Croatia | 2 | Peru | 3 |
+| Bolivia | 1 | Paraguay | 1 |
+| Uruguay | 1 | Venezuela | 1 |
+| Luxembourg, Nigeria | 1 each | | |
 
 Most European, North American, and Australian connectors are **open** (OGC WCS/WMS or
 STAC+COG). A handful require free registration — see below.

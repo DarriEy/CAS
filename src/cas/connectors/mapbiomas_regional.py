@@ -14,11 +14,13 @@ Regions wired here:
 * **Amazonia** (RAISG / Pan-Amazonia) — the trinational Amazon basin.
 * **Chaco** — the Gran Chaco dry forest (Argentina/Paraguay/Bolivia/Brazil).
 * **Pampa** — the trinational Pampa grasslands (Brazil/Uruguay/Argentina).
+* Per-country initiatives: **Bolivia, Colombia, Peru, Paraguay, Uruguay,
+  Venezuela** (South America) and **Indonesia** (the Asia coverage leg).
 
-These fill the South American coverage gap left by the global products (ESA
-WorldCover, Dynamic World, IO LULC), which carry only a coarse legend, while
-MapBiomas uses a far richer, ecosystem-specific legend (dry-forest, several
-grassland classes, ...).
+These fill the South American (and South-East Asian) coverage gap left by the
+global products (ESA WorldCover, Dynamic World, IO LULC), which carry only a
+coarse legend, while MapBiomas uses a far richer, ecosystem-specific legend
+(dry-forest, several grassland classes, ...).
 
 The COG paths below were each confirmed by opening the raster over ``/vsicurl``
 (uint8, EPSG:4326, single band, nodata unset → ``_NODATA`` fallback). Note the
@@ -272,3 +274,141 @@ class MapBiomasPampaConnector(_MapBiomasRegionalConnector):
     citation = "MapBiomas Pampa Project, Collection 3"
     # Uruguay / Rio Grande do Sul Pampa grassland (verified on-data).
     health_anchor = (-55.0, -31.5)
+
+
+# ── Per-country MapBiomas initiatives ───────────────────────────────────────
+#
+# MapBiomas also publishes single-country annual LULC for several South American
+# countries and Indonesia, on the same bucket and pixel convention. Their
+# sampled class codes all fall within the integrated MAPBIOMAS_CLASSES legend
+# (unseen codes degrade to ``class_<n>`` labels, never affecting the numeric
+# distribution), so they reuse the default legend. Each COG path/year below was
+# confirmed by opening the raster over ``/vsicurl``; the sub-path again varies
+# per initiative (``coverage/`` vs ``lclu/coverage/``).
+
+
+@register("mapbiomas_bolivia")
+class MapBiomasBoliviaConnector(_MapBiomasRegionalConnector):
+    """MapBiomas Bolivia annual LULC, 30 m."""
+
+    slug = "mapbiomas_bolivia"
+    display_name = "MapBiomas Bolivia LULC 30m"
+    region_label = "Bolivia"
+    collection = 1
+    year = 2021
+    cog_url = (
+        "https://storage.googleapis.com/mapbiomas-public/initiatives/bolivia/"
+        f"collection_{collection}/lclu/coverage/bolivia_coverage_{year}.tif"
+    )
+    extent = BoundingBox(min_lon=-69.7, min_lat=-23.0, max_lon=-57.4, max_lat=-9.6)
+    citation = "MapBiomas Bolivia Project, Collection 1"
+    health_anchor = (-63.5, -16.5)  # Santa Cruz lowland forest/savanna
+
+
+@register("mapbiomas_colombia")
+class MapBiomasColombiaConnector(_MapBiomasRegionalConnector):
+    """MapBiomas Colombia annual LULC, 30 m."""
+
+    slug = "mapbiomas_colombia"
+    display_name = "MapBiomas Colombia LULC 30m"
+    region_label = "Colombia"
+    collection = 1
+    year = 2022
+    cog_url = (
+        "https://storage.googleapis.com/mapbiomas-public/initiatives/colombia/"
+        f"collection_{collection}/coverage/colombia_coverage_{year}.tif"
+    )
+    extent = BoundingBox(min_lon=-79.1, min_lat=-4.3, max_lon=-66.8, max_lat=12.6)
+    citation = "MapBiomas Colombia Project, Collection 1"
+    health_anchor = (-73.5, 4.5)  # Llanos / Andean foothills
+
+
+@register("mapbiomas_peru")
+class MapBiomasPeruConnector(_MapBiomasRegionalConnector):
+    """MapBiomas Peru annual LULC, 30 m."""
+
+    slug = "mapbiomas_peru"
+    display_name = "MapBiomas Peru LULC 30m"
+    region_label = "Peru"
+    collection = 1
+    year = 2021
+    cog_url = (
+        "https://storage.googleapis.com/mapbiomas-public/initiatives/peru/"
+        f"collection_{collection}/lclu/coverage/peru_coverage_{year}.tif"
+    )
+    extent = BoundingBox(min_lon=-81.4, min_lat=-18.4, max_lon=-68.7, max_lat=-0.0)
+    citation = "MapBiomas Peru Project, Collection 1"
+    health_anchor = (-74.5, -10.0)  # Amazonian Peru (Ucayali)
+
+
+@register("mapbiomas_paraguay")
+class MapBiomasParaguayConnector(_MapBiomasRegionalConnector):
+    """MapBiomas Paraguay annual LULC, 30 m."""
+
+    slug = "mapbiomas_paraguay"
+    display_name = "MapBiomas Paraguay LULC 30m"
+    region_label = "Paraguay"
+    collection = 1
+    year = 2022
+    cog_url = (
+        "https://storage.googleapis.com/mapbiomas-public/initiatives/paraguay/"
+        f"collection_{collection}/coverage/paraguay_coverage_{year}.tif"
+    )
+    extent = BoundingBox(min_lon=-62.7, min_lat=-27.6, max_lon=-54.2, max_lat=-19.3)
+    citation = "MapBiomas Paraguay Project, Collection 1"
+    health_anchor = (-57.5, -24.5)  # eastern Paraguay
+
+
+@register("mapbiomas_uruguay")
+class MapBiomasUruguayConnector(_MapBiomasRegionalConnector):
+    """MapBiomas Uruguay annual LULC, 30 m."""
+
+    slug = "mapbiomas_uruguay"
+    display_name = "MapBiomas Uruguay LULC 30m"
+    region_label = "Uruguay"
+    collection = 1
+    year = 2022
+    cog_url = (
+        "https://storage.googleapis.com/mapbiomas-public/initiatives/uruguay/"
+        f"collection_{collection}/coverage/uruguay_coverage_{year}.tif"
+    )
+    extent = BoundingBox(min_lon=-58.5, min_lat=-35.0, max_lon=-53.0, max_lat=-30.0)
+    citation = "MapBiomas Uruguay Project, Collection 1"
+    health_anchor = (-56.0, -33.0)  # central Uruguay
+
+
+@register("mapbiomas_venezuela")
+class MapBiomasVenezuelaConnector(_MapBiomasRegionalConnector):
+    """MapBiomas Venezuela annual LULC, 30 m."""
+
+    slug = "mapbiomas_venezuela"
+    display_name = "MapBiomas Venezuela LULC 30m"
+    region_label = "Venezuela"
+    collection = 1
+    year = 2022
+    cog_url = (
+        "https://storage.googleapis.com/mapbiomas-public/initiatives/venezuela/"
+        f"collection_{collection}/coverage/venezuela_coverage_{year}.tif"
+    )
+    extent = BoundingBox(min_lon=-73.4, min_lat=0.6, max_lon=-59.8, max_lat=12.2)
+    citation = "MapBiomas Venezuela Project, Collection 1"
+    health_anchor = (-66.0, 7.5)  # Llanos del Orinoco
+
+
+@register("mapbiomas_indonesia")
+class MapBiomasIndonesiaConnector(_MapBiomasRegionalConnector):
+    """MapBiomas Indonesia annual LULC, 30 m (Asia coverage leg)."""
+
+    slug = "mapbiomas_indonesia"
+    display_name = "MapBiomas Indonesia LULC 30m"
+    region_label = "Indonesia"
+    collection = 2
+    year = 2022
+    cog_url = (
+        "https://storage.googleapis.com/mapbiomas-public/initiatives/indonesia/"
+        f"collection_{collection}/coverage/indonesia_coverage_{year}.tif"
+    )
+    extent = BoundingBox(min_lon=95.0, min_lat=-11.0, max_lon=141.0, max_lat=6.0)
+    citation = "MapBiomas Indonesia Project, Collection 2"
+    # The archipelago centroid is ocean; sample central Sumatra (Riau) instead.
+    health_anchor = (101.5, 0.5)

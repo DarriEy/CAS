@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 # Copyright (C) 2024-2026 CAS Contributors
-"""Unit tests for the MapBiomas regional connectors (Amazonia/Chaco/Pampa)."""
+"""Unit tests for the MapBiomas regional/country connectors."""
 
 from __future__ import annotations
 
@@ -10,8 +10,15 @@ from cas.connectors.mapbiomas import MAPBIOMAS_CLASSES
 from cas.connectors.mapbiomas_regional import (
     CHACO_CLASSES,
     MapBiomasAmazoniaConnector,
+    MapBiomasBoliviaConnector,
     MapBiomasChacoConnector,
+    MapBiomasColombiaConnector,
+    MapBiomasIndonesiaConnector,
     MapBiomasPampaConnector,
+    MapBiomasParaguayConnector,
+    MapBiomasPeruConnector,
+    MapBiomasUruguayConnector,
+    MapBiomasVenezuelaConnector,
 )
 
 network = pytest.mark.network
@@ -20,6 +27,13 @@ REGIONAL = [
     MapBiomasAmazoniaConnector,
     MapBiomasChacoConnector,
     MapBiomasPampaConnector,
+    MapBiomasBoliviaConnector,
+    MapBiomasColombiaConnector,
+    MapBiomasPeruConnector,
+    MapBiomasParaguayConnector,
+    MapBiomasUruguayConnector,
+    MapBiomasVenezuelaConnector,
+    MapBiomasIndonesiaConnector,
 ]
 
 
@@ -78,11 +92,8 @@ class TestMapBiomasRegionalExtract:
     """Live windowed-COG extraction over a small polygon in each region's
     heartland. Marked ``network`` so it is excluded from the default CI run."""
 
-    SITES = {
-        MapBiomasAmazoniaConnector: (-62.2, -4.0),   # central Amazon (várzea)
-        MapBiomasChacoConnector: (-60.5, -22.5),     # Argentine/Paraguayan Chaco
-        MapBiomasPampaConnector: (-55.0, -31.5),     # Uruguay/RS Pampa grassland
-    }
+    # Default to each connector's curated health anchor (verified on-data).
+    SITES = {cls: cls.health_anchor for cls in REGIONAL}
 
     @staticmethod
     def _box(lon: float, lat: float, d: float = 0.05):
