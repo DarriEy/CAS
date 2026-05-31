@@ -323,7 +323,10 @@ class NationalWCSConnector(BaseConnector):
                     export_params = {
                         "bbox": f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}",
                         "bboxSR": "4326", "imageSR": "4326",
-                        "size": "500,500", "format": "png", "f": "image",
+                        # Keep the request coarse: scale-cached ArcGIS services (e.g.
+                        # BGR soil) render nothing below ~44 m/px, and 100 px over the
+                        # small test window stays above that while giving ample samples.
+                        "size": "100,100", "format": "png", "f": "image",
                     }
                     resp = await client.get(export_url, params=export_params)
                     content_type = resp.headers.get("content-type", "")
@@ -340,12 +343,26 @@ class NationalWCSConnector(BaseConnector):
             raise DataFormatError(cfg.slug, f"WCS request failed: {e}") from e
 
         ct_lower = resp.headers.get("content-type", "").lower()
-        if "png" in ct_lower or "jpeg" in ct_lower:
+        # Sniff the body, not just content-type: several ArcGIS/MapServer WMS
+        # endpoints return a PNG/JPEG body under an "image/tiff" content-type.
+        # Feeding that to parse_geotiff yields an identity transform + crs=None,
+        # so the polygon maps off-raster and coverage comes out 0.
+        is_image = (
+            raster_bytes[:4] == b"\x89PNG"
+            or raster_bytes[:3] == b"\xff\xd8\xff"
+            or "png" in ct_lower
+            or "jpeg" in ct_lower
+        )
+        if is_image:
             raster_data, transform, nodata, src_crs = _parse_wms_image(
                 raster_bytes, bbox, cfg.crs,
             )
         else:
             raster_data, transform, nodata, src_crs = parse_geotiff(raster_bytes)
+        # WMS/WCS GeoTIFFs often omit the embedded CRS; fall back to the
+        # configured CRS so the geometry is reprojected to the raster's grid.
+        if src_crs is None:
+            src_crs = cfg.crs
         if cfg.nodata_value is not None:
             nodata = cfg.nodata_value
 

@@ -113,7 +113,13 @@ class FranceDEMConnector(BaseConnector):
             try:
                 resp = await self._get(
                     "/altimetrie/1.0/calcul/alti/rest/elevation.json",
-                    params={"lon": str(round(lon, 6)), "lat": str(round(lat, 6))},
+                    params={
+                        "lon": str(round(lon, 6)),
+                        "lat": str(round(lat, 6)),
+                        # Required by the IGN Geoplateforme API; without it every
+                        # request is rejected with HTTP 405.
+                        "resource": "ign_rge_alti_wld",
+                    },
                 )
                 data = resp.json()
                 elevations = data.get("elevations", [])

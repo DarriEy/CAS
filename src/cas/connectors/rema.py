@@ -31,7 +31,7 @@ from cas.extract.zonal import compute_zonal_stats, rasterize_geometry
 logger = structlog.get_logger()
 
 PGC_STAC_URL = "https://stac.pgc.umn.edu/api/v1"
-COLLECTION = "rema-mosaics"
+COLLECTION = "rema-mosaics-v2.0-10m"
 
 ELEVATION_VAR = Variable(
     name="elevation",

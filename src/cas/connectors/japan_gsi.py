@@ -76,7 +76,7 @@ class JapanGSIConnector(BaseConnector):
         # Try DEM5A first, fall back to DEM10B
         value = None
         provenance = ""
-        for dem_type in ["dem5a_png", "dem_png"]:
+        for dem_type in ["dem5a", "dem"]:  # GSI text-tile names (the _png paths 404)
             url = f"{self.base_url}/xyz/{dem_type}/{zoom}/{tile_x}/{tile_y}.txt"
             try:
                 resp = await self._get(url)
