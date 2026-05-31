@@ -258,13 +258,25 @@ def verify(slug):
 @cli.command()
 @click.option("--slug", "-s", default=None, help="Check a single provider by slug")
 @click.option("--strict", is_flag=True, help="Exit non-zero if any provider is down")
-def health(slug, strict):
+@click.option("--json", "json_path", default=None,
+              help="Write a machine-readable snapshot to PATH (use '-' for stdout)")
+def health(slug, strict, json_path):
     """End-to-end extraction health check (real extract per provider)."""
     from cas.monitor.health import check_all_providers
+    from cas.monitor.trend import snapshot_dict
 
     async def _run():
         slugs = [slug] if slug else None
         results = await check_all_providers(slugs=slugs)
+
+        if json_path:
+            snapshot = json.dumps(snapshot_dict(results), indent=2)
+            if json_path == "-":
+                click.echo(snapshot)
+            else:
+                with open(json_path, "w") as f:
+                    f.write(snapshot + "\n")
+                click.echo(f"  Snapshot written to {json_path}", err=True)
 
         healthy = degraded = down = auth = 0
         failures = []
@@ -304,3 +316,28 @@ def health(slug, strict):
             raise SystemExit(1)
 
     asyncio.run(_run())
+
+
+@cli.command(name="health-compare")
+@click.argument("baseline", type=click.Path(exists=True))
+@click.argument("current", type=click.Path(exists=True))
+@click.option("--fail-on-regression/--no-fail-on-regression", default=True,
+              help="Exit non-zero if any provider regressed vs baseline (default: on)")
+def health_compare(baseline, current, fail_on_regression):
+    """Compare a CURRENT health snapshot against a BASELINE snapshot.
+
+    Reports providers that regressed (status worse than baseline), improved,
+    or arrived broken. Exits 1 on regressions unless --no-fail-on-regression.
+    """
+    from cas.monitor.trend import compare, format_report
+
+    with open(baseline) as f:
+        base_snap = json.load(f)
+    with open(current) as f:
+        cur_snap = json.load(f)
+
+    cmp = compare(base_snap, cur_snap)
+    click.echo(format_report(cmp))
+
+    if fail_on_regression and cmp.has_regressions:
+        raise SystemExit(1)

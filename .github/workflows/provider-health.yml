@@ -5,6 +5,12 @@ on:
     - cron: "0 6 * * *"
   workflow_dispatch:
 
+# contents: write   -> push daily snapshots to the orphan health-history branch
+# issues:   write   -> open/update the regression issue
+permissions:
+  contents: write
+  issues: write
+
 jobs:
   reachability:
     runs-on: ubuntu-latest
@@ -26,9 +32,11 @@ jobs:
 
   extract:
     # End-to-end extraction sweep: a real extract() per provider over a
-    # coverage-derived test polygon (see cas.monitor.test_geometry).
-    # Informational — does not hard-fail on individual flaky upstreams; the
-    # summary line reports the healthy/degraded/down counts.
+    # coverage-derived test polygon (see cas.monitor.test_geometry). The run
+    # is compared against the committed baseline (health/baseline.json); a
+    # provider doing *worse* than its baseline status is a regression, which
+    # fails the job and opens/updates a tracking issue. The honest-degraded
+    # and auth-gated providers are baked into the baseline, so they stay quiet.
     runs-on: ubuntu-latest
 
     steps:
@@ -43,5 +51,98 @@ jobs:
         run: pip install -e ".[dev,stac]"
 
       - name: End-to-end extraction health check
-        run: cas health
+        run: cas health --json snapshot.json | tee health-output.txt
         timeout-minutes: 20
+
+      - name: Compare against baseline
+        id: compare
+        run: |
+          set +e
+          cas health-compare health/baseline.json snapshot.json | tee compare.txt
+          code=${PIPESTATUS[0]}
+          set -e
+          if [ "$code" -ne 0 ]; then
+            echo "regressed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "regressed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload snapshot artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: health-snapshot
+          path: |
+            snapshot.json
+            compare.txt
+
+      - name: Archive snapshot to health-history branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          DATE=$(date -u +%Y-%m-%d)
+          REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          tmp=$(mktemp -d)
+          git clone "$REPO_URL" "$tmp"
+          cd "$tmp"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin health-history >/dev/null 2>&1; then
+            git checkout health-history
+          else
+            git checkout --orphan health-history
+            git rm -rf . >/dev/null 2>&1 || true
+          fi
+          mkdir -p snapshots
+          cp "$GITHUB_WORKSPACE/snapshot.json" "snapshots/$DATE.json"
+          cp "$GITHUB_WORKSPACE/snapshot.json" latest.json
+          git add -A
+          git commit -m "Health snapshot $DATE" || { echo "No change since last snapshot."; exit 0; }
+          git push origin health-history
+
+      - name: Open or update regression issue
+        if: steps.compare.outputs.regressed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('compare.txt', 'utf8');
+            const date = new Date().toISOString().slice(0, 10);
+            const { owner, repo } = context.repo;
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const body = [
+              `Provider health regression detected on **${date}** by \`provider-health.yml\`.`,
+              '',
+              '```',
+              report.trim(),
+              '```',
+              '',
+              `[View run](${runUrl})`,
+              '',
+              'If a change is intentional/expected, refresh `health/baseline.json` and close this issue.',
+            ].join('\n');
+            const existing = await github.rest.issues.listForRepo({
+              owner, repo, state: 'open', labels: 'health-regression',
+            });
+            if (existing.data.length) {
+              const num = existing.data[0].number;
+              await github.rest.issues.update({ owner, repo, issue_number: num, body });
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: num,
+                body: `Regression still present as of ${date}. [Run](${runUrl})`,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner, repo,
+                title: `⚠ Provider health regression (${date})`,
+                body,
+                labels: ['health-regression'],
+              });
+            }
+
+      - name: Fail the job on regression
+        if: steps.compare.outputs.regressed == 'true'
+        run: |
+          echo "::error::Provider health regressed vs baseline — see the regression issue."
+          exit 1
