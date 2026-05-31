@@ -8,11 +8,13 @@ Reference: Lang et al. 2023, Nature Ecology & Evolution.
 
 from __future__ import annotations
 
+import math
 import time
 
 import structlog
 
 from cas.connectors.base import BaseConnector
+from cas.connectors.protocols.stac import STACMixin
 from cas.core.exceptions import DataFormatError
 from cas.core.models import (
     AggregationMethod,
@@ -29,7 +31,7 @@ from cas.core.models import (
     Variable,
 )
 from cas.core.registry import register
-from cas.extract.zonal import compute_zonal_stats, geometry_to_bbox, parse_geotiff, rasterize_geometry
+from cas.extract.zonal import compute_zonal_stats, geometry_to_bbox, rasterize_geometry
 
 logger = structlog.get_logger()
 
@@ -43,7 +45,7 @@ CANOPY_HEIGHT_VAR = Variable(
 
 
 @register("canopy_height")
-class CanopyHeightConnector(BaseConnector):
+class CanopyHeightConnector(STACMixin, BaseConnector):
     slug = "canopy_height"
     display_name = "ETH Canopy Height 10m"
     base_url = ETH_BASE
@@ -79,12 +81,16 @@ class CanopyHeightConnector(BaseConnector):
         tile_file = f"ETH_GlobalCanopyHeight_10m_2020_{tile_name}_Map.tif"
         tile_url = f"{ETH_BASE}?path=%2F3deg_cogs&files={tile_file}"
 
+        # Each tile is a 36000x36000 (~377MB) COG. Read only the window over the
+        # request bbox via /vsicurl range requests instead of downloading the
+        # whole tile.
         try:
-            raster_bytes = await self._get_bytes(tile_url)
+            raster_data, transform, nodata, src_crs = await self._read_cog_window(
+                tile_url, bbox, geometry,
+            )
         except Exception as e:
-            raise DataFormatError(self.slug, f"Tile download failed for {tile_name}: {e}") from e
+            raise DataFormatError(self.slug, f"Tile window read failed for {tile_name}: {e}") from e
 
-        raster_data, transform, nodata, src_crs = parse_geotiff(raster_bytes)
         geom_dict = geometry.model_dump()
         mask = rasterize_geometry(geom_dict, raster_data.shape, transform, src_crs)
 
@@ -109,12 +115,12 @@ class CanopyHeightConnector(BaseConnector):
 
 
 def _bbox_to_tile(bbox: tuple[float, float, float, float]) -> str:
-    """ETH tiles are 3x3 degrees, named by center lat/lon: e.g. N39W099."""
+    """ETH tiles are 3x3 degrees, named by their lower-left corner: e.g. N48E006
+    spans 48-51N, 6-9E. Floor the bbox centre to the 3-degree grid."""
     center_lon = (bbox[0] + bbox[2]) / 2
     center_lat = (bbox[1] + bbox[3]) / 2
-    # Round to nearest 3-degree grid center
-    tile_lat = round(center_lat / 3) * 3
-    tile_lon = round(center_lon / 3) * 3
+    tile_lat = int(math.floor(center_lat / 3) * 3)
+    tile_lon = int(math.floor(center_lon / 3) * 3)
     ns = "N" if tile_lat >= 0 else "S"
     ew = "E" if tile_lon >= 0 else "W"
     return f"{ns}{abs(tile_lat):02d}{ew}{abs(tile_lon):03d}"

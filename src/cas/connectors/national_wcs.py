@@ -206,8 +206,20 @@ class NationalWCSConnector(BaseConnector):
         params: dict = {}
 
         if cfg.use_wms:
+            # WMS GetMap expects the BBOX in the requested SRS. `bbox` is always
+            # EPSG:4326 degrees here, so for a projected layer CRS we must
+            # reproject — otherwise the server reads degree coords as metres and
+            # returns a blank (but HTTP-200) image, which never trips the
+            # failed-status fallback below. Regressed norway_dem (EPSG:25833).
+            wms_bbox = bbox
+            if cfg.crs.upper() != "EPSG:4326":
+                from pyproj import Transformer
+                t = Transformer.from_crs("EPSG:4326", cfg.crs, always_xy=True)
+                x0, y0 = t.transform(bbox[0], bbox[1])
+                x1, y1 = t.transform(bbox[2], bbox[3])
+                wms_bbox = (x0, y0, x1, y1)
             params = _wms_params(
-                cfg.wms_version, cfg.coverage_id, cfg.crs, "image/geotiff", bbox, cfg.extra_params,
+                cfg.wms_version, cfg.coverage_id, cfg.crs, "image/geotiff", wms_bbox, cfg.extra_params,
             )
         elif cfg.protocol_version == "2.0.1":
             if cfg.crs != "EPSG:4326":
