@@ -48,6 +48,7 @@ class QualityFlag(StrEnum):
 
 class Protocol(StrEnum):
     WCS = "wcs"
+    WFS = "wfs"
     STAC_COG = "stac_cog"
     OPENDAP = "opendap"
     REST = "rest"
