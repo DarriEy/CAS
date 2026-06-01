@@ -239,33 +239,12 @@ class USGSNHDConnector(NationalWCSConnector):
     )
 
 
-# Disabled: mrdata.usgs.gov/services/sgmc is a *styled* WMS only (no WCS — a
-# WCS GetCapabilities 400s). Every GetMap format returns a colorized PNG of the
-# scanned 1:500k map, so the connector would read the red channel and report RGB
-# byte values as "geology classes" — meaningless categorical data, not SGMC
-# lithology codes. There is no class-coded raster/legend endpoint to key against.
-# Verified 2026-05-30.
-# Re-enable path: switch to a classified SGMC source (e.g. the SGMC geodatabase
-# rasterized to unit codes, or a feature service with a Generalized_Lith field)
-# and add a code->name legend, then restore @register.
-# @register("usgs_geology")
-class USGSGeologyConnector(NationalWCSConnector):
-    slug = "usgs_geology"
-    display_name = "USGS State Geologic Map (US)"
-    base_url = "https://mrdata.usgs.gov/services/sgmc"
-    protocol = "wcs"
-    _config = NationalDatasetConfig(
-        slug="usgs_geology",
-        display_name="USGS State Geologic Map Compilation (SGMC)",
-        wcs_url="https://mrdata.usgs.gov/services/sgmc",
-        coverage_id="sgmc2",
-        variable=Variable(name="geology", units="class", data_type=DataType.CATEGORICAL,
-                          description="US state geologic map compilation — lithology and age"),
-        resolution_m=250, category="geology",
-        bbox=BoundingBox(min_lon=-180, min_lat=17, max_lon=-64, max_lat=72),
-        license="Public Domain", citation="USGS, State Geologic Map Compilation (SGMC)",
-        use_wms=True,
-    )
+# usgs_geology moved to connectors/wfs_vector.py (2026-05-31). The SGMC WMS (sgmc2)
+# is a cascaded proxy serving pre-rendered symbology only — GetStyles/GetLegendGraphic
+# return 501, so there is no service-side color->class table to invert and the styled
+# WMS gives meaningless RGB bytes. The SGMC WFS Lithology layer instead exposes the
+# authoritative lith62 (62-class generalized lithology) attribute, so the connector now
+# extracts it via the new WFSVectorConnector (area-weighted feature overlay).
 
 
 @register("usgs_karst")

@@ -251,11 +251,16 @@ class NationalWCSConnector(BaseConnector):
                 x0, y0 = t.transform(bbox[0], bbox[1])
                 x1, y1 = t.transform(bbox[2], bbox[3])
                 wms_bbox = (x0, y0, x1, y1)
+            # color_map connectors want the server's pre-rendered symbology PNG
+            # (which _parse_wms_image inverts back to class codes). Requesting a
+            # GeoTIFF for those would return raw RGB-derived bytes or, for some
+            # MapServer layers, an all-nodata raster — so ask for PNG up front.
+            primary_fmt = "image/png" if cfg.color_map else "image/geotiff"
             params = _wms_params(
                 cfg.wms_version,
                 cfg.coverage_id,
                 cfg.crs,
-                "image/geotiff",
+                primary_fmt,
                 wms_bbox,
                 cfg.extra_params,
             )

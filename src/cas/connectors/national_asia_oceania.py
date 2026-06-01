@@ -275,10 +275,20 @@ class NigeriaLCConnector(NationalWCSConnector):
 #     exportImage fallback yielded value=None / coverage=0 / quality=missing.
 # The land cover only exists as pre-rendered RGB symbology tiles
 # (/MapServer/tile/{z}/{y}/{x}, levels 0..~12, 404 above) — cartographic colors,
-# not categorical class values, and unrecoverable without an unpublished
-# color->class table. No path the NationalWCSConnector base supports returns
-# real data, so re-enabling requires a different source for Indonesian LC
+# not categorical class values. No path the NationalWCSConnector base supports
+# returns real data, so re-enabling requires a different source for Indonesian LC
 # (e.g. MapBiomas Indonesia already covers this region — see PR #5).
+#
+# Re-investigated 2026-05-31 against the new color_map symbology mapper: still not
+# revivable, for two independent reasons. (1) singleFusedMapCache=true — dynamic
+# /export and /WMSServer render blank/disabled (ArcGIS error); only the tile cache
+# carries pixels, which the base connector doesn't fetch. (2) The renderer is
+# non-injective: the /legend reports 23 classes but only 10 distinct swatch colors
+# (e.g. (115,255,0) is shared by 3 classes; white and black each by 5-6 and also
+# serve as background / label-and-outline linework). A color_map cannot recover the
+# class from the pixel. The labels are also forest-change transition codes
+# (20012001 = stayed primary forest, 20012002 = primary->secondary, ...), not a
+# flat 23-class land-cover legend. Stick with mapbiomas_indonesia.
 # @register("indonesia_lc")
 class IndonesiaLCConnector(NationalWCSConnector):
     slug = "indonesia_lc"
