@@ -1,12 +1,12 @@
 {
   "generated_at": "2026-06-01T01:25:02.226272+00:00",
   "summary": {
-    "healthy": 210,
+    "healthy": 212,
     "degraded": 0,
     "auth_gated": 12,
     "down": 0,
     "unknown": 0,
-    "total": 222
+    "total": 224
   },
   "providers": [
     {
@@ -831,6 +831,22 @@
       "response_time_ms": 6842,
       "datasets_available": 1,
       "test_value": 1.0,
+      "error": null
+    },
+    {
+      "provider": "hydrobasins",
+      "status": "healthy",
+      "response_time_ms": 534,
+      "datasets_available": 1,
+      "test_value": 1781338.5195,
+      "error": null
+    },
+    {
+      "provider": "hydrolakes",
+      "status": "healthy",
+      "response_time_ms": 1745,
+      "datasets_available": 1,
+      "test_value": 200.5,
       "error": null
     },
     {
