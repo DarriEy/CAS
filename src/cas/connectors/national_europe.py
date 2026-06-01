@@ -1627,6 +1627,11 @@ class ItalySkyviewConnector(NationalWCSConnector):
 # It also renders nothing below ~0.2° bbox — larger than the health-check
 # polygon's 0.05° cap (test_geometry._MAX_HALF_SIZE) — so it can't be coaxed
 # healthy via resolution_m either. Verified 2026-05-30.
+# Re-checked 2026-05-31 against the color_map mapper: still unrecoverable. A 1°
+# GetMap render returns 254 distinct colors that are all near-clones of each other
+# ((247,57,20)/(247,61,20)/(247,53,20)/...) — JPEG/anti-alias noise from the
+# scanned paper map, with no flat fills, so no color->class table can be built.
+# (Contrast france_lithology below, a vector layer that IS injective and revived.)
 # Re-enable path: use a class-coded BRGM source (e.g. the GeoServer WFS geol unit
 # features, or a rasterized lithology grid) with a code->name legend, then
 # restore @register.
@@ -1650,14 +1655,16 @@ class FranceGeologyConnector(NationalWCSConnector):
     )
 
 
-# Disabled: same BRGM styled-WMS limitation as france_geology — image/geotiff is
-# rejected and the image/tiff fallback for LITHO_1M_SIMPLIFIEE returns an
-# all-nodata (-1.0) raster at every bbox/scale tested (the layer only renders as
-# a colorized PNG, never as classified data). No class-coded coverage endpoint.
-# Verified 2026-05-30.
-# Re-enable path: use a class-coded BRGM lithology source with a code->name
-# legend, then restore @register.
-# @register("france_lithology")
+# Re-enabled 2026-05-31 via the color_map symbology mapper. Unlike france_geology
+# (a scanned raster, see note above), LITHO_1M_SIMPLIFIEE is a *vector* layer
+# rendered with flat fills: its WMS GetStyles SLD is a unique-value renderer on
+# CODE_GEOL with 11 classes -> 11 distinct, injective fill colors (verified to
+# exactly match the rendered PNG; polygon-boundary anti-aliasing is <2% of pixels
+# and falls to nodata). The old image/tiff fallback returned all-nodata, so the
+# connector now requests image/png up front (gated on color_map in national_wcs)
+# and inverts the symbology back to CODE_GEOL. Lithology controls permeability —
+# a useful subsurface/hydrogeology attribute. Live-verified over the Paris Basin.
+@register("france_lithology")
 class FranceLithologyConnector(NationalWCSConnector):
     slug = "france_lithology"
     display_name = "France Lithology (BRGM)"
@@ -1668,12 +1675,37 @@ class FranceLithologyConnector(NationalWCSConnector):
         display_name="France Simplified Lithology 1:1M (BRGM)",
         wcs_url="https://geoservices.brgm.fr/geologie",
         coverage_id="LITHO_1M_SIMPLIFIEE",
-        variable=Variable(name="lithology", units="class", data_type=DataType.CATEGORICAL,
-                          description="Simplified lithological classification — controls permeability"),
+        variable=Variable(
+            name="lithology", units="class", data_type=DataType.CATEGORICAL,
+            description=(
+                "Simplified lithological classification (BRGM CODE_GEOL, controls "
+                "permeability): 1 Argiles/clays, 2 Calcaire-marnes-gypse/limestone, "
+                "3 Craie/chalk, 5 Gres/sandstone, 6 Sables/sands, 7 Basaltes-rhyolites, "
+                "8 Granites, 9 Ophiolites, 10 Gneiss, 11 Micaschistes, 12 Schistes-gres"
+            ),
+        ),
         resolution_m=1000, category="geology",
         bbox=BoundingBox(min_lon=-5.2, min_lat=41.3, max_lon=9.6, max_lat=51.1),
         license="Open (BRGM)", citation="BRGM, Lithologie Simplifiée",
         use_wms=True,
+        # CODE_GEOL anchor at the Paris Basin (limestone/sands) — renders a clean
+        # dominant class at the health-check's ~0.1deg box (the >0.2deg blank-render
+        # limitation in the france_geology note applies only to the scanned raster).
+        health_anchor=(2.35, 48.85),
+        # RGB fill -> CODE_GEOL, from the layer's WMS GetStyles SLD (injective).
+        color_map={
+            (212, 255, 191): 1,   # Argiles (clays)
+            (115, 179, 255): 2,   # Calcaire, marnes et gypse (limestone/marl/gypsum)
+            (191, 209, 255): 3,   # Craie (chalk)
+            (245, 201, 122): 5,   # Grès (sandstone)
+            (255, 255, 115): 6,   # Sables (sands)
+            (0, 76, 168): 7,      # Basaltes et rhyolites
+            (255, 0, 0): 8,       # Granites
+            (0, 135, 0): 9,       # Ophiolites
+            (255, 191, 232): 10,  # Gneiss
+            (255, 235, 191): 11,  # Micaschistes
+            (138, 138, 69): 12,   # Schistes et grès
+        },
     )
 
 
