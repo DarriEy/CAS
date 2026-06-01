@@ -1359,6 +1359,10 @@ class FranceLCConnector(NationalWCSConnector):
         resolution_m=10, category="land_cover",
         bbox=BoundingBox(min_lon=-5.2, min_lat=41.3, max_lon=9.6, max_lat=51.1),
         license="Open Licence (Etalab)", citation="IGN, OCS GE (Geoplateforme)",
+        # bbox centroid / first land anchor (Switzerland) falls outside France's
+        # data mask, and OCS GE has rural gaps. Pin Paris so the check lands on
+        # dense, reliably-populated land cover.
+        health_anchor=(2.35, 48.86),
         use_wms=True, wms_version="1.3.0",
     )
 
@@ -2512,7 +2516,13 @@ class NetherlandsNatura2000Connector(NationalWCSConnector):
 #  NORWAY — avalanche/landslide hazard (NVE)
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("norway_avalanche")
+# Disabled 2026-05-31: NVE's SnoskredAktsomhet is a dynamic ArcGIS MapServer that
+# only renders the hazard polygons as RGBA cartographic *symbology* (export over
+# Romsdalen returns a 4-band uint8 image of colour bytes, not class codes). There
+# is no value-raster / WCS coverage, so zonal extraction would return meaningless
+# RGB bytes — same unservable pattern as taiwan_dem / indonesia_lc. Re-enable only
+# if NVE publishes a coded value raster or a queryable coverage.
+# @register("norway_avalanche")
 class NorwayAvalancheConnector(NationalWCSConnector):
     slug = "norway_avalanche"
     display_name = "Norway Snow Avalanche Zones (NVE)"
@@ -2528,10 +2538,19 @@ class NorwayAvalancheConnector(NationalWCSConnector):
         resolution_m=25, category="cryosphere",
         bbox=BoundingBox(min_lon=4.5, min_lat=57.9, max_lon=31.2, max_lat=71.2),
         license="NLOD (Norway)", citation="NVE, Snøskred Aktsomhet",
+        # Avalanche zones exist only in steep terrain; the Oslo land anchor is flat.
+        # Pin the Romsdalen fjord/mountain area (Åndalsnes) where zones are mapped.
+        health_anchor=(7.69, 62.56),
     )
 
 
-@register("norway_landslide")
+# Disabled 2026-05-31: NVE's Skredfaresoner3 is a dynamic ArcGIS MapServer serving
+# the hazard zones as RGBA symbology only (export returns a 4-band uint8 colour
+# image — uniform/transparent outside mapped zones), not a coded value raster. No
+# WCS coverage exists, so zonal extraction can't recover class values. Same
+# unservable pattern as taiwan_dem / indonesia_lc. Re-enable only with a real
+# value raster or queryable coverage.
+# @register("norway_landslide")
 class NorwayLandslideConnector(NationalWCSConnector):
     slug = "norway_landslide"
     display_name = "Norway Landslide Hazard (NVE)"
@@ -2547,6 +2566,9 @@ class NorwayLandslideConnector(NationalWCSConnector):
         resolution_m=25, category="geology",
         bbox=BoundingBox(min_lon=4.5, min_lat=57.9, max_lon=31.2, max_lat=71.2),
         license="NLOD (Norway)", citation="NVE, Skredfaresoner",
+        # Landslide hazard zones are mapped around steep-terrain settlements.
+        # Pin the Romsdalen fjord/mountain area (Åndalsnes) rather than flat Oslo.
+        health_anchor=(7.69, 62.56),
     )
 
 
@@ -2632,6 +2654,11 @@ class DEAAfricaWaterConnector(NationalWCSConnector):
         display_name="Digital Earth Africa Water Observations (WOfS)",
         wcs_url="https://ows.digitalearth.africa/wcs",
         coverage_id="wofs_ls_summary_alltime", protocol_version="2.0.1",
+        # This coverage is 3-band (count_wet, count_clear, frequency); band 1 is
+        # a wet-observation COUNT (~hundreds), not a frequency. Select the
+        # `frequency` band so we surface the 0-1 water frequency, matching the
+        # sibling australia_water_obs rather than an out-of-range count.
+        extra_params={"rangesubset": "frequency"},
         variable=Variable(name="water_frequency", units="%", data_type=DataType.CONTINUOUS,
                           valid_range=(0, 100),
                           description="All-time water observation frequency (Landsat)"),
@@ -2639,7 +2666,14 @@ class DEAAfricaWaterConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=-26, min_lat=-35, max_lon=58, max_lat=38),
         license="CC-BY 4.0",
         citation="Digital Earth Africa, Water Observations from Space",
-        crs="EPSG:3857",
+        # Native grid of wofs_ls_summary_alltime is EPSG:6933 (verified via
+        # DescribeCoverage, axisLabels "x y"). EPSG:3857 subset coords were read
+        # by the server as 6933 metres, sampling dry land ~490 km off-target →
+        # 0 valid water pixels. Matches sibling dea_africa_dem/lc (also 6933).
+        crs="EPSG:6933",
+        # Water frequency is 0/nodata over dry land. Pin permanent open water
+        # (Lake Victoria) so the check samples a place with real observations.
+        health_anchor=(33.0, -1.5),
     )
 
 

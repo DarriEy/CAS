@@ -10,6 +10,7 @@ Layers: occurrence, change, seasonality, recurrence, extent.
 
 from __future__ import annotations
 
+import math
 import time
 
 import structlog
@@ -70,6 +71,10 @@ class JRCGlobalSurfaceWaterConnector(STACMixin, BaseConnector):
     display_name = "JRC Global Surface Water"
     base_url = GCS_BASE
     protocol = "rest"
+    # First dataset is water "occurrence" — over a random land anchor it is
+    # legitimately 0/nodata. Pin a permanent water body (Lake Victoria) so the
+    # health check exercises a place this layer actually has water.
+    health_anchor = (33.0, -1.5)
 
     async def list_datasets(self) -> list[Dataset]:
         datasets = []
@@ -182,8 +187,12 @@ def _build_gcs_tile_url(layer: str, bbox: tuple[float, float, float, float]) -> 
     center_lon = (bbox[0] + bbox[2]) / 2
     center_lat = (bbox[1] + bbox[3]) / 2
 
-    tile_lon = int(center_lon // 10) * 10
-    tile_lat = int(center_lat // 10) * 10
+    # JRC GSW tiles are 10x10 deg, named by their TOP-LEFT corner. Longitude is
+    # the left edge (floor); latitude is the TOP edge, so a point at lat Y sits in
+    # the tile whose top = ceil(Y/10)*10 (e.g. -1.5 -> 0N, not 10S). Using floor
+    # for latitude fetched the tile one band too far south, missing the point.
+    tile_lon = int(math.floor(center_lon / 10.0)) * 10
+    tile_lat = int(math.ceil(center_lat / 10.0)) * 10
 
     lon_str = f"{abs(tile_lon)}E" if tile_lon >= 0 else f"{abs(tile_lon)}W"
     lat_str = f"{abs(tile_lat)}N" if tile_lat >= 0 else f"{abs(tile_lat)}S"

@@ -119,9 +119,11 @@ async def check_provider(provider_slug: str) -> HealthCheckResult:
 
     except RegistrationRequiredError as e:
         # Missing credentials is a configuration state, not a connector failure.
+        # AUTH_GATED is distinct from UNKNOWN so the baseline can show "expected,
+        # needs creds" separately from "genuinely unclassified".
         return HealthCheckResult(
             provider=provider_slug,
-            status=ProviderStatus.UNKNOWN,
+            status=ProviderStatus.AUTH_GATED,
             response_time_ms=int((time.monotonic() - start) * 1000),
             last_checked=datetime.now(UTC),
             error=f"auth-gated: {str(e)[:160]}",
@@ -155,7 +157,7 @@ def _provider_host(slug: str) -> str:
 
 
 # Higher is better. Used to keep the better of two checks when re-verifying.
-_STATUS_RANK = {"down": 0, "degraded": 1, "unknown": 2, "healthy": 3}
+_STATUS_RANK = {"down": 0, "degraded": 1, "unknown": 2, "auth_gated": 2, "healthy": 3}
 
 
 async def check_all_providers(

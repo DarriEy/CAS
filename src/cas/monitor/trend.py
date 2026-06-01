@@ -17,15 +17,15 @@ from datetime import UTC, datetime
 from cas.core.models import HealthCheckResult
 
 # Higher is better. A regression is current_rank < baseline_rank.
-# unknown = auth-gated (creds unset): service exists but couldn't be verified,
-# so an unexpected healthy→unknown drop is worth surfacing, while the known
-# auth-gated providers stay quiet (unknown in baseline → unknown now).
-STATUS_RANK = {"down": 0, "degraded": 1, "unknown": 2, "healthy": 3}
+# auth_gated (creds unset) and unknown both mean "couldn't verify", ranked below
+# healthy so an unexpected healthy→auth_gated/unknown drop surfaces, while the
+# known auth-gated providers stay quiet (auth_gated in baseline → auth_gated now).
+STATUS_RANK = {"down": 0, "degraded": 1, "unknown": 2, "auth_gated": 2, "healthy": 3}
 
 
 def snapshot_dict(results: list[HealthCheckResult], generated_at: datetime | None = None) -> dict:
     """Serialize health results to a stable, diff-friendly snapshot dict."""
-    counts = {"healthy": 0, "degraded": 0, "unknown": 0, "down": 0}
+    counts = {"healthy": 0, "degraded": 0, "auth_gated": 0, "down": 0, "unknown": 0}
     providers = []
     for r in sorted(results, key=lambda r: r.provider):
         status = str(r.status)

@@ -49,6 +49,10 @@ class NLCDImperviousConnector(BaseConnector):
     display_name = "NLCD Imperviousness (US)"
     base_url = WMS_URL
     protocol = "rest"
+    # Impervious surface is ~0 over rural anchors (e.g. central Kansas). Pin a
+    # dense urban core (downtown Chicago) so the health check lands where this
+    # layer has non-zero data.
+    health_anchor = (-87.63, 41.88)
 
     async def list_datasets(self) -> list[Dataset]:
         return [
@@ -89,7 +93,10 @@ class NLCDImperviousConnector(BaseConnector):
             "version": "1.1.1",
             "request": "GetMap",
             "layers": layer,
-            "bbox": f"{bbox[1]},{bbox[0]},{bbox[3]},{bbox[2]}",
+            # WMS 1.1.1 + EPSG:4326 uses lon/lat (x,y) axis order:
+            # minlon,minlat,maxlon,maxlat. Sending lat/lon renders an empty
+            # out-of-CONUS area (all-255 white tile).
+            "bbox": f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}",
             "width": "500",
             "height": "500",
             "srs": "EPSG:4326",
@@ -109,7 +116,17 @@ class NLCDImperviousConnector(BaseConnector):
         except Exception as e:
             raise DataFormatError(self.slug, f"WMS request failed: {e}") from e
 
-        raster_data, transform, nodata, src_crs = parse_geotiff(raster_bytes)
+        raster_data, _file_transform, nodata, _file_crs = parse_geotiff(raster_bytes)
+        # GeoServer's GetMap TIFF carries no CRS/geotransform (identity matrix),
+        # so build the transform from the request bbox (always EPSG:4326) and
+        # keep the geometry in 4326 — otherwise rasterize_geometry maps the
+        # polygon outside the 500x500 grid and the mask is empty.
+        from rasterio.transform import from_bounds
+
+        transform = from_bounds(
+            bbox[0], bbox[1], bbox[2], bbox[3], raster_data.shape[1], raster_data.shape[0]
+        )
+        src_crs = "EPSG:4326"
         # NLCD uses 127 or 255 as nodata for imperviousness
         if nodata is None:
             nodata = 255.0

@@ -46,6 +46,10 @@ class HREAConnector(STACMixin, BaseConnector):
     display_name = "HREA Electricity Access"
     base_url = STAC_URL
     protocol = "stac_cog"
+    # Electricity-access indicators are nodata over unpopulated land, and the
+    # tiles are per-country COGs. Pin Dodoma so the check lands inside the
+    # HREA_Tanzania tile (the item picked for East Africa) over a lit settlement.
+    health_anchor = (35.74, -6.16)
 
     async def list_datasets(self) -> list[Dataset]:
         return [Dataset(
