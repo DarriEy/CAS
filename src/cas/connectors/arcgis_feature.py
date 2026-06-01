@@ -4,10 +4,13 @@
 
 A companion to ``wfs_vector`` (which serves *categorical* class distributions from WFS/GML).
 This module adds CAS's second vector path: a thin ArcGIS REST ``/query`` -> GeoJSON ->
-shapely-overlay reader for sources whose attribute of interest is a *numeric value carried by
-a polygon feature* — a basin's upstream drainage area, a lake's mean depth. The aggregation is
-therefore **continuous** (area-weighted mean over the query geometry / value-at-point), not the
-categorical distribution that ``wfs_vector`` returns.
+shapely reader for sources whose attribute of interest is a *numeric value carried by a feature*.
+Two aggregation modes:
+
+  - ``polygon`` (basins, lakes): **continuous** area-weighted mean over the query geometry /
+    value-at-point — a basin's upstream drainage area, a lake's mean depth.
+  - ``line_nearest`` (rivers): the value of the nearest/dominant (max) **linestring** near the
+    query — a river's average discharge ("the main river here").
 
 Why ArcGIS REST: the HydroSHEDS family (the obvious hydrology fill for CAS) has no live global
 OGC endpoint — it is download-only, which a no-storage passthrough service cannot use. The only
@@ -15,9 +18,7 @@ live, bbox-queryable mirrors are third-party ArcGIS FeatureServer/MapServer endp
 **regional clips**, not global; each connector's ``bbox`` reflects the true service extent
 honestly, and a query outside it returns MISSING (never a fabricated value).
 
-Deliberately minimal: polygon layers only. HydroRIVERS (linestrings) need a nearest-feature
-aggregation and are intentionally left to a follow-up. Generalize the config surface when a
-non-HydroSHEDS source actually lands.
+Generalize the config surface when a non-HydroSHEDS source actually lands.
 """
 
 from __future__ import annotations
@@ -55,8 +56,8 @@ def _parse_geojson_features(payload: dict, field: str):
     """Yield (shapely geometry, float value) for each GeoJSON feature with a numeric ``field``.
 
     ArcGIS ``f=geojson`` returns a standard FeatureCollection, so shapely parses the geometry
-    directly. Features whose attribute is null or non-numeric are skipped — they cannot
-    contribute to a continuous mean.
+    directly (polygons for basins/lakes, linestrings for rivers). Features whose attribute is
+    null or non-numeric are skipped — they cannot contribute to a numeric aggregate.
     """
     from shapely.geometry import shape as shapely_shape
 
@@ -83,6 +84,58 @@ def _parse_geojson_features(payload: dict, field: str):
     return out
 
 
+def _aggregate_polygon_mean(features, query, is_point: bool) -> tuple[float | None, float, int]:
+    """Continuous polygon aggregation -> (value, coverage_fraction, feature_hits).
+
+    Point -> the value of the covering polygon. Polygon -> the area-weighted mean of the
+    per-feature values over the query geometry (planar degree² area is fine for one small query:
+    the latitude scale factor cancels in the per-feature weights).
+    """
+    if is_point:
+        for geom, val in features:
+            if geom.covers(query):
+                return val, 1.0, 1
+        return None, 0.0, 0
+
+    query_area = query.area
+    weighted = 0.0
+    covered = 0.0
+    hits = 0
+    for geom, val in features:
+        if not geom.intersects(query):
+            continue
+        inter = geom.intersection(query).area
+        if inter <= 0:
+            continue
+        weighted += val * inter
+        covered += inter
+        hits += 1
+    if covered <= 0:
+        return None, 0.0, 0
+    coverage = max(0.0, min(1.0, covered / query_area)) if query_area else 0.0
+    return weighted / covered, coverage, hits
+
+
+def _aggregate_line_nearest(
+    features, query, is_point: bool, buffer_deg: float
+) -> tuple[float | None, float, int]:
+    """River (linestring) aggregation -> (value, coverage_fraction, river_hits).
+
+    Returns the value of the *dominant* (maximum) river near the query — the natural answer to
+    "what's the main river here". The query (point or polygon) reaches ``buffer_deg`` (~5km) so a
+    point snaps to a nearby river and a catchment whose outlet river skirts its edge still finds
+    it. No river in range -> MISSING (honest: this network carries only major rivers, so
+    headwaters legitimately have none). ``is_point`` is accepted for signature symmetry with the
+    polygon aggregator; the buffer applies to both.
+    """
+    _ = is_point
+    search_area = query.buffer(buffer_deg)
+    candidates = [val for geom, val in features if geom.intersects(search_area)]
+    if not candidates:
+        return None, 0.0, 0
+    return max(candidates), 1.0, len(candidates)
+
+
 @dataclass
 class ArcGISFeatureConfig:
     slug: str
@@ -96,6 +149,12 @@ class ArcGISFeatureConfig:
     category: str = "hydrology"
     license: str = "Open"
     citation: str = ""
+    # "polygon": area-weighted mean / value-at-point (basins, lakes).
+    # "line_nearest": discharge of the dominant (max) river near the query (rivers).
+    geometry_mode: str = "polygon"
+    # line_nearest only: how far (degrees) a point reaches to snap to a nearby river (~0.05°≈5km),
+    # and the amount the service-query envelope is widened so those rivers are actually fetched.
+    search_buffer_deg: float = 0.05
     # MapServer rejects resultRecordCount ("Pagination is not supported"); FeatureServer accepts it.
     supports_pagination: bool = True
     max_record_count: int = 2000
@@ -148,6 +207,12 @@ class ArcGISFeatureConnector(BaseConnector):
         min_lon, min_lat, max_lon, max_lat = geometry_to_bbox(geometry)
         layer = self._select_layer(min_lon, min_lat, max_lon, max_lat)
 
+        # In line-nearest mode the geometry's own envelope (≈100m for a point) is too tight to
+        # fetch a river a few km away, so widen the service query envelope by the search buffer.
+        if cfg.geometry_mode == "line_nearest":
+            buf = cfg.search_buffer_deg
+            min_lon, min_lat, max_lon, max_lat = (min_lon - buf, min_lat - buf, max_lon + buf, max_lat + buf)
+
         params = {
             "where": "1=1",
             "geometry": f"{min_lon},{min_lat},{max_lon},{max_lat}",
@@ -189,38 +254,19 @@ class ArcGISFeatureConnector(BaseConnector):
         features = _parse_geojson_features(payload, cfg.attribute_field)
         query = shapely_shape(geometry.model_dump())
 
-        # Continuous aggregation. Point -> the value of the covering polygon. Polygon -> the
-        # area-weighted mean of the per-feature values over the query geometry (planar degree²
-        # area is fine for one small query: the latitude scale factor cancels in the weights).
-        value: float | None = None
-        coverage = 0.0
-        hits = 0
-        if geometry.is_point:
-            for geom, val in features:
-                if geom.covers(query):
-                    value = val
-                    coverage = 1.0
-                    hits = 1
-                    break
+        if cfg.geometry_mode == "line_nearest":
+            value, coverage, hits = _aggregate_line_nearest(
+                features, query, geometry.is_point, cfg.search_buffer_deg
+            )
+            aggregation = AggregationMethod.MAX
+            agg_label = "max discharge of nearest/dominant river"
         else:
-            query_area = query.area
-            weighted = 0.0
-            covered = 0.0
-            for geom, val in features:
-                if not geom.intersects(query):
-                    continue
-                inter = geom.intersection(query).area
-                if inter <= 0:
-                    continue
-                weighted += val * inter
-                covered += inter
-                hits += 1
-            if covered > 0:
-                value = weighted / covered
-                coverage = max(0.0, min(1.0, covered / query_area)) if query_area else 0.0
+            value, coverage, hits = _aggregate_polygon_mean(features, query, geometry.is_point)
+            aggregation = AggregationMethod.MEAN
+            agg_label = "area-weighted mean"
 
         elapsed_ms = int((time.monotonic() - start) * 1000)
-        provenance = f"ArcGIS REST: layer {layer}.{cfg.attribute_field}"
+        provenance = f"ArcGIS REST: layer {layer}.{cfg.attribute_field} ({agg_label})"
 
         if value is None:
             return AttributeResult(
@@ -228,7 +274,7 @@ class ArcGISFeatureConnector(BaseConnector):
                 variable=cfg.variable.name,
                 value=None,
                 units=cfg.variable.units,
-                aggregation=AggregationMethod.MEAN,
+                aggregation=aggregation,
                 quality=QualityFlag.MISSING,
                 coverage_fraction=0.0,
                 pixel_count=0,
@@ -243,7 +289,7 @@ class ArcGISFeatureConnector(BaseConnector):
             variable=cfg.variable.name,
             value=round(value, 4),
             units=cfg.variable.units,
-            aggregation=AggregationMethod.MEAN,
+            aggregation=aggregation,
             quality=quality,
             coverage_fraction=coverage,
             pixel_count=hits,
@@ -328,4 +374,46 @@ class HydroLakesConnector(ArcGISFeatureConnector):
         citation="Messager et al. (2016), HydroLAKES v1.0 — HydroSHEDS; via public ArcGIS FeatureServer mirror",
         supports_pagination=True,
         health_anchor=(50.5, 41.0),  # southern Caspian Sea
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  HydroRIVERS — WWF HydroSHEDS river network (linestrings)
+# ═══════════════════════════════════════════════════════════════════════
+
+# CAS's first *linestring* path. Rivers are lines, not areas, so the aggregation is
+# nearest/dominant-feature (line_nearest), not area overlay: it returns DIS_AV_CMS — the average
+# discharge (m³/s) — of the largest river near the query (the natural "main river here" answer).
+# This South-America service is the broadest live HydroRIVERS mirror (continent-spanning), but
+# it carries only the level-6+ drainage network (major rivers); headwater points legitimately
+# return MISSING. Complements the Americas `hydrobasins` tenant.
+@register("hydrorivers")
+class HydroRiversConnector(ArcGISFeatureConnector):
+    slug = "hydrorivers"
+    display_name = "HydroRIVERS average discharge (South America)"
+    base_url = "https://services5.arcgis.com/Lw3jWlmYzUzOr2jO/arcgis/rest/services/HydroSHEDS/FeatureServer"
+    protocol = "rest"
+    _config = ArcGISFeatureConfig(
+        slug="hydrorivers",
+        display_name="HydroRIVERS — Average Discharge, Nearest/Main River (South America)",
+        service_url="https://services5.arcgis.com/Lw3jWlmYzUzOr2jO/arcgis/rest/services/HydroSHEDS/FeatureServer",
+        layers=[17],  # "Red drenaje Nivel 6+" — HydroRIVERS level-6+ network
+        attribute_field="DIS_AV_CMS",
+        variable=Variable(
+            name="river_discharge",
+            units="m3/s",
+            data_type=DataType.CONTINUOUS,
+            description="HydroRIVERS average long-term discharge (DIS_AV_CMS) of the nearest/dominant major river",
+            valid_range=(0.0, 250000.0),  # Amazon mean ≈ 200k m³/s
+        ),
+        resolution_m=500,
+        category="hydrology",
+        geometry_mode="line_nearest",
+        search_buffer_deg=0.05,  # ~5km snap radius for point queries
+        # True extent = the South-America clip hosted by this service; query outside -> MISSING.
+        bbox=BoundingBox(min_lon=-80.0, min_lat=-52.0, max_lon=-34.0, max_lat=12.0),
+        license="HydroSHEDS / WWF (free for scientific, educational, commercial use; attribution)",
+        citation="Lehner, B. & Grill, G. (2013), HydroRIVERS — HydroSHEDS; via public ArcGIS FeatureServer mirror",
+        supports_pagination=True,
+        health_anchor=(-60.0, -3.1),  # Amazon main stem near Manaus
     )

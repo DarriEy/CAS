@@ -16,12 +16,14 @@ import respx
 from cas.connectors.arcgis_feature import (
     HydroBasinsConnector,
     HydroLakesConnector,
+    HydroRiversConnector,
     _parse_geojson_features,
 )
 from cas.core.models import Geometry, QualityFlag
 
 BASINS_BASE = "https://imapinvasives.natureserve.org/arcgis/rest/services/hydrobasins/MapServer"
 LAKES_BASE = "https://services8.arcgis.com/GyR85gR88mMqIY4t/arcgis/rest/services/HydroLAKES_v10/FeatureServer"
+RIVERS_BASE = "https://services5.arcgis.com/Lw3jWlmYzUzOr2jO/arcgis/rest/services/HydroSHEDS/FeatureServer"
 
 
 def _square(lon0: float, lat0: float, lon1: float, lat1: float) -> list:
@@ -36,6 +38,19 @@ def _fc(*features: tuple[list, dict]) -> bytes:
             "features": [
                 {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": ring}, "properties": props}
                 for ring, props in features
+            ],
+        }
+    ).encode()
+
+
+def _line_fc(*features: tuple[list, dict]) -> bytes:
+    """A GeoJSON FeatureCollection of LineStrings: ((coords), props)."""
+    return json.dumps(
+        {
+            "type": "FeatureCollection",
+            "features": [
+                {"type": "Feature", "geometry": {"type": "LineString", "coordinates": coords}, "properties": props}
+                for coords, props in features
             ],
         }
     ).encode()
@@ -167,3 +182,52 @@ class TestHydroLakesConnector:
             r = await conn.extract("hydrolakes:lake_depth", point)
         assert r.value is None
         assert r.quality == QualityFlag.MISSING
+
+
+class TestHydroRiversConnector:
+    # A big river (discharge 1000) and a small tributary (discharge 5), both crossing the point.
+    TWO_RIVERS = _line_fc(
+        ([[-60.1, -3.0], [-59.9, -3.0]], {"DIS_AV_CMS": 1000.0}),
+        ([[-60.0, -3.1], [-60.0, -2.9]], {"DIS_AV_CMS": 5.0}),
+    )
+
+    @pytest.mark.asyncio
+    async def test_list_datasets_is_line_mode(self):
+        async with HydroRiversConnector() as conn:
+            datasets = await conn.list_datasets()
+        assert datasets[0].provider == "hydrorivers"
+        assert datasets[0].variables[0].name == "river_discharge"
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_point_returns_dominant_river_discharge(self):
+        respx.get(f"{RIVERS_BASE}/17/query").mock(return_value=httpx.Response(200, content=self.TWO_RIVERS))
+        point = Geometry(type="Point", coordinates=[-60.0, -3.0])  # both rivers within 5km buffer
+        async with HydroRiversConnector() as conn:
+            r = await conn.extract("hydrorivers:river_discharge", point)
+        assert r.aggregation.value == "max"  # dominant (largest) river
+        assert r.value == pytest.approx(1000.0)
+        assert r.pixel_count == 2
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_request_envelope_widened_by_search_buffer(self):
+        route = respx.get(f"{RIVERS_BASE}/17/query").mock(return_value=httpx.Response(200, content=self.TWO_RIVERS))
+        async with HydroRiversConnector() as conn:
+            await conn.extract("hydrorivers:river_discharge", Geometry(type="Point", coordinates=[-60.0, -3.0]))
+        # geometry_to_bbox gives a ~100m point box; line mode must widen it by ~0.05° so nearby
+        # rivers are actually fetched. Parse the xmin from the geometry envelope param.
+        geom_param = route.calls.last.request.url.params["geometry"]
+        xmin = float(geom_param.split(",")[0])
+        assert xmin < -60.0 - 0.04  # widened well beyond the bare point envelope
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_no_river_in_range_is_missing(self):
+        respx.get(f"{RIVERS_BASE}/17/query").mock(return_value=httpx.Response(200, content=_line_fc()))
+        point = Geometry(type="Point", coordinates=[-55.0, -10.0])  # headwaters: no level-6+ river
+        async with HydroRiversConnector() as conn:
+            r = await conn.extract("hydrorivers:river_discharge", point)
+        assert r.value is None
+        assert r.quality == QualityFlag.MISSING
+        assert r.coverage_fraction == 0.0

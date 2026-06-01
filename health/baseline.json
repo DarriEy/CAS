@@ -1,12 +1,12 @@
 {
   "generated_at": "2026-06-01T01:25:02.226272+00:00",
   "summary": {
-    "healthy": 212,
+    "healthy": 213,
     "degraded": 0,
     "auth_gated": 12,
     "down": 0,
     "unknown": 0,
-    "total": 224
+    "total": 225
   },
   "providers": [
     {
@@ -847,6 +847,14 @@
       "response_time_ms": 1745,
       "datasets_available": 1,
       "test_value": 200.5,
+      "error": null
+    },
+    {
+      "provider": "hydrorivers",
+      "status": "healthy",
+      "response_time_ms": 735,
+      "datasets_available": 1,
+      "test_value": 29613.148,
       "error": null
     },
     {
