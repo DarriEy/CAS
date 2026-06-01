@@ -22,7 +22,9 @@ def test_snapshot_dict_counts_and_shape():
                           datasets_available=2, test_value=1.5),
     ]
     snap = snapshot_dict(results, generated_at=now)
-    assert snap["summary"] == {"healthy": 1, "degraded": 1, "unknown": 0, "down": 0, "total": 2}
+    assert snap["summary"] == {
+        "healthy": 1, "degraded": 1, "auth_gated": 0, "down": 0, "unknown": 0, "total": 2,
+    }
     # providers sorted by name for stable diffs
     assert [p["provider"] for p in snap["providers"]] == ["a", "b"]
     assert snap["providers"][0]["test_value"] == 1.5
@@ -45,7 +47,7 @@ def test_honest_degraded_does_not_alert():
 
 
 def test_auth_gated_stays_quiet():
-    cmp = compare(_snap({"finland_dem": "unknown"}), _snap({"finland_dem": "unknown"}))
+    cmp = compare(_snap({"finland_dem": "auth_gated"}), _snap({"finland_dem": "auth_gated"}))
     assert not cmp.has_regressions
 
 

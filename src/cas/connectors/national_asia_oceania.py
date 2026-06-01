@@ -98,6 +98,9 @@ class AustraliaWaterObsConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=112, min_lat=-44, max_lon=154, max_lat=-10),
         license="CC-BY 4.0", citation="DEA, Water Observations from Space",
         crs="EPSG:3577",
+        # Water frequency is 0/nodata over dry land. Pin a large permanent
+        # reservoir (Lake Argyle, WA) so the check samples real water observations.
+        health_anchor=(128.74, -16.11),
     )
 
 
@@ -262,7 +265,21 @@ class NigeriaLCConnector(NationalWCSConnector):
     )
 
 
-@register("indonesia_lc")
+# Disabled: geoportal.menlhk.go.id is a fused-cache-only ArcGIS MapServer with no
+# passthrough-usable raster path. Verified 2026-05-31 (host reachable):
+#   - WCSServer  -> HTTP 400 ArcGIS error (no WCS).
+#   - WMSServer  -> HTTP 400 ArcGIS error (no WMS).
+#   - REST /export -> HTTP 200 but renders a BLANK image over interior land
+#     (Java/Sumatra/Kalimantan): "singleFusedMapCache":true with "layers":[],
+#     so dynamic export has nothing to draw. This is why the base connector's
+#     exportImage fallback yielded value=None / coverage=0 / quality=missing.
+# The land cover only exists as pre-rendered RGB symbology tiles
+# (/MapServer/tile/{z}/{y}/{x}, levels 0..~12, 404 above) — cartographic colors,
+# not categorical class values, and unrecoverable without an unpublished
+# color->class table. No path the NationalWCSConnector base supports returns
+# real data, so re-enabling requires a different source for Indonesian LC
+# (e.g. MapBiomas Indonesia already covers this region — see PR #5).
+# @register("indonesia_lc")
 class IndonesiaLCConnector(NationalWCSConnector):
     slug = "indonesia_lc"
     display_name = "Indonesia Land Cover (KLHK)"
@@ -278,6 +295,9 @@ class IndonesiaLCConnector(NationalWCSConnector):
         resolution_m=30, category="land_cover",
         bbox=BoundingBox(min_lon=95, min_lat=-11, max_lon=141, max_lat=6),
         license="Open (KLHK)", citation="KLHK, Peta Penutupan Lahan Indonesia",
+        # bbox centroid falls in the sea between islands. Pin interior Kalimantan
+        # (Borneo) so the check samples land rather than nodata ocean.
+        health_anchor=(113.9, -1.5),
     )
 
 

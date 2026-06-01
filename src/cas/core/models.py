@@ -58,7 +58,8 @@ class ProviderStatus(StrEnum):
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     DOWN = "down"
-    UNKNOWN = "unknown"
+    AUTH_GATED = "auth_gated"  # service exists but needs credentials we don't have
+    UNKNOWN = "unknown"  # genuinely unclassified — should be empty in a clean baseline
 
 
 # ── Dataset Metadata ────────────────────────────────────────────────

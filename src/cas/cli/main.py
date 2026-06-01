@@ -278,24 +278,27 @@ def health(slug, strict, json_path):
                     f.write(snapshot + "\n")
                 click.echo(f"  Snapshot written to {json_path}", err=True)
 
-        healthy = degraded = down = auth = 0
+        healthy = degraded = down = auth = unknown = 0
         failures = []
         for r in sorted(results, key=lambda r: r.provider):
             status_icon = {
                 "healthy": "OK  ",
                 "degraded": "WARN",
                 "down": "FAIL",
-                "unknown": "AUTH",
-            }[r.status]
+                "auth_gated": "AUTH",
+                "unknown": "UNKN",
+            }.get(r.status, "UNKN")
             if r.status == "healthy":
                 healthy += 1
             elif r.status == "degraded":
                 degraded += 1
-            elif r.status == "unknown":
+            elif r.status == "auth_gated":
                 auth += 1
-            else:
+            elif r.status == "down":
                 down += 1
                 failures.append(r)
+            else:
+                unknown += 1
             line = (
                 f"  [{status_icon}] {r.provider:30s}  "
                 f"{r.response_time_ms or 0:>6d}ms  "
@@ -305,9 +308,10 @@ def health(slug, strict, json_path):
                 line += f"  ERROR: {r.error}"
             click.echo(line)
 
-        total = healthy + degraded + down + auth
+        total = healthy + degraded + down + auth + unknown
         click.echo(f"\n  {total} providers: {healthy} healthy, "
-                    f"{degraded} degraded, {auth} auth-gated, {down} down")
+                    f"{degraded} degraded, {auth} auth-gated, {down} down"
+                    + (f", {unknown} unknown" if unknown else ""))
 
         if strict and failures:
             click.echo("\nDown providers:", err=True)

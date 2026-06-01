@@ -109,6 +109,10 @@ class MapBiomasBrazilConnector(STACMixin, BaseConnector):
     display_name = "MapBiomas Brazil LULC 30m"
     base_url = "https://storage.googleapis.com/mapbiomas-public"
     protocol = "stac_cog"
+    # The bbox spans into Argentina/Paraguay where MapBiomas-Brazil has no data
+    # (pixel 0), so the default land anchor lands on nodata. Pin Brasília so the
+    # health check samples real Brazilian land cover.
+    health_anchor = (-47.9, -15.8)
 
     async def list_datasets(self) -> list[Dataset]:
         return [

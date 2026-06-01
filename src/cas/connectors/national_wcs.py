@@ -510,6 +510,9 @@ class PermafrostConnector(NationalWCSConnector):
         bbox=BoundingBox(min_lon=-180, min_lat=-90, max_lon=180, max_lat=90),
         license="Open",
         citation="Obu et al. 2019, Global Permafrost Zonation Index",
+        # Permafrost index is ~0/nodata over temperate anchors. Pin continuous
+        # permafrost in northern Yakutia (Siberia) so the check samples real data.
+        health_anchor=(129.0, 67.5),
     )
 
 
