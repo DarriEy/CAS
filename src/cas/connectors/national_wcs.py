@@ -80,6 +80,9 @@ class NationalDatasetConfig:
     # land anchor — for layers whose data only exists in narrow locations
     # (e.g. mangroves on coastlines) where the default anchor lands on nodata.
     health_anchor: tuple[float, float] | None = None
+    # Optional mapping of RGB(A) tuples to categorical integer values.
+    # Used for connectors that only provide pre-rendered symbology images.
+    color_map: dict[tuple[int, int, int], int] | None = None
 
 
 _RETRYABLE_STATUS = (500, 502, 503, 504)
@@ -145,6 +148,7 @@ def _parse_wms_image(
     data: bytes,
     bbox: tuple[float, float, float, float],
     crs: str = "EPSG:4326",
+    color_map: dict[tuple[int, int, int], int] | None = None,
 ):
     """Convert a WMS GetMap PNG/JPEG response to raster array + transform."""
     from io import BytesIO
@@ -155,14 +159,33 @@ def _parse_wms_image(
 
     img = Image.open(BytesIO(data))
     arr = np.array(img)
-    if arr.ndim == 3:
+    nodata = 0
+
+    if color_map:
+        # Ensure we are working with RGB bytes even if the input was indexed or RGBA.
+        img_rgb = img.convert("RGB")
+        arr_rgb = np.array(img_rgb)
+        h, w, _ = arr_rgb.shape
+        # Default to 65535 (nodata) to avoid collision with low-integer classes.
+        out = np.full((h, w), 65535, dtype=np.uint16)
+        nodata = 65535
+
+        # Map colors from the config to their categorical values.
+        for color, val in color_map.items():
+            target = np.array(color, dtype=np.uint8)
+            mask = np.all(arr_rgb == target, axis=-1)
+            out[mask] = val
+        arr = out
+    elif arr.ndim == 3:
+        # Default: just take the first band (e.g. for greyscale GeoTIFFs served as PNG).
         arr = arr[:, :, 0]
+
     # The transform is built from the request bbox, which is always EPSG:4326
     # degrees in this codebase — so the raster's CRS is 4326 regardless of the
     # layer's native `crs`. Returning `crs` here would make rasterize_geometry
     # reproject the geometry into metres against a degree transform (empty mask).
     transform = from_bounds(bbox[0], bbox[1], bbox[2], bbox[3], arr.shape[1], arr.shape[0])
-    return arr, transform, 0, "EPSG:4326"
+    return arr, transform, nodata, "EPSG:4326"
 
 
 class NationalWCSConnector(BaseConnector):
@@ -393,6 +416,7 @@ class NationalWCSConnector(BaseConnector):
                 raster_bytes,
                 bbox,
                 cfg.crs,
+                cfg.color_map,
             )
         else:
             raster_data, transform, nodata, src_crs = parse_geotiff(raster_bytes)

@@ -2522,7 +2522,7 @@ class NetherlandsNatura2000Connector(NationalWCSConnector):
 # is no value-raster / WCS coverage, so zonal extraction would return meaningless
 # RGB bytes — same unservable pattern as taiwan_dem / indonesia_lc. Re-enable only
 # if NVE publishes a coded value raster or a queryable coverage.
-# @register("norway_avalanche")
+@register("norway_avalanche")
 class NorwayAvalancheConnector(NationalWCSConnector):
     slug = "norway_avalanche"
     display_name = "Norway Snow Avalanche Zones (NVE)"
@@ -2532,15 +2532,21 @@ class NorwayAvalancheConnector(NationalWCSConnector):
         slug="norway_avalanche",
         display_name="Norway Snow Avalanche Susceptibility (NVE)",
         wcs_url="https://gis3.nve.no/map/rest/services/SnoskredAktsomhet/MapServer/WMSServer",
-        coverage_id="0",
+        coverage_id="0,1,2,3",
         variable=Variable(name="avalanche_risk", units="class", data_type=DataType.CATEGORICAL,
-                          description="Snow avalanche susceptibility zones"),
+                          description="Snow avalanche susceptibility zones (1: Caution area)"),
         resolution_m=25, category="cryosphere",
         bbox=BoundingBox(min_lon=4.5, min_lat=57.9, max_lon=31.2, max_lat=71.2),
         license="NLOD (Norway)", citation="NVE, Snøskred Aktsomhet",
         # Avalanche zones exist only in steep terrain; the Oslo land anchor is flat.
-        # Pin the Romsdalen fjord/mountain area (Åndalsnes) where zones are mapped.
-        health_anchor=(7.69, 62.56),
+        # Pin the Loen area (Nordfjord) which has extensive mapping.
+        health_anchor=(6.85, 61.87),
+        # Map RGBA symbology back to class values.
+        color_map={
+            (255, 127, 127): 1,  # Aktsomhetsområde (Light red/Pink)
+            (220, 50, 32): 1,    # S3 Aktsomhetsområde (Red)
+            (204, 121, 167): 1,  # S2 Aktsomhetsområde (Magenta)
+        },
     )
 
 
@@ -2550,7 +2556,7 @@ class NorwayAvalancheConnector(NationalWCSConnector):
 # WCS coverage exists, so zonal extraction can't recover class values. Same
 # unservable pattern as taiwan_dem / indonesia_lc. Re-enable only with a real
 # value raster or queryable coverage.
-# @register("norway_landslide")
+@register("norway_landslide")
 class NorwayLandslideConnector(NationalWCSConnector):
     slug = "norway_landslide"
     display_name = "Norway Landslide Hazard (NVE)"
@@ -2560,15 +2566,27 @@ class NorwayLandslideConnector(NationalWCSConnector):
         slug="norway_landslide",
         display_name="Norway Landslide Hazard Zones (NVE)",
         wcs_url="https://gis3.nve.no/map/rest/services/Skredfaresoner3/MapServer/WMSServer",
-        coverage_id="0",
+        coverage_id="5",
         variable=Variable(name="landslide_hazard", units="class", data_type=DataType.CATEGORICAL,
-                          description="Landslide hazard zones (rockfall, debris flow, clay slides)"),
+                          description="Landslide hazard zones (100: 1/100yr, 1000: 1/1000yr, 5000: 1/5000yr)"),
         resolution_m=25, category="geology",
         bbox=BoundingBox(min_lon=4.5, min_lat=57.9, max_lon=31.2, max_lat=71.2),
         license="NLOD (Norway)", citation="NVE, Skredfaresoner",
         # Landslide hazard zones are mapped around steep-terrain settlements.
-        # Pin the Romsdalen fjord/mountain area (Åndalsnes) rather than flat Oslo.
-        health_anchor=(7.69, 62.56),
+        # Pin the Loen area (Nordfjord) which has extensive mapping.
+        health_anchor=(6.85, 61.87),
+        # Map RGBA symbology back to class values.
+        color_map={
+            (168, 0, 0): 100,    # 1/100 year
+            (255, 85, 0): 1000,   # 1/1000 year
+            (255, 170, 0): 5000,  # 1/5000 year
+            (169, 0, 230): 1,     # Influence area (Pavirkningsomrade)
+            (230, 0, 169): 1,     # Influence area (Pink variant)
+            (203, 0, 149): 1,     # Influence area (Pink variant)
+            (217, 0, 187): 1,     # Influence area (Pink variant)
+            (125, 0, 171): 1,     # Influence area (Purple variant)
+            (149, 0, 203): 1,     # Influence area (Purple variant)
+        },
     )
 
 

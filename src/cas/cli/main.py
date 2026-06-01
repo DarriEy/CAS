@@ -345,3 +345,7 @@ def health_compare(baseline, current, fail_on_regression):
 
     if fail_on_regression and cmp.has_regressions:
         raise SystemExit(1)
+
+
+if __name__ == "__main__":
+    cli()
