@@ -157,6 +157,7 @@ class AttributeResult(BaseModel):
     provider: str
     elapsed_ms: int = 0
     provenance: str = ""
+    valid_range: tuple[float, float] | None = None
 
 
 class AttributeResponse(BaseModel):

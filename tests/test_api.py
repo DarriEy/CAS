@@ -184,6 +184,56 @@ class TestCatalog:
         assert body["offset"] == 1
         assert body["datasets"][0]["id"] == "p:ds1"
 
+    def test_datasets_filtering(self):
+        from cas.core.models import TemporalType
+
+        ds1 = Dataset(
+            id="p:clay", provider="p", name="Clay",
+            variables=[Variable(name="clay", units="m")], resolution_m=30,
+            bbox=BoundingBox(min_lon=-10, min_lat=-10, max_lon=-5, max_lat=-5),
+            temporal=TemporalExtent(temporal_type=TemporalType.STATIC),
+            protocol=Protocol.WCS,
+        )
+        ds2 = Dataset(
+            id="p:temp", provider="p", name="Temp",
+            variables=[Variable(name="temp", units="C")], resolution_m=1000,
+            bbox=BoundingBox(min_lon=0, min_lat=0, max_lon=10, max_lat=10),
+            temporal=TemporalExtent(temporal_type=TemporalType.MONTHLY),
+            protocol=Protocol.WCS,
+        )
+
+        async def fake_datasets_for(slug):
+            return [ds1, ds2]
+
+        with (
+            patch("cas.api.app.list_providers", return_value=["p"]),
+            patch("cas.api.app._datasets_for", side_effect=fake_datasets_for),
+            TestClient(create_app()) as client,
+        ):
+            # 1. Filter by variable
+            r = client.get("/api/v1/datasets?variable=clay")
+            assert r.json()["total"] == 1
+            assert r.json()["datasets"][0]["id"] == "p:clay"
+
+            # 2. Filter by resolution
+            r = client.get("/api/v1/datasets?max_resolution=50")
+            assert r.json()["total"] == 1
+            assert r.json()["datasets"][0]["id"] == "p:clay"
+
+            # 3. Filter by temporal_type
+            r = client.get("/api/v1/datasets?temporal_type=monthly")
+            assert r.json()["total"] == 1
+            assert r.json()["datasets"][0]["id"] == "p:temp"
+
+            # 4. Filter by bbox (intersects ds2, misses ds1)
+            r = client.get("/api/v1/datasets?bbox=5,5,15,15")
+            assert r.json()["total"] == 1
+            assert r.json()["datasets"][0]["id"] == "p:temp"
+
+            # 5. Filter by bbox (misses both)
+            r = client.get("/api/v1/datasets?bbox=50,50,60,60")
+            assert r.json()["total"] == 0
+
 
 class TestOps:
     def test_health(self):

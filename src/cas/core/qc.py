@@ -65,6 +65,18 @@ def validate_result(result: AttributeResult) -> list[str]:
 
 
 def _check_range(result: AttributeResult, warnings: list[str]) -> None:
+    # 1. Use metadata-driven range if available
+    if result.valid_range:
+        vmin, vmax = result.valid_range
+        if result.value < vmin or result.value > vmax:  # type: ignore[operator]
+            result.quality = QualityFlag.SUSPECT
+            warnings.append(
+                f"{result.dataset_id}: value {result.value} outside "
+                f"expected range [{vmin}, {vmax}] (metadata-driven)"
+            )
+        return
+
+    # 2. Fall back to global defaults by variable prefix
     variable_lower = result.variable.lower()
     for var_prefix, (vmin, vmax) in VALID_RANGES.items():
         if variable_lower.startswith(var_prefix):

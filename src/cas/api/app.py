@@ -23,6 +23,7 @@ from cas.core.models import (
     ProviderDetail,
     ProviderListResponse,
     ProviderSummary,
+    TemporalType,
 )
 from cas.core.registry import discover, get_connector, list_providers
 
@@ -104,25 +105,60 @@ def create_app() -> FastAPI:
         "/api/v1/datasets",
         response_model=DatasetListResponse,
         tags=["catalog"],
-        summary="List available datasets (paginated)",
+        summary="List available datasets (paginated and filtered)",
         dependencies=secured,
     )
     async def get_datasets(
         provider: str | None = None,
+        variable: str | None = None,
+        temporal_type: TemporalType | None = None,
+        min_resolution: float | None = None,
+        max_resolution: float | None = None,
+        bbox: str | None = Query(None, pattern=r"^-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?$"),
         limit: int = Query(100, ge=1, le=1000),
         offset: int = Query(0, ge=0),
     ):
         slugs = [provider] if provider else list_providers()
-        all_datasets: list[dict] = []
+        all_datasets: list[Dataset] = []
         for slug in slugs:
-            all_datasets.extend(ds.model_dump() for ds in await _datasets_for(slug))
-        page = all_datasets[offset : offset + limit]
+            all_datasets.extend(await _datasets_for(slug))
+
+        # Filtering
+        filtered = all_datasets
+        if variable:
+            var_lower = variable.lower()
+            filtered = [
+                ds for ds in filtered
+                if any(v.name.lower() == var_lower for v in ds.variables)
+            ]
+        if temporal_type:
+            filtered = [ds for ds in filtered if ds.temporal.temporal_type == temporal_type]
+        if min_resolution is not None:
+            filtered = [ds for ds in filtered if ds.resolution_m >= min_resolution]
+        if max_resolution is not None:
+            filtered = [ds for ds in filtered if ds.resolution_m <= max_resolution]
+        if bbox:
+            try:
+                min_lon, min_lat, max_lon, max_lat = map(float, bbox.split(","))
+                filtered = [
+                    ds for ds in filtered
+                    if not (
+                        ds.bbox.max_lon < min_lon or
+                        ds.bbox.min_lon > max_lon or
+                        ds.bbox.max_lat < min_lat or
+                        ds.bbox.min_lat > max_lat
+                    )
+                ]
+            except ValueError:
+                pass  # Pattern validation should catch this, but safety first
+
+        page = filtered[offset : offset + limit]
         return {
-            "total": len(all_datasets),
+            "total": len(filtered),
             "limit": limit,
             "offset": offset,
             "count": len(page),
-            "datasets": page,
+            "datasets": [ds.model_dump() for ds in page],
         }
 
     def _provider_summary(slug: str) -> ProviderSummary | None:

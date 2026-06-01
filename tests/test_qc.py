@@ -72,6 +72,22 @@ class TestValidateResult:
         validate_result(result)
         assert result.quality == QualityFlag.SUSPECT
 
+    def test_metadata_driven_range_overrides_global(self):
+        # Global NDVI range is [-1, 1]. Let's provide a result with valid_range=[0, 10]
+        # and value=5. It should PASS.
+        result = _make_result(variable="ndvi", value=5.0, units="dimensionless")
+        result.valid_range = (0.0, 10.0)
+        warnings = validate_result(result)
+        assert warnings == []
+        assert result.quality == QualityFlag.GOOD
+
+    def test_metadata_driven_range_fails_correctly(self):
+        result = _make_result(variable="ndvi", value=15.0, units="dimensionless")
+        result.valid_range = (0.0, 10.0)
+        warnings = validate_result(result)
+        assert result.quality == QualityFlag.SUSPECT
+        assert "(metadata-driven)" in warnings[0]
+
 
 class TestCrossProviderConsistency:
     def test_consistent_values(self):

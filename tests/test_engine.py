@@ -207,3 +207,34 @@ class TestExtractEngine:
 
         assert len(response.results) == 0
         assert len(response.warnings) > 0
+
+    @pytest.mark.asyncio
+    async def test_result_metadata_enrichment(self, sample_geometry, mock_result):
+        """Engine should fill in valid_range from connector metadata if missing."""
+        from cas.core.models import Dataset, Variable
+
+        mock_ds = Dataset(
+            id="test_provider:test_var",
+            provider="test_provider",
+            name="Test",
+            variables=[Variable(name="test_var", units="m", valid_range=(0.0, 100.0))],
+            resolution_m=10,
+            bbox={"min_lon": -180, "min_lat": -90, "max_lon": 180, "max_lat": 90},
+            protocol="wcs",
+        )
+
+        mock_cls, mock_instance = _make_mock_connector(mock_result)
+        mock_instance.list_datasets = AsyncMock(return_value=[mock_ds])
+        mock_result.valid_range = None  # Ensure it's empty initially
+
+        with (
+            patch("cas.extract.engine.discover"),
+            patch("cas.extract.engine.get_connector", return_value=mock_cls),
+        ):
+            request = AttributeRequest(
+                geometry=sample_geometry,
+                dataset_ids=["test_provider:test_var"],
+            )
+            response = await extract(request)
+
+        assert response.results[0].valid_range == (0.0, 100.0)

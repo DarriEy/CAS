@@ -243,6 +243,21 @@ async def _extract_single(
                 time_range=request.time_range,
             )
             result.elapsed_ms = int((time.monotonic() - start) * 1000)
+
+            # Enrich result with metadata-driven valid_range if missing
+            if result.valid_range is None:
+                try:
+                    datasets = await conn.list_datasets()
+                    for ds in datasets:
+                        if ds.id == dataset_id:
+                            for var in ds.variables:
+                                if var.name == result.variable:
+                                    result.valid_range = var.valid_range
+                                    break
+                            break
+                except Exception:
+                    pass  # Catalog fetch failure shouldn't kill the extraction
+
             return result
     except ConnectorError:
         raise
