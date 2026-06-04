@@ -24,7 +24,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install -e ".[dev,stac]"
+        run: pip install -e ".[dev,stac,climate]"
 
       - name: Endpoint reachability check
         run: cas verify
@@ -51,14 +51,14 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install -e ".[dev,stac]"
+        run: pip install -e ".[dev,stac,climate]"
 
       - name: End-to-end extraction health check
-        # Lower concurrency than the default (12): heavy raster/zarr providers
-        # (terraclimate, ssurgo, australia_dem, ...) are healthy individually but
-        # read as down under egress saturation when the full sweep runs flat-out
-        # on a shared runner. Trading a little wall-clock for far fewer load
-        # false-positives.
+        # Lower concurrency than the default (12): heavy raster providers
+        # (ssurgo, ssurgo_hsg, australia_dem, sweden_soil, ...) are healthy
+        # individually but read as down under egress saturation when the full
+        # sweep runs flat-out on a shared runner. Trading a little wall-clock
+        # for far fewer load false-positives (observed: 7 down -> 1 at conc=6).
         run: cas health --concurrency 6 --json snapshot.json | tee health-output.txt
         timeout-minutes: 20
 
