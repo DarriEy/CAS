@@ -25,6 +25,7 @@ from __future__ import annotations
 import time
 
 import structlog
+from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 from cas.connectors.base import BaseConnector
 from cas.connectors.protocols.zarr_store import ZarrStoreMixin
@@ -46,6 +47,12 @@ from cas.core.models import (
 from cas.core.registry import register
 
 logger = structlog.get_logger(__name__)
+
+
+def _is_transient_open_error(exc: BaseException) -> bool:
+    """Retry a Zarr/STAC open on any error except the missing-extra config error."""
+    return not (isinstance(exc, RuntimeError) and "climate' extra" in str(exc))
+
 
 PC_CATALOG = "https://planetarycomputer.microsoft.com/api/stac/v1"
 TC_COLLECTION = "terraclimate"
@@ -127,8 +134,19 @@ class TerraClimateConnector(ZarrStoreMixin, BaseConnector):
         )
         return datasets
 
+    @retry(
+        retry=retry_if_exception(_is_transient_open_error),
+        wait=wait_exponential(multiplier=1, min=2, max=15),
+        stop=stop_after_attempt(3),
+        reraise=True,
+    )
     def _open_store(self):
-        """Resolve and open the signed TerraClimate Zarr datacube (blocking)."""
+        """Resolve and open the signed TerraClimate Zarr datacube (blocking).
+
+        The open is three sequential network steps (STAC client, collection
+        fetch, Zarr handshake); a transient blip on any of them is retried so a
+        slow upstream surfaces as a delayed success rather than a flaky DOWN.
+        """
         import planetary_computer
         import pystac_client
 
