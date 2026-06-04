@@ -34,9 +34,12 @@ jobs:
     # End-to-end extraction sweep: a real extract() per provider over a
     # coverage-derived test polygon (see cas.monitor.test_geometry). The run
     # is compared against the committed baseline (health/baseline.json); a
-    # provider doing *worse* than its baseline status is a regression, which
-    # fails the job and opens/updates a tracking issue. The honest-degraded
-    # and auth-gated providers are baked into the baseline, so they stay quiet.
+    # provider doing *worse* than its baseline status is a regression. To avoid
+    # red from transient upstream/runner blips (which flip a different handful
+    # of providers each run), the job only fails on *persistent* regressions —
+    # a provider broken in both this run and the previous one (health-history
+    # latest.json). The honest-degraded and auth-gated providers are baked into
+    # the baseline, so they stay quiet.
     runs-on: ubuntu-latest
 
     steps:
@@ -51,14 +54,36 @@ jobs:
         run: pip install -e ".[dev,stac]"
 
       - name: End-to-end extraction health check
-        run: cas health --json snapshot.json | tee health-output.txt
+        # Lower concurrency than the default (12): heavy raster/zarr providers
+        # (terraclimate, ssurgo, australia_dem, ...) are healthy individually but
+        # read as down under egress saturation when the full sweep runs flat-out
+        # on a shared runner. Trading a little wall-clock for far fewer load
+        # false-positives.
+        run: cas health --concurrency 6 --json snapshot.json | tee health-output.txt
         timeout-minutes: 20
+
+      - name: Fetch previous snapshot (for persistence gating)
+        id: prev
+        run: |
+          if git ls-remote --exit-code --heads origin health-history >/dev/null 2>&1 \
+             && git fetch --depth 1 origin health-history >/dev/null 2>&1 \
+             && git show FETCH_HEAD:latest.json > prev.json 2>/dev/null; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "Previous snapshot fetched from health-history."
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "No previous snapshot — first run gates on baseline alone."
+          fi
 
       - name: Compare against baseline
         id: compare
         run: |
           set +e
-          cas health-compare health/baseline.json snapshot.json | tee compare.txt
+          if [ "${{ steps.prev.outputs.available }}" = "true" ]; then
+            cas health-compare health/baseline.json snapshot.json --previous prev.json | tee compare.txt
+          else
+            cas health-compare health/baseline.json snapshot.json | tee compare.txt
+          fi
           code=${PIPESTATUS[0]}
           set -e
           if [ "$code" -ne 0 ]; then
@@ -112,7 +137,8 @@ jobs:
             const { owner, repo } = context.repo;
             const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
             const body = [
-              `Provider health regression detected on **${date}** by \`provider-health.yml\`.`,
+              `Persistent provider health regression detected on **${date}** by \`provider-health.yml\` `,
+              `(broken in two consecutive runs — not a transient blip).`,
               '',
               '```',
               report.trim(),

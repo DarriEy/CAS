@@ -260,14 +260,19 @@ def verify(slug):
 @click.option("--strict", is_flag=True, help="Exit non-zero if any provider is down")
 @click.option("--json", "json_path", default=None,
               help="Write a machine-readable snapshot to PATH (use '-' for stdout)")
-def health(slug, strict, json_path):
+@click.option("--concurrency", type=int, default=None,
+              help="Max in-flight checks across the sweep. Lower it (e.g. 6) on a "
+                   "shared CI runner so heavy providers don't read as down under "
+                   "egress saturation. Default: the sweep's own bound (12).")
+def health(slug, strict, json_path, concurrency):
     """End-to-end extraction health check (real extract per provider)."""
     from cas.monitor.health import check_all_providers
     from cas.monitor.trend import snapshot_dict
 
     async def _run():
         slugs = [slug] if slug else None
-        results = await check_all_providers(slugs=slugs)
+        kwargs = {} if concurrency is None else {"concurrency": concurrency}
+        results = await check_all_providers(slugs=slugs, **kwargs)
 
         if json_path:
             snapshot = json.dumps(snapshot_dict(results), indent=2)
@@ -325,15 +330,24 @@ def health(slug, strict, json_path):
 @cli.command(name="health-compare")
 @click.argument("baseline", type=click.Path(exists=True))
 @click.argument("current", type=click.Path(exists=True))
+@click.option("--previous", type=click.Path(exists=True), default=None,
+              help="Previous run's snapshot. When set, only regressions present in BOTH "
+                   "the current and previous run (persistent) drive the exit code — "
+                   "transient single-run churn is reported but does not fail.")
 @click.option("--fail-on-regression/--no-fail-on-regression", default=True,
-              help="Exit non-zero if any provider regressed vs baseline (default: on)")
-def health_compare(baseline, current, fail_on_regression):
+              help="Exit non-zero on a (persistent, if --previous) regression (default: on)")
+def health_compare(baseline, current, previous, fail_on_regression):
     """Compare a CURRENT health snapshot against a BASELINE snapshot.
 
     Reports providers that regressed (status worse than baseline), improved,
     or arrived broken. Exits 1 on regressions unless --no-fail-on-regression.
+
+    With --previous, the exit code is gated on *persistent* regressions only:
+    a provider must be broken in both the current and the previous run to fail
+    the check. This filters out transient upstream/runner blips, which rarely
+    recur on the same provider across consecutive runs.
     """
-    from cas.monitor.trend import compare, format_report
+    from cas.monitor.trend import compare, format_report, persistent_regressions
 
     with open(baseline) as f:
         base_snap = json.load(f)
@@ -343,7 +357,21 @@ def health_compare(baseline, current, fail_on_regression):
     cmp = compare(base_snap, cur_snap)
     click.echo(format_report(cmp))
 
-    if fail_on_regression and cmp.has_regressions:
+    if previous is not None:
+        with open(previous) as f:
+            prev_snap = json.load(f)
+        persistent = persistent_regressions(base_snap, cur_snap, prev_snap)
+        click.echo("")
+        if persistent:
+            click.echo(f"Persistent regressions ({len(persistent)}) — broken this run AND the previous run:")
+            click.echo("\n".join(f"  ✗✗ {c}" for c in persistent))
+        else:
+            click.echo("No persistent regressions — any regressions above appeared in only one run (transient).")
+        should_fail = bool(persistent)
+    else:
+        should_fail = cmp.has_regressions
+
+    if fail_on_regression and should_fail:
         raise SystemExit(1)
 
 

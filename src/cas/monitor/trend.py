@@ -100,6 +100,32 @@ def compare(baseline: dict, current: dict) -> Comparison:
     return Comparison(regressions, improvements, new_down, removed)
 
 
+def alert_set(baseline: dict, snapshot: dict) -> set[str]:
+    """Providers that are *broken* in ``snapshot`` relative to ``baseline``.
+
+    The alert set is every regression (worse than baseline) plus every
+    provider that arrived broken (absent from baseline, now degraded/down).
+    """
+    cmp = compare(baseline, snapshot)
+    return {c.provider for c in cmp.regressions} | {c.provider for c in cmp.new_down}
+
+
+def persistent_regressions(baseline: dict, current: dict, previous: dict) -> list[StatusChange]:
+    """Current alerts that were *also* broken in the previous run.
+
+    A *persistent* regression is the trustworthy signal. Transient upstream or
+    CI-runner blips flip a (usually different) handful of providers on any
+    given run, so they seldom appear broken in two consecutive snapshots; a
+    genuine connector break stays broken until fixed. Gating on persistence
+    keeps the scheduled check quiet for churn while still surfacing real
+    breakage on the second consecutive failure.
+    """
+    cur = compare(baseline, current)
+    prev_broken = alert_set(baseline, previous)
+    alerts = cur.regressions + cur.new_down
+    return [c for c in alerts if c.provider in prev_broken]
+
+
 def format_report(cmp: Comparison) -> str:
     """Render a comparison as a human-readable report."""
     lines: list[str] = []

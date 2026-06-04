@@ -7,7 +7,12 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from cas.core.models import HealthCheckResult, ProviderStatus
-from cas.monitor.trend import compare, snapshot_dict
+from cas.monitor.trend import (
+    alert_set,
+    compare,
+    persistent_regressions,
+    snapshot_dict,
+)
 
 
 def _snap(statuses: dict[str, str]) -> dict:
@@ -72,3 +77,34 @@ def test_removed_provider_listed():
     cmp = compare(_snap({"gone": "healthy"}), _snap({}))
     assert cmp.removed == ["gone"]
     assert not cmp.has_regressions
+
+
+def test_alert_set_includes_regressions_and_new_broken():
+    base = _snap({"x": "healthy", "dead": "down"})
+    snap = _snap({"x": "down", "dead": "down", "newbie": "degraded"})
+    # x regressed, newbie arrived broken; dead was already down (not an alert).
+    assert alert_set(base, snap) == {"x", "newbie"}
+
+
+def test_persistent_regression_when_broken_in_both_runs():
+    base = _snap({"x": "healthy", "y": "healthy"})
+    previous = _snap({"x": "down", "y": "healthy"})   # x already broken last run
+    current = _snap({"x": "down", "y": "down"})        # x persists, y is new churn
+    persistent = persistent_regressions(base, current, previous)
+    assert [c.provider for c in persistent] == ["x"]
+
+
+def test_transient_churn_is_not_persistent():
+    base = _snap({"a": "healthy", "b": "healthy"})
+    previous = _snap({"a": "down", "b": "healthy"})    # a down last run
+    current = _snap({"a": "healthy", "b": "down"})     # a recovered, b newly down
+    # Different providers each run → nothing persistent → no alert.
+    assert persistent_regressions(base, current, previous) == []
+
+
+def test_persistent_new_broken_provider():
+    base = _snap({})                                   # provider not in baseline
+    previous = _snap({"newbie": "down"})
+    current = _snap({"newbie": "down"})
+    persistent = persistent_regressions(base, current, previous)
+    assert [c.provider for c in persistent] == ["newbie"]
