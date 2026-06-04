@@ -36,14 +36,18 @@ jobs:
 
   extract:
     # End-to-end extraction sweep: a real extract() per provider over a
-    # coverage-derived test polygon (see cas.monitor.test_geometry). The run
-    # is compared against the committed baseline (health/baseline.json); a
-    # provider doing *worse* than its baseline status is a regression. To avoid
-    # red from transient upstream/runner blips (which flip a different handful
-    # of providers each run), the job only fails on *persistent* regressions —
-    # a provider broken in both this run and the previous one (health-history
-    # latest.json). The honest-degraded and auth-gated providers are baked into
-    # the baseline, so they stay quiet.
+    # coverage-derived test polygon (see cas.monitor.test_geometry). The run is
+    # compared against the committed baseline (health/baseline.json).
+    #
+    # This is a MONITOR, not a gate: extracting from ~228 third-party servers
+    # on a shared runner has an irreducible flaky tail (slow government WCS/soil
+    # endpoints that are healthy when probed directly but time out under load,
+    # an unpredictable handful each run). So the job is non-blocking — it never
+    # reds CI. Instead, a *persistent* regression (a provider broken in both
+    # this run and the previous one, via health-history/latest.json) opens or
+    # updates the tracking issue. Transient single-run churn stays in the logs.
+    # The honest-degraded and auth-gated providers are baked into the baseline,
+    # so they stay quiet. (Code correctness is gated by ci.yml, not here.)
     runs-on: ubuntu-latest
 
     steps:
@@ -58,12 +62,7 @@ jobs:
         run: pip install -e ".[dev,stac,climate]"
 
       - name: End-to-end extraction health check
-        # Lower concurrency than the default (12): heavy raster providers
-        # (ssurgo, ssurgo_hsg, australia_dem, sweden_soil, ...) are healthy
-        # individually but read as down under egress saturation when the full
-        # sweep runs flat-out on a shared runner. Trading a little wall-clock
-        # for far fewer load false-positives (observed: 7 down -> 1 at conc=6).
-        run: cas health --concurrency 6 --json snapshot.json | tee health-output.txt
+        run: cas health --json snapshot.json | tee health-output.txt
         timeout-minutes: 20
 
       - name: Fetch previous snapshot (for persistence gating)
@@ -171,8 +170,7 @@ jobs:
               });
             }
 
-      - name: Fail the job on regression
+      - name: Flag persistent regression (non-blocking)
         if: steps.compare.outputs.regressed == 'true'
         run: |
-          echo "::error::Provider health regressed vs baseline — see the regression issue."
-          exit 1
+          echo "::warning::Persistent provider health regression vs baseline — see the tracking issue. (Monitor only; not failing CI.)"
