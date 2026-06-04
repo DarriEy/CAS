@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import asyncio
+import math
 import time
 
 import numpy as np
@@ -55,6 +56,17 @@ SOILGRIDS_VARIABLES: dict[str, Variable] = {
 DEPTHS = ["0-5cm", "5-15cm", "15-30cm", "30-60cm", "60-100cm", "100-200cm"]
 
 GRID_SPACING_DEG = 0.003  # ~250m at mid-latitudes, matching native resolution
+
+# ISRIC's REST point API (rest.isric.org) is rate-limited and fragile: a burst
+# of concurrent queries makes it stop responding entirely (every request then
+# read-times-out), and even at low concurrency individual requests randomly hang
+# or 429. So query it gently — few points, low concurrency, and a hard per-point
+# deadline so one stuck request can't stall the whole gather. (For dense/large-
+# area soil sampling, the sibling ``soilgrids_derived`` reads static COGs from
+# files.isric.org and is far more robust.)
+_MAX_QUERY_POINTS = 9          # 3×3 sample is plenty; more just risks rate limits
+_MAX_CONCURRENT_QUERIES = 2    # bursts of 10+ choke the API into total timeout
+_POINT_QUERY_TIMEOUT_S = 20.0  # cap per point; base client would otherwise wait 120s × retries
 
 
 @register("isric_soilgrids")
@@ -110,7 +122,7 @@ class ISRICSoilGridsConnector(BaseConnector):
         if not sample_points:
             sample_points = [((bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2)]
 
-        sem = asyncio.Semaphore(10)
+        sem = asyncio.Semaphore(_MAX_CONCURRENT_QUERIES)
         tasks = [
             self._query_point(lon, lat, var_name, depth, sem) for lon, lat in sample_points
         ]
@@ -165,20 +177,25 @@ class ISRICSoilGridsConnector(BaseConnector):
     ) -> float | None:
         async with sem:
             try:
-                resp = await self._get(
-                    "/soilgrids/v2.0/properties/query",
-                    params={
-                        "lon": str(round(lon, 5)),
-                        "lat": str(round(lat, 5)),
-                        "property": variable,
-                        "depth": depth,
-                        "value": "mean",
-                    },
+                resp = await asyncio.wait_for(
+                    self._get(
+                        "/soilgrids/v2.0/properties/query",
+                        params={
+                            "lon": str(round(lon, 5)),
+                            "lat": str(round(lat, 5)),
+                            "property": variable,
+                            "depth": depth,
+                            "value": "mean",
+                        },
+                    ),
+                    timeout=_POINT_QUERY_TIMEOUT_S,
                 )
                 data = resp.json()
                 val = data["properties"]["layers"][0]["depths"][0]["values"]["mean"]
                 return float(val) if val is not None else None
             except Exception:
+                # A timeout/hang/429 on one point just drops it from the mean
+                # (coverage_fraction reflects how many points came back).
                 return None
 
 
@@ -195,10 +212,19 @@ def _generate_grid_points(
         lons = np.array([(min_lon + max_lon) / 2])
     if len(lats) == 0:
         lats = np.array([(min_lat + max_lat) / 2])
-    # Cap at reasonable grid size
-    max_points = 500
-    if len(lons) * len(lats) > max_points:
-        step = max(1, int(np.sqrt(len(lons) * len(lats) / max_points)))
-        lons = lons[::step]
-        lats = lats[::step]
+
+    # Cap the grid hard: ISRIC's point API is rate-limited, so a dense grid both
+    # times out and adds no real signal for a health/zonal sample (see notes on
+    # _MAX_QUERY_POINTS). Thin each axis to at most sqrt(cap) evenly-spaced
+    # points, guaranteeing the product stays within the cap.
+    side = math.isqrt(_MAX_QUERY_POINTS)
+
+    def _thin(arr: np.ndarray, k: int) -> np.ndarray:
+        if len(arr) <= k:
+            return arr
+        idx = np.linspace(0, len(arr) - 1, k).round().astype(int)
+        return np.asarray(arr[idx])
+
+    lons = _thin(lons, side)
+    lats = _thin(lats, side)
     return [(float(lon), float(lat)) for lon in lons for lat in lats]
