@@ -27,8 +27,12 @@ jobs:
         run: pip install -e ".[dev,stac,climate]"
 
       - name: Endpoint reachability check
-        run: cas verify
-        timeout-minutes: 2
+        # Serial re-probe (built into cas verify) clears load-induced timeouts;
+        # --max-failures tolerates the odd endpoint that stays slow so a couple
+        # of transient timeouts out of ~228 don't red the job. A real outage
+        # (many endpoints) still exceeds the tolerance.
+        run: cas verify --max-failures 3
+        timeout-minutes: 5
 
   extract:
     # End-to-end extraction sweep: a real extract() per provider over a

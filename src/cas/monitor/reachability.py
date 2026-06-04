@@ -173,10 +173,17 @@ async def check_all_reachability(
     slugs: list[str] | None = None,
     concurrency: int = 20,
     timeout_s: float = 20.0,
+    recheck_failures: bool = True,
 ) -> list[ReachabilityResult]:
     """Check reachability for all (or selected) providers in parallel.
 
     Deduplicates by base_url so shared endpoints are only probed once.
+
+    ``recheck_failures`` re-probes any endpoint that came back unreachable a
+    second time, serially (one at a time). A 20s-timeout failure under
+    concurrent load often clears when retried alone — the same rationale as
+    the health sweep's serial recheck — so this strips out load-induced false
+    failures while a genuinely down endpoint stays failed.
     """
     discover()
 
@@ -205,6 +212,24 @@ async def check_all_reachability(
             tasks.append(check_reachability(representative, url, protocol, client, semaphore))
 
         url_results = await asyncio.gather(*tasks)
+
+    # Serial re-probe of failed endpoints (no concurrency) to drop load-induced
+    # timeouts; keep the retry only if it does better than the parallel pass.
+    if recheck_failures and any(not r.reachable and not r.skipped for r in url_results):
+        serial = asyncio.Semaphore(1)
+        async with httpx.AsyncClient(
+            timeout=httpx.Timeout(timeout_s, connect=10.0),
+            headers={"User-Agent": "CAS/0.1 (reachability check)"},
+            verify=False,
+        ) as client:
+            for i, r in enumerate(url_results):
+                if r.reachable or r.skipped:
+                    continue
+                representative = url_to_slugs[r.url][0]
+                _, protocol = slug_to_url[representative]
+                retry = await check_reachability(representative, r.url, protocol, client, serial)
+                if retry.reachable and not r.reachable:
+                    url_results[i] = retry
 
     url_result_map = {r.url: r for r in url_results}
     results = []

@@ -218,7 +218,11 @@ def export_inventory(output):
 
 @cli.command()
 @click.option("--slug", "-s", default=None, help="Check a single provider by slug")
-def verify(slug):
+@click.option("--max-failures", type=int, default=0,
+              help="Tolerate up to N still-failing endpoints before exiting non-zero. "
+                   "A backstop for the odd endpoint that stays slow even on the serial "
+                   "re-probe; a real multi-endpoint outage still exceeds it. Default: 0.")
+def verify(slug, max_failures):
     """Fast endpoint reachability check for all providers (~20s)."""
     from cas.monitor.reachability import check_all_reachability
 
@@ -250,7 +254,12 @@ def verify(slug):
             click.echo("\nFailed endpoints:", err=True)
             for r in failures:
                 click.echo(f"  {r.slug}: {r.url}  ({r.detail})", err=True)
-            raise SystemExit(1)
+            if fail > max_failures:
+                raise SystemExit(1)
+            click.echo(
+                f"\n  {fail} failure(s) within tolerance (--max-failures {max_failures}); "
+                "not failing.", err=True,
+            )
 
     asyncio.run(_run())
 
