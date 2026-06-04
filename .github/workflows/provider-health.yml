@@ -14,6 +14,10 @@ permissions:
 jobs:
   reachability:
     runs-on: ubuntu-latest
+    # Monitor, not a gate: a bad egress window from the runner can time out a
+    # batch of slow third-party endpoints at once (all healthy when probed
+    # directly). Never red CI for that — the step logs still show what failed.
+    continue-on-error: true
 
     steps:
       - uses: actions/checkout@v4
@@ -49,6 +53,10 @@ jobs:
     # The honest-degraded and auth-gated providers are baked into the baseline,
     # so they stay quiet. (Code correctness is gated by ci.yml, not here.)
     runs-on: ubuntu-latest
+    # Never red CI: the sweep can fail or time out wholesale in a bad egress
+    # window. The job still archives its snapshot and files a persistence-gated
+    # issue when it completes; a failed/timed-out run is just a missed sample.
+    continue-on-error: true
 
     steps:
       - uses: actions/checkout@v4
@@ -63,7 +71,9 @@ jobs:
 
       - name: End-to-end extraction health check
         run: cas health --json snapshot.json | tee health-output.txt
-        timeout-minutes: 20
+        # Headroom for the serial re-check pass, which re-probes every slow
+        # provider one at a time and can run long in a bad egress window.
+        timeout-minutes: 30
 
       - name: Fetch previous snapshot (for persistence gating)
         id: prev
