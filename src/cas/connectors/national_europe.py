@@ -2554,7 +2554,7 @@ class NetherlandsNatura2000Connector(NationalWCSConnector):
 # is no value-raster / WCS coverage, so zonal extraction would return meaningless
 # RGB bytes — same unservable pattern as taiwan_dem / indonesia_lc. Re-enable only
 # if NVE publishes a coded value raster or a queryable coverage.
-@register("norway_avalanche")
+# @register("norway_avalanche")  # deregistered 2026-06-04: unservable (see above)
 class NorwayAvalancheConnector(NationalWCSConnector):
     slug = "norway_avalanche"
     display_name = "Norway Snow Avalanche Zones (NVE)"

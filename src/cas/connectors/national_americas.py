@@ -106,7 +106,7 @@ class MexicoLCConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="mexico_lc", display_name="Mexico Uso de Suelo y Vegetación (INEGI)",
         wcs_url="https://gaia.inegi.org.mx/NLB/tunnel/wms/wms61",
-        coverage_id="Hipsografico",
+        coverage_id="c781",
         variable=Variable(name="land_cover", units="class", data_type=DataType.CATEGORICAL,
                           description="Mexican land use and vegetation classification"),
         resolution_m=250, category="land_cover",
