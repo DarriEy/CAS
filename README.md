@@ -4,15 +4,28 @@ Harmonized access to global geospatial attribute datasets (DEM, soil, land cover
 
 CAS is **not a data warehouse** — it's a QC layer and one-stop-shop that pulls from upstream providers on-demand, validates responses, and returns harmonized results.
 
-CAS ships **225 active providers** spanning DEM/elevation, soil, land cover, hydrology, vegetation/canopy, climate/water-balance, geology, and biodiversity — including global/flagship datasets plus **169 national/regional providers across 38 countries** (incl. MapBiomas land cover for Amazonia, Chaco, Pampa, Bolivia, Colombia, Peru, Paraguay, Uruguay and Venezuela in South America, and Indonesia in South-East Asia). Every provider listed below is registered in the runtime connector registry and exercised by the end-to-end health sweep; run `cas providers` to see the live list.
+CAS ships **228 active providers** spanning DEM/elevation, soil, land cover, hydrology, vegetation/canopy, climate/water-balance, geology, and biodiversity — including global/flagship datasets plus **169 national/regional providers across 38 countries** (incl. MapBiomas land cover for Amazonia, Chaco, Pampa, Bolivia, Colombia, Peru, Paraguay, Uruguay and Venezuela in South America, and Indonesia in South-East Asia). Every provider listed below is registered in the runtime connector registry and exercised by the end-to-end health sweep; run `cas providers` to see the live list.
 
 **Status**: Alpha (v0.1.0)
+
+## Statement of need
+
+Large-sample hydrology depends on harmonized catchment attributes — terrain, soil, land cover, climate, and geology summarized over thousands of basins — as popularized by CAMELS-style datasets. Assembling such attributes today still means writing bespoke, per-dataset extraction scripts: every provider exposes a different protocol (WCS, STAC+COG, OPeNDAP, Zarr), grid, projection, and no-data convention, and the resulting one-off pipelines are rarely reusable or comparable across studies. CAS replaces that with a single interface for harmonized, quality-controlled zonal attribute extraction across 200+ providers: given a geometry and dataset identifiers, it fans out to the upstream services, subsets server-side, computes zonal statistics, applies QC (range, coverage, cross-provider consistency), and returns uniform results with provenance and citations. It is aimed at hydrologists, land-surface modelers, and large-sample studies that need reproducible attribute datasets without maintaining their own extraction code.
 
 ## Quick Start
 
 ```bash
-pip install -e ".[dev,stac]"
+pip install "community-attribute-service[stac]"
+```
 
+The PyPI distribution is named `community-attribute-service`; the package you import is still `cas` and the CLI command is still `cas`. To work from a source checkout instead:
+
+```bash
+git clone https://github.com/DarriEy/CAS.git && cd CAS
+pip install -e ".[dev,stac]"
+```
+
+```bash
 # List registered providers
 cas providers
 
@@ -43,10 +56,12 @@ cas extract \
 cas health
 ```
 
+> **Note for reviewers:** commands that contact live providers (`cas extract`, `cas health`, `cas verify`, the `-m network` tests) can occasionally fail due to transient upstream outages outside CAS's control; the daily CI health sweep compared against the committed baseline (`health/baseline.json`) is the mitigation that separates real regressions from provider downtime.
+
 ## API
 
 ```bash
-pip install -e ".[dev,api,stac]"
+pip install "community-attribute-service[api,stac]"
 uvicorn cas.api.app:create_app --factory --reload
 ```
 
@@ -63,7 +78,7 @@ GET  /docs                     — Interactive OpenAPI docs
 
 The endpoints are typed with Pydantic response models, so `/openapi.json` and
 `/docs` are a complete, always-in-sync description of the service. The full
-229-provider catalog is discoverable over HTTP: list `GET /api/v1/providers`,
+228-provider catalog is discoverable over HTTP: list `GET /api/v1/providers`,
 then drill into `GET /api/v1/providers/{slug}` for resolution, bbox, license,
 citation, and variables.
 
@@ -165,8 +180,8 @@ Geometry in → CAS engine → fan out to providers → server-side subset → z
 
 ## Implemented Providers
 
-CAS registers **225 active providers**. The tables below list the headline global/flagship
-datasets per category; the national breadth (172 country/region-specific providers across 38 countries)
+CAS registers **228 active providers**. The tables below list the headline global/flagship
+datasets per category; the national breadth (169 national/regional providers across 38 countries)
 is summarized in [National providers by country](#national-providers-by-country). The complete
 machine-readable catalog (resolution, bbox, license, variables) lives in
 `inventory/providers.yaml` and is regenerated with `cas export-inventory`. Get the live list any
@@ -261,8 +276,9 @@ runoff, Palmer Drought Severity Index, temperature, plus a derived UNEP aridity 
 
 ### National providers by country
 
-172 of the 225 providers are country/region-specific (DEM, soil, land cover, hydrology, geology),
-across 38 countries, plus trinational MapBiomas land cover for Amazonia, Chaco and Pampa. Counts:
+166 of the 228 providers are country-specific (DEM, soil, land cover, hydrology, geology)
+across 38 countries, plus trinational MapBiomas land cover for Amazonia, Chaco and Pampa
+(169 national/regional providers in total). Counts:
 
 | Country | Providers | Country | Providers |
 |---------|:---------:|---------|:---------:|
@@ -459,7 +475,7 @@ pytest tests/ -v                       # unit tests (no network)
 Tests marked `network` run a real `extract()` against live upstream
 providers and are excluded from the default run. Each provider is tested
 over a **coverage-derived** test polygon — a small area inside the
-provider's own declared coverage (see `cas.monitor.test_geometry`), so
+provider's own declared coverage (see `cas.monitor.geometry_check`), so
 country-specific connectors are exercised over data they actually serve
 rather than a single fixed point.
 

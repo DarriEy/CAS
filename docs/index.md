@@ -9,9 +9,26 @@ returns consistent results. Give it a geometry and one or more dataset IDs; it
 fans out to the relevant providers, subsets server-side, computes zonal
 statistics, runs QC, and hands back a uniform result.
 
+## Statement of need
+
+Large-sample hydrology depends on harmonized catchment attributes — terrain,
+soil, land cover, climate, and geology summarized over thousands of basins — as
+popularized by CAMELS-style datasets. Assembling such attributes today still
+means writing bespoke, per-dataset extraction scripts: every provider exposes a
+different protocol (WCS, STAC+COG, OPeNDAP, Zarr), grid, projection, and
+no-data convention, and the resulting one-off pipelines are rarely reusable or
+comparable across studies. CAS replaces that with a single interface for
+harmonized, quality-controlled zonal attribute extraction across 200+
+providers: given a geometry and dataset identifiers, it fans out to the
+upstream services, subsets server-side, computes zonal statistics, applies QC
+(range, coverage, cross-provider consistency), and returns uniform results with
+provenance and citations. It is aimed at hydrologists, land-surface modelers,
+and large-sample studies that need reproducible attribute datasets without
+maintaining their own extraction code.
+
 ## Why CAS?
 
-- **214 active providers** across 34 countries — global flagships plus deep
+- **228 active providers** across 38 countries — global flagships plus deep
   national coverage, all behind one consistent interface.
 - **Passthrough, not storage** — no stale local copies; every request reflects
   the live upstream.
