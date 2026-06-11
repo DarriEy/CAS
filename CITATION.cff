@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+type: software
+title: "CAS: Community Attribute Service"
+abstract: >-
+  CAS provides harmonized, quality-controlled zonal attribute extraction
+  (elevation, soil, land cover, hydrology, vegetation, geology, climate)
+  from more than 200 upstream geospatial data providers through a single
+  CLI, HTTP API, and Python SDK, without storing any data itself.
+authors:
+  - family-names: Eythorsson
+    given-names: Darri
+    orcid: "https://orcid.org/0000-0003-3653-3936"
+    affiliation: "University of Calgary"
+    email: dae5@hi.is
+repository-code: "https://github.com/DarriEy/CAS"
+url: "https://github.com/DarriEy/CAS"
+license: MIT
+version: 0.1.0
+date-released: 2026-06-11
+keywords:
+  - geospatial
+  - hydrology
+  - catchment attributes
+  - zonal statistics
+  - large-sample hydrology
+  - soil
+  - elevation
+  - land cover
