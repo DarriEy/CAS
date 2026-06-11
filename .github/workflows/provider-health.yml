@@ -40,7 +40,7 @@ jobs:
 
   extract:
     # End-to-end extraction sweep: a real extract() per provider over a
-    # coverage-derived test polygon (see cas.monitor.test_geometry). The run is
+    # coverage-derived test polygon (see cas.monitor.geometry_check). The run is
     # compared against the committed baseline (health/baseline.json).
     #
     # This is a MONITOR, not a gate: extracting from ~228 third-party servers

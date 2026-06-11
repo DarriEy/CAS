@@ -6,7 +6,7 @@ Unlike reachability (which only confirms an endpoint answers), a health
 check runs a real ``extract()`` against each provider and verifies the
 returned zonal statistic is present and finite.  The test polygon is
 derived from each provider's own coverage so country-specific connectors
-are exercised over data they actually serve (see :mod:`test_geometry`).
+are exercised over data they actually serve (see :mod:`geometry_check`).
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ from cas.core.models import (
     QualityFlag,
 )
 from cas.core.registry import discover, get_connector, list_providers
-from cas.monitor.test_geometry import coverage_test_geometry
+from cas.monitor.geometry_check import coverage_test_geometry
 
 logger = structlog.get_logger()
 

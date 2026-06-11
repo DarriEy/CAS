@@ -1625,7 +1625,7 @@ class ItalySkyviewConnector(NationalWCSConnector):
 # image/tiff fallback returns a single-band float raster of RGB-derived pixel
 # values (a 0–255 "distribution" of scan colours), not classified geology codes.
 # It also renders nothing below ~0.2° bbox — larger than the health-check
-# polygon's 0.05° cap (test_geometry._MAX_HALF_SIZE) — so it can't be coaxed
+# polygon's 0.05° cap (geometry_check._MAX_HALF_SIZE) — so it can't be coaxed
 # healthy via resolution_m either. Verified 2026-05-30.
 # Re-checked 2026-05-31 against the color_map mapper: still unrecoverable. A 1°
 # GetMap render returns 254 distinct colors that are all near-clones of each other

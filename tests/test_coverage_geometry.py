@@ -3,7 +3,7 @@
 """Tests for coverage-aware health test geometry, incl. explicit anchors."""
 
 from cas.core.models import BoundingBox
-from cas.monitor.test_geometry import coverage_test_geometry
+from cas.monitor.geometry_check import coverage_test_geometry
 
 
 def _bbox(a, b, c, d):

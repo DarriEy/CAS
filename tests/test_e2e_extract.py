@@ -25,8 +25,8 @@ import pytest
 
 from cas.core.models import ProviderStatus
 from cas.core.registry import discover, list_providers
+from cas.monitor.geometry_check import LAND_ANCHORS, coverage_test_geometry
 from cas.monitor.health import check_provider
-from cas.monitor.test_geometry import LAND_ANCHORS, coverage_test_geometry
 
 discover()
 ALL_PROVIDERS = sorted(list_providers())
