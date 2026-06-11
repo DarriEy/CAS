@@ -4,15 +4,23 @@
 
 ```bash
 # Library + CLI
-pip install -e ".[stac]"
+pip install "community-attribute-service[stac]"
 
 # Add the HTTP API server
-pip install -e ".[api,stac]"
+pip install "community-attribute-service[api,stac]"
 ```
 
-The `stac` extra pulls in `pystac-client` and `planetary-computer`, needed by
-the many providers served via STAC + COG. The `api` extra pulls in FastAPI and
-Uvicorn.
+The PyPI distribution is named `community-attribute-service`; the package you
+import is `cas` and the CLI command is `cas`. The `stac` extra pulls in
+`pystac-client` and `planetary-computer`, needed by the many providers served
+via STAC + COG. The `api` extra pulls in FastAPI and Uvicorn.
+
+To work from a source checkout instead:
+
+```bash
+git clone https://github.com/DarriEy/CAS.git && cd CAS
+pip install -e ".[dev,stac]"
+```
 
 ## 1. Explore providers
 

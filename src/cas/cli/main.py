@@ -18,7 +18,7 @@ structlog.configure(
 
 
 @click.group()
-@click.version_option(package_name="cas")
+@click.version_option(package_name="community-attribute-service")
 @click.pass_context
 def cli(ctx: click.Context) -> None:
     """CAS — Community Attribute Service."""

@@ -6,7 +6,7 @@ both are generated from the same typed Pydantic models documented here, so they
 are always in sync with the deployed version.
 
 ```bash
-pip install -e ".[api,stac]"
+pip install "community-attribute-service[api,stac]"
 uvicorn cas.api.app:create_app --factory --reload
 ```
 

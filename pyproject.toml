@@ -3,14 +3,14 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "cas"
-version = "0.1.0"
+name = "community-attribute-service"
+dynamic = ["version"]
 description = "Community Attribute Service — harmonized access to global geospatial attribute datasets"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
 authors = [
-    { name = "CAS Contributors" },
+    { name = "Darri Eythorsson", email = "dae5@hi.is" },
 ]
 keywords = ["geospatial", "attributes", "raster", "soil", "elevation", "land-cover", "hydrology"]
 classifiers = [
@@ -65,8 +65,18 @@ docs = [
     "mkdocstrings[python]>=0.25",
 ]
 
+[project.urls]
+Homepage = "https://github.com/DarriEy/CAS"
+Repository = "https://github.com/DarriEy/CAS"
+Documentation = "https://darriey.github.io/CAS/"
+Issues = "https://github.com/DarriEy/CAS/issues"
+Changelog = "https://github.com/DarriEy/CAS/blob/main/CHANGELOG.md"
+
 [project.scripts]
 cas = "cas.cli.main:cli"
+
+[tool.hatch.version]
+path = "src/cas/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/cas"]

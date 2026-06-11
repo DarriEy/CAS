@@ -1,6 +1,6 @@
 # CLI
 
-The `cas` command is installed with the package (`pip install -e .`).
+The `cas` command is installed with the package (`pip install community-attribute-service`).
 
 ```bash
 cas --help
