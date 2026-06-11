@@ -38,6 +38,7 @@ nav:
   - Python API (embedded): python-api.md
   - Python SDK (HTTP client): sdk.md
   - CLI: cli.md
+  - SYMFLUENCE Plugin: symfluence.md
   - Provider Catalog: catalog.md
   - Architecture: architecture.md
   - SDK Reference: reference.md
