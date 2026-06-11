@@ -122,11 +122,36 @@ docker run -p 8000:8000 \
 The rate limiter is in-memory and per-process; for multi-replica deployments,
 enforce limits at the ingress/gateway instead.
 
-## Python SDK
+## Python API (embedded)
 
-`cas.client` is a typed wrapper over the HTTP API (ships with the core package,
-no extra needed). It returns the same `cas.core.models` types the service uses,
-and offers both a synchronous and an asynchronous client.
+`import cas` is the supported interface for using CAS in-process — no service
+to deploy. Build a request, extract, iterate results:
+
+```python
+import cas
+
+cas.configure(provider_timeout_s=60)   # optional: override env-based settings
+
+request = cas.BatchAttributeRequest(
+    geometries=[{"type": "Point", "coordinates": [-96.5, 39.0]}],
+    dataset_ids=["copernicus_dem:elevation", "isric_soilgrids:clay_0-5cm"],
+)
+batch = cas.batch_extract_sync(request)
+for resp in batch.responses:
+    for r in resp.results:
+        print(r.dataset_id, r.value, r.units, r.quality)
+```
+
+Async callers can `await cas.extract(...)` / `await cas.batch_extract(...)`
+directly. See the [Python API docs](https://darriey.github.io/CAS/python-api/)
+for the full blessed surface (`cas.__all__`).
+
+## Python SDK (HTTP client)
+
+`cas.client` is a typed wrapper over the HTTP API of a deployed service (ships
+with the core package, no extra needed). It returns the same `cas.core.models`
+types the service uses, and offers both a synchronous and an asynchronous
+client.
 
 ```python
 from cas.client import CASClient

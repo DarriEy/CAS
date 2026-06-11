@@ -1,8 +1,13 @@
-# Python SDK
+# Python SDK (HTTP client)
 
-`cas.client` is a thin, typed wrapper over the [HTTP API](api.md). It ships with
-the core package (no extra needed) and returns the same canonical
-`cas.core.models` types the service uses.
+`cas.client` is a thin, typed wrapper over the [HTTP API](api.md) of a
+**deployed** CAS service. It ships with the core package (no extra needed) and
+returns the same canonical `cas.core.models` types the service uses.
+
+!!! tip "Embedding CAS instead?"
+    To run CAS in-process — no service to deploy — use the
+    [Python API](python-api.md) (`import cas`). It returns the same response
+    models, so downstream code is portable between the two.
 
 Both a synchronous (`CASClient`) and an asynchronous (`AsyncCASClient`) client
 are available with identical method surfaces.
