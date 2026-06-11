@@ -75,6 +75,11 @@ Changelog = "https://github.com/DarriEy/CAS/blob/main/CHANGELOG.md"
 [project.scripts]
 cas = "cas.cli.main:cli"
 
+# SYMFLUENCE auto-discovers this at `import symfluence` (importlib.metadata
+# entry points); register() is a no-op when SYMFLUENCE is not installed.
+[project.entry-points."symfluence.plugins"]
+cas = "cas.integrations.symfluence:register"
+
 [tool.hatch.version]
 path = "src/cas/__init__.py"
 
