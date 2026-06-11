@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] — 2026-06-11
+
+### Added
+
+- **SYMFLUENCE integration plugin** (`cas.integrations.symfluence`): a
+  `CASAttributeAcquirer` acquisition handler that extracts per-HRU zonal
+  attributes for any CAS datasets and writes a per-HRU CSV
+  (`{DOMAIN_NAME}_cas_attributes.csv`) into the domain's
+  `data/attributes/cas/` directory. Auto-discovered via the
+  `symfluence.plugins` entry point — a plain `import symfluence` registers
+  the handler under `'CAS'` and appends it to every attribute profile
+  (`core`/`camels_spat`/`full`). The handler is a strict no-op until
+  `CAS_DATASETS` is set in the SYMFLUENCE config, and can be disabled with
+  `DOWNLOAD_CAS: false`. The module imports defensively, so `import cas`
+  works without SYMFLUENCE installed and adds no new dependency.
+- New "SYMFLUENCE Plugin" documentation page (`docs/symfluence.md`) covering
+  auto-discovery, configuration, and the output CSV contract.
+
 ## [0.2.0] — 2026-06-11
 
 ### Added

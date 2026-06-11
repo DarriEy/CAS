@@ -41,7 +41,7 @@ from cas.core.models import (
 from cas.core.registry import discover, get_connector, list_providers
 from cas.extract.engine import batch_extract, extract
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
     "__version__",
