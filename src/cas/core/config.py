@@ -14,7 +14,7 @@ string (``a,b``) for ergonomic shell/Docker use.
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Annotated
+from typing import Annotated, Any
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
@@ -65,7 +65,7 @@ class Settings(BaseSettings):
         return v
 
 
-_overrides: dict[str, object] = {}
+_overrides: dict[str, Any] = {}
 """Programmatic overrides applied on top of the environment (see configure)."""
 
 
