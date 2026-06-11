@@ -65,7 +65,48 @@ class Settings(BaseSettings):
         return v
 
 
+_overrides: dict[str, object] = {}
+"""Programmatic overrides applied on top of the environment (see configure)."""
+
+
 @lru_cache
 def get_settings() -> Settings:
-    """Return the process-wide settings singleton (cached)."""
-    return Settings()
+    """Return the process-wide settings singleton (cached).
+
+    Values are read from ``CAS_``-prefixed environment variables, overlaid
+    with any programmatic overrides applied via :func:`configure`.
+    """
+    return Settings(**_overrides)
+
+
+def configure(**overrides: object) -> Settings:
+    """Apply runtime configuration overrides and refresh the settings singleton.
+
+    Because :func:`get_settings` is cached, environment variables are normally
+    read **once**, at first use — env vars set after CAS has been imported and
+    used are silently ignored. Embedding frameworks (e.g. a SYMFLUENCE adapter)
+    can call ``cas.configure(...)`` at any time to (re)configure CAS:
+
+    - keyword arguments name :class:`Settings` fields directly and take
+      precedence over the environment (validated by pydantic);
+    - calling ``configure()`` with no arguments simply clears the cache so the
+      current environment is re-read.
+
+    Overrides accumulate across calls. The next extraction picks up the new
+    settings (the engine's result cache is rebuilt against the refreshed
+    settings on first use).
+
+    Returns the refreshed :class:`Settings` instance.
+
+    >>> import cas
+    >>> cas.configure(provider_timeout_s=60, result_cache_ttl_s=0)
+    """
+    unknown = sorted(set(overrides) - set(Settings.model_fields))
+    if unknown:
+        valid = ", ".join(sorted(Settings.model_fields))
+        raise TypeError(
+            f"Unknown CAS setting(s): {', '.join(unknown)}. Valid settings: {valid}"
+        )
+    _overrides.update(overrides)
+    get_settings.cache_clear()
+    return get_settings()

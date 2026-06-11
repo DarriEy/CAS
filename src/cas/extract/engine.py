@@ -29,18 +29,25 @@ from cas.core.registry import discover, get_connector
 logger = structlog.get_logger()
 
 
-def _build_result_cache() -> ResultCache:
-    settings = get_settings()
-    return ResultCache(
-        default_ttl=settings.result_cache_ttl_s,
-        max_entries=settings.result_cache_max_entries,
-    )
-
-
-_result_cache = _build_result_cache()
+_result_cache: ResultCache | None = None
+_result_cache_settings: object | None = None
 
 
 def get_result_cache() -> ResultCache:
+    """Return the process-wide result cache, building it lazily.
+
+    The cache is keyed to the current :class:`~cas.core.config.Settings`
+    singleton: when settings are refreshed (e.g. via :func:`cas.configure`),
+    the next call rebuilds the cache with the new TTL/size limits.
+    """
+    global _result_cache, _result_cache_settings
+    settings = get_settings()
+    if _result_cache is None or _result_cache_settings is not settings:
+        _result_cache = ResultCache(
+            default_ttl=settings.result_cache_ttl_s,
+            max_entries=settings.result_cache_max_entries,
+        )
+        _result_cache_settings = settings
     return _result_cache
 
 
@@ -86,6 +93,7 @@ async def extract(request: AttributeRequest) -> AttributeResponse:
     discover()
     _validate_limits(request)
     settings = get_settings()
+    result_cache = get_result_cache()
     start_time = time.monotonic()
     request_id = uuid4().hex[:12]
     geometry_hash = hashlib.sha256(
@@ -103,10 +111,10 @@ async def extract(request: AttributeRequest) -> AttributeResponse:
 
     for provider_slug, ds_ids in provider_datasets.items():
         for ds_id in ds_ids:
-            cache_key = _result_cache.make_key(
+            cache_key = result_cache.make_key(
                 ds_id, geometry_hash, request.aggregation, request.time_range,
             )
-            cached = _result_cache.get(cache_key)
+            cached = result_cache.get(cache_key)
             if cached is not None:
                 logger.debug("cache_hit", dataset=ds_id)
                 qc_warnings = validate_result(cached)
@@ -139,10 +147,10 @@ async def extract(request: AttributeRequest) -> AttributeResponse:
                 warnings.append(f"{ds_id}: {result}")
                 logger.warning("extraction_failed", dataset=ds_id, error=str(result))
             elif isinstance(result, AttributeResult):
-                cache_key = _result_cache.make_key(
+                cache_key = result_cache.make_key(
                     ds_id, geometry_hash, request.aggregation, request.time_range,
                 )
-                _result_cache.set(cache_key, result)
+                result_cache.set(cache_key, result)
                 qc_warnings = validate_result(result)
                 if qc_warnings:
                     warnings.extend(qc_warnings)
