@@ -7,6 +7,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Response
+from pydantic import field_validator
 
 from cas.api.metrics import PROVIDER_FAILURES, render_latest
 from cas.api.middleware import register_middleware
@@ -20,12 +21,38 @@ from cas.core.models import (
     BatchAttributeResponse,
     Dataset,
     DatasetListResponse,
+    OutputMode,
     ProviderDetail,
     ProviderListResponse,
     ProviderSummary,
     TemporalType,
 )
 from cas.core.registry import discover, get_connector, list_providers
+
+_RASTER_OVER_HTTP_MSG = (
+    "output='raster' is not available over the CAS HTTP API: the service is "
+    "stats-only by design — it stores no rasters and does not redistribute "
+    "provider data. Raster mode is in-process only: embed CAS and call "
+    "cas.extract_raster_sync(...) (or 'await cas.extract_raster(...)')."
+)
+
+
+class StatsOnlyAttributeRequest(AttributeRequest):
+    """HTTP-facing request model: rejects raster output at validation time.
+
+    The in-process raster capability (``cas.extract_raster*``) must not be
+    reachable through the FastAPI layer — that would turn CAS into a raster
+    re-server, breaking its no-storage identity and the licensing posture
+    that library access to provider rasters relies on.
+    """
+
+    @field_validator("output")
+    @classmethod
+    def _reject_raster(cls, v: OutputMode) -> OutputMode:
+        if v is OutputMode.RASTER:
+            raise ValueError(_RASTER_OVER_HTTP_MSG)
+        return v
+
 
 _metadata_cache: MetadataCache | None = None
 
@@ -81,7 +108,7 @@ def create_app() -> FastAPI:
         summary="Extract attributes for a single geometry",
         dependencies=secured,
     )
-    async def extract_attributes(request: AttributeRequest):
+    async def extract_attributes(request: StatsOnlyAttributeRequest):
         from cas.extract.engine import extract
 
         response = await extract(request)

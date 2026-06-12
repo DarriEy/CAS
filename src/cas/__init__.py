@@ -21,11 +21,26 @@ in-process (no HTTP service required):
 Connector modules are imported lazily on first ``discover()``/``extract()``
 call, so ``import cas`` stays light.
 
+Raster mode (in-process **only** — the HTTP API stays stats-only by design):
+
+>>> result = cas.extract_raster_sync(
+...     "copernicus_dem:elevation",
+...     bbox=(-112.05, 41.95, -111.95, 42.05),
+...     output_dir="/tmp/rasters",
+... )
+>>> result.path, result.crs, result.shape, result.nodata
+
+``extract_raster`` / ``extract_raster_sync`` write a domain-bbox,
+tile-mosaicked, native-resolution, EPSG:4326 GeoTIFF with correct nodata to
+the caller-supplied directory and return a :class:`RasterResult` carrying
+the path — the contract SYMFLUENCE discretization consumes.
+
 For talking to a *deployed* CAS service over HTTP, use :mod:`cas.client`,
-which returns these same response models.
+which returns these same response models (stats only; raster mode is not
+served over HTTP).
 """
 
-from cas.api_sync import batch_extract_sync, extract_sync
+from cas.api_sync import batch_extract_sync, extract_raster_sync, extract_sync
 from cas.core.config import configure
 from cas.core.models import (
     AggregationMethod,
@@ -34,12 +49,16 @@ from cas.core.models import (
     AttributeResult,
     BatchAttributeRequest,
     BatchAttributeResponse,
+    BoundingBox,
     Geometry,
+    OutputMode,
     QualityFlag,
+    RasterResampling,
+    RasterResult,
     TimeRange,
 )
 from cas.core.registry import discover, get_connector, list_providers
-from cas.extract.engine import batch_extract, extract
+from cas.extract.engine import batch_extract, extract, extract_raster
 
 __version__ = "0.3.0"
 
@@ -48,8 +67,10 @@ __all__ = [
     # Engine entry points (async) and sync wrappers
     "extract",
     "batch_extract",
+    "extract_raster",
     "extract_sync",
     "batch_extract_sync",
+    "extract_raster_sync",
     # Runtime configuration
     "configure",
     # Provider registry
@@ -62,8 +83,12 @@ __all__ = [
     "AttributeResponse",
     "BatchAttributeResponse",
     "AttributeResult",
+    "RasterResult",
     "Geometry",
+    "BoundingBox",
     "TimeRange",
     "AggregationMethod",
+    "OutputMode",
+    "RasterResampling",
     "QualityFlag",
 ]

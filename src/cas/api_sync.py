@@ -12,16 +12,21 @@ the underlying coroutines (``cas.extract`` / ``cas.batch_extract``) instead.
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
 
 from cas.core.models import (
     AttributeRequest,
     AttributeResponse,
     BatchAttributeRequest,
     BatchAttributeResponse,
+    BoundingBox,
+    RasterResampling,
+    RasterResult,
+    TimeRange,
 )
-from cas.extract.engine import batch_extract, extract
+from cas.extract.engine import batch_extract, extract, extract_raster
 
-__all__ = ["batch_extract_sync", "extract_sync"]
+__all__ = ["batch_extract_sync", "extract_raster_sync", "extract_sync"]
 
 
 def _check_no_running_loop(sync_name: str, async_name: str) -> None:
@@ -46,3 +51,35 @@ def batch_extract_sync(request: BatchAttributeRequest) -> BatchAttributeResponse
     """Blocking multi-geometry extraction (sync wrapper for :func:`cas.batch_extract`)."""
     _check_no_running_loop("batch_extract_sync", "batch_extract")
     return asyncio.run(batch_extract(request))
+
+
+def extract_raster_sync(
+    dataset_id: str,
+    bbox: BoundingBox | tuple[float, float, float, float] | list[float] | dict,
+    output_dir: str | Path,
+    *,
+    target_resolution: float | None = None,
+    resampling: RasterResampling | str = RasterResampling.NEAREST,
+    time_range: TimeRange | None = None,
+    filename: str | None = None,
+) -> RasterResult:
+    """Blocking bbox-mode raster extraction (sync wrapper for :func:`cas.extract_raster`).
+
+    In-process only — this capability is deliberately absent from the HTTP
+    API. The written file honors the discretization-grade contract: a
+    domain-bbox, tile-mosaicked, native-resolution, EPSG:4326 GeoTIFF with
+    correct nodata; the returned :class:`~cas.core.models.RasterResult`
+    carries its path.
+    """
+    _check_no_running_loop("extract_raster_sync", "extract_raster")
+    return asyncio.run(
+        extract_raster(
+            dataset_id,
+            bbox,
+            output_dir,
+            target_resolution=target_resolution,
+            resampling=resampling,
+            time_range=time_range,
+            filename=filename,
+        )
+    )
