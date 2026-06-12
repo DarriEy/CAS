@@ -114,6 +114,33 @@ class TestExtractEndpoint:
         assert resp.headers["X-Request-ID"]
 
 
+class TestRasterExcludedOverHTTP:
+    """Raster mode is in-process only: the HTTP layer must reject it."""
+
+    def test_extract_rejects_output_raster_with_clear_message(self):
+        body = {
+            "output": "raster",
+            "bbox": {"min_lon": -96.6, "min_lat": 39.0, "max_lon": -96.5, "max_lat": 39.1},
+            "dataset_ids": ["copernicus_dem:elevation"],
+        }
+        with TestClient(create_app()) as client:
+            resp = client.post("/api/v1/extract", json=body)
+        assert resp.status_code == 422
+        err = resp.json()["error"]
+        assert err["type"] == "validation_error"
+        # The rejection must point at the in-process facade.
+        assert "extract_raster_sync" in resp.text
+        assert "in-process" in resp.text
+
+    def test_explicit_output_stats_still_works(self):
+        d, g = _mock_engine()
+        body = {**VALID_BODY, "output": "stats"}
+        with d, g, TestClient(create_app()) as client:
+            resp = client.post("/api/v1/extract", json=body)
+        assert resp.status_code == 200
+        assert resp.json()["results"][0]["value"] == 42.0
+
+
 class TestAuth:
     def test_missing_key_401_when_enabled(self, monkeypatch):
         monkeypatch.setenv("CAS_AUTH_ENABLED", "true")
