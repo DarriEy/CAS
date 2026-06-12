@@ -14,6 +14,7 @@ Everything here is blocking rasterio work — callers run it via
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
 import numpy as np
@@ -23,6 +24,34 @@ from cas.core.exceptions import ProtocolError
 from cas.core.models import RasterResampling
 
 logger = structlog.get_logger()
+
+
+def _snap_bounds_to_grid(
+    bounds: tuple[float, float, float, float],
+    transform: object,
+) -> tuple[float, float, float, float]:
+    """Expand bounds outward to the pixel edges of a reference grid.
+
+    ``rasterio.merge`` anchors the output grid at the requested west/north
+    bound. When that grid is offset from the source pixel grid (Copernicus
+    DEM tiles are half-pixel shifted: pixel *centers* sit on degree lines),
+    rounding can leave the easternmost/southernmost output column/row
+    uncovered by any source — silently 0-filled when nodata is None. Snapping
+    the request outward to the reference grid (≤1 native pixel per edge)
+    aligns the output with the sources so every pixel is covered.
+    """
+    t = transform  # affine.Affine
+    rx: float = t.a  # type: ignore[attr-defined]  # pixel width (> 0)
+    ry: float = -t.e  # type: ignore[attr-defined]  # pixel height (> 0)
+    x_off: float = t.c  # type: ignore[attr-defined]
+    y_off: float = t.f  # type: ignore[attr-defined]
+    west, south, east, north = bounds
+    eps_x, eps_y = rx * 1e-6, ry * 1e-6
+    west = x_off + math.floor((west - x_off) / rx + eps_x) * rx
+    east = x_off + math.ceil((east - x_off) / rx - eps_x) * rx
+    north = y_off - math.floor((y_off - north) / ry + eps_y) * ry
+    south = y_off - math.ceil((y_off - south) / ry - eps_y) * ry
+    return (west, south, east, north)
 
 
 def mosaic_cog_windows(
@@ -39,7 +68,9 @@ def mosaic_cog_windows(
     in that native CRS (v1 passthrough — no reprojection). ``rasterio.merge``
     reads only the per-source windows that overlap the clipped bounds, so a
     basin spanning several 1° DEM tiles comes back as one correct array
-    without downloading whole tiles.
+    without downloading whole tiles. The bounds are snapped outward (at most
+    one native pixel per edge) to the first source's pixel grid so the merge
+    cannot leave half-covered edge pixels unfilled.
 
     Returns ``(array_2d, transform, nodata, crs)`` for band 1.
     """
@@ -64,6 +95,9 @@ def mosaic_cog_windows(
 
         reproject_bbox = crs0 is not None and str(crs0) != "EPSG:4326"
         bounds = transform_bounds("EPSG:4326", crs0, *bbox) if reproject_bbox else bbox
+        # Align the output grid with the source pixel grid (≤1 px outward per
+        # edge) so merge rounding can't leave edge columns/rows uncovered.
+        bounds = _snap_bounds_to_grid(tuple(bounds), srcs[0].transform)
 
         src_nodata = [s.nodata for s in srcs]
         nodata = next((v for v in src_nodata if v is not None), None)

@@ -38,7 +38,10 @@ consumers get is exactly:
 Concretely:
 
 - **Domain-bbox**: requests are bbox-mode — a rectangular domain, not a
-  per-HRU geometry. The output raster is clipped to that bbox.
+  per-HRU geometry. The output raster is clipped to that bbox, snapped
+  outward by at most one native pixel per edge so it aligns with the source
+  pixel grid (Copernicus DEM grids are half-pixel offset; without the snap,
+  merge rounding can leave an edge column silently unfilled).
 - **Tile-mosaicked**: for STAC/COG sources, *all* catalog items intersecting
   the bbox are merged (windowed `rasterio.merge` of per-item bbox windows).
   A basin straddling Copernicus DEM 1° tile boundaries comes back as one

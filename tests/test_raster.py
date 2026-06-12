@@ -332,6 +332,50 @@ class TestSTACMosaic:
             assert src.width == 10 and src.height == 6
 
     @respx.mock
+    async def test_half_pixel_offset_grid_leaves_no_uncovered_edge(self, tmp_path):
+        """Copernicus-style grids (pixel centers on degree lines) must not
+        yield a silently empty east column when the bbox isn't grid-aligned
+        (regression: rasterio.merge rounding left the last column 0-filled).
+        """
+        from rasterio.transform import from_origin
+
+        tiles = []
+        for name, west, value in [("w", 10.0, 100.0), ("e", 11.0, 200.0)]:
+            path = tmp_path / f"offset_{name}.tif"
+            width = height = round(1 / RES)
+            transform = from_origin(west - RES / 2, 51.0 + RES / 2, RES, RES)
+            arr = np.full((height, width), value, dtype=np.float32)
+            with rasterio.open(
+                path, "w", driver="GTiff", height=height, width=width, count=1,
+                dtype="float32", crs="EPSG:4326", transform=transform, nodata=NODATA,
+            ) as dst:
+                dst.write(arr, 1)
+            tiles.append(path)
+        respx.post("https://stac.test/api/search").mock(
+            return_value=httpx.Response(200, json=_stac_items(*tiles))
+        )
+
+        # bbox deliberately not aligned to the half-pixel-offset source grid
+        out = tmp_path / "offset_mosaic.tif"
+        async with TwoTileSTACConnector() as conn:
+            await conn.extract_raster(
+                dataset_id="test_stac:elevation",
+                bbox=(10.47, 50.22, 11.53, 50.81),
+                output_path=out,
+            )
+
+        with rasterio.open(out) as src:
+            arr = src.read(1)
+            # Every pixel is covered by a source tile: no nodata, no 0-fill.
+            assert not (arr == NODATA).any()
+            assert not (arr == 0.0).any()
+            assert set(np.unique(arr)) == {100.0, 200.0}
+            # Output grid aligns with the source grid, expanded <= 1 px/edge.
+            assert src.bounds.left == pytest.approx(10.47 - RES / 2, abs=RES)
+            assert src.bounds.left <= 10.47 and src.bounds.right >= 11.53
+            assert src.bounds.bottom <= 50.22 and src.bounds.top >= 50.81
+
+    @respx.mock
     async def test_no_items_raises(self, tmp_path):
         respx.post("https://stac.test/api/search").mock(
             return_value=httpx.Response(200, json={"features": []})
