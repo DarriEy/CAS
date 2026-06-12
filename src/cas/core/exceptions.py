@@ -67,3 +67,44 @@ class RegistrationRequiredError(ConnectorError):
             provider,
             f"Registration required. Register at: {registration_url}\n{instructions}",
         )
+
+
+# ── Curated mirror tier ─────────────────────────────────────────────
+
+
+class MirrorError(CASError):
+    """Base exception for the curated-mirror tier."""
+
+
+class MirrorDatasetNotFoundError(MirrorError):
+    """Requested dataset (or pinned version) is not in the mirror registry."""
+
+
+class MirrorOfflineError(MirrorError):
+    """Materialization required but CAS_MIRROR_OFFLINE is set."""
+
+
+class MirrorWriteError(MirrorError):
+    """Mirror root is not writable and the dataset is not materialized."""
+
+
+class MirrorIntegrityError(MirrorError):
+    """Checksum or size mismatch against the registry or manifest.
+
+    Carries ``expected`` and ``actual`` hashes — never silently accepted.
+    """
+
+    def __init__(self, message: str, *, expected: str | None = None, actual: str | None = None) -> None:
+        self.expected = expected
+        self.actual = actual
+        if expected or actual:
+            message = f"{message} (expected sha256={expected}, actual sha256={actual})"
+        super().__init__(message)
+
+
+class MirrorLicenseError(MirrorError):
+    """Dataset license terms require explicit acknowledgment that is absent."""
+
+
+class MirrorDependencyError(MirrorError):
+    """The optional [mirror] dependencies (geopandas/pyarrow) are missing."""
