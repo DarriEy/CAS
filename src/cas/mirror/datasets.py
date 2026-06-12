@@ -377,3 +377,317 @@ register_mirror_dataset(
         disk_note="~3 GB if all 19 regions are synced; a typical domain needs 1-2 regions.",
     )
 )
+
+
+# ════════════════════════════════════════════════════════════════════
+#  Geofabrics (slice 2b) — PATH delivery, NOT bbox subsetting
+#
+#  CAS materializes topology-complete versioned units and delivers verified
+#  local paths (design header decisions 1 & 4, §3). Upstream-trace closure
+#  stays in the consumer (SYMFLUENCE GeofabricSubsetter). Shapefile-distributed
+#  sets are converted to GeoPackage at mirror time (the subsetter reads gpkg);
+#  TDX stays parquet+gpkg as upstream ships; NWS stays gpkg.
+# ════════════════════════════════════════════════════════════════════
+
+
+# ── HydroBASINS v1.c ────────────────────────────────────────────────
+#
+# Units are continental-region × Pfafstetter-level (e.g. na_lev06). The
+# WWF HydroSHEDS v1 License Agreement (NOT CC-BY, design §8) requires a
+# one-time acknowledgment and the verbatim Exhibit B notice next to the data.
+_HYDROBASINS_URL = (
+    "https://data.hydrosheds.org/file/HydroBASINS/standard/"
+    "hybas_{region}_lev{level:02d}_v1c.zip"
+)
+_HYDROBASINS_REGIONS = {"af", "ar", "as", "au", "eu", "na", "sa", "si"}
+
+
+def _parse_hydrobasins_unit(unit: str) -> tuple[str, int]:
+    """``na_lev06`` → ``("na", 6)``; validates region and level."""
+    region, _, lev = unit.partition("_lev")
+    if region not in _HYDROBASINS_REGIONS or not lev.isdigit() or not 1 <= int(lev) <= 12:
+        raise MirrorUnitError(
+            f"Bad HydroBASINS unit '{unit}'. Expected '<region>_lev<NN>' with "
+            f"region in {sorted(_HYDROBASINS_REGIONS)} and level 1-12 "
+            f"(e.g. 'na_lev06')."
+        )
+    return region, int(lev)
+
+
+def _hydrobasins_sources(ds: MirrorDataset, unit: str) -> list[MirrorSource]:
+    region, level = _parse_hydrobasins_unit(unit)
+    return [
+        MirrorSource(
+            url=_HYDROBASINS_URL.format(region=region, level=level),
+            archive_name=f"hybas_{region}_lev{level:02d}_v1c.zip",
+            sha256=None,
+            size_bytes_approx=120_000_000,
+            unit=unit,
+            role="basins",
+        )
+    ]
+
+
+register_unit_source_factory("hydrobasins", _hydrobasins_sources)
+register_mirror_dataset(
+    MirrorDataset(
+        slug="hydrobasins",
+        version="1c",
+        display_name="HydroBASINS v1c — Pfafstetter sub-basins with topology",
+        description=(
+            "WWF HydroSHEDS HydroBASINS, continental-region × Pfafstetter-level "
+            "units carrying basin polygons AND river topology (HYBAS_ID / "
+            "NEXT_DOWN). Path-delivered; the subsetter traces upstream closure."
+        ),
+        sources=[],  # built per-unit by the factory above
+        delivery="path",
+        unit_scheme="continental region × Pfafstetter level (e.g. na_lev06)",
+        unit_processing="gpkg",
+        dynamic_units=True,
+        # Shapefile distribution; the layer has the topology columns the
+        # subsetter needs (HYBAS_ID, NEXT_DOWN). Keep ALL columns.
+        shapefile_patterns=["hybas_*_lev*_v1c.shp", "*.shp"],
+        known_columns=["HYBAS_ID", "NEXT_DOWN", "MAIN_BAS", "PFAF_ID", "UP_AREA"],
+        notice_file="hydrosheds_v1_exhibit_b.txt",
+        license=MirrorLicense(
+            license="HydroSHEDS v1 License Agreement (WWF) — NOT CC-BY",
+            license_url="https://www.hydrosheds.org/about",
+            license_verified=True,  # design §8: bespoke WWF agreement, verified
+            attribution=(
+                "HydroBASINS v1c (Lehner & Grill, 2013), WWF HydroSHEDS; "
+                "see the embedded Exhibit B notice"
+            ),
+            license_flags=["bespoke-license", "acknowledgment-required"],
+            requires_acknowledgment=True,
+        ),
+        citation=(
+            "Lehner, B. & Grill, G. (2013). Global river hydrography and network "
+            "routing: baseline data and new approaches to study the world's large "
+            "river systems. Hydrological Processes, 27(15), 2171-2186. "
+            "HydroBASINS via https://www.hydrosheds.org. Accessed {access_date}."
+        ),
+        approx_materialized_bytes=500_000_000,
+        disk_note="~0.1-0.3 GB per (region, level) zip; varies sharply with level.",
+    )
+)
+
+
+# ── MERIT-Basins ────────────────────────────────────────────────────
+#
+# Nine Pfaf-L1 regions, each a catchments + rivernet shapefile pair. Dual
+# license ODbL-1.0 OR CC-BY-NC-4.0 (design §8) → a license-fork flag.
+#
+# URL pattern is the one the native SYMFLUENCE handler (merit_basins.py)
+# ships. NOTE (verified 2026-06-12): the Princeton host
+# hydrology.princeton.edu no longer resolves (DNS NXDOMAIN) and reachhydro.org
+# has migrated MERIT-Basins distribution to Google Drive / Globus folders that
+# have no stable per-region direct-download URL. The pattern below is recorded
+# faithfully from the native handler; a maintainer should bake in the new
+# direct URLs (and expected sha256) once reachhydro publishes them.
+_MERIT_BASE_URL = "http://hydrology.princeton.edu/data/mpan/MERIT_Basins"
+_MERIT_CATCHMENTS = f"{_MERIT_BASE_URL}/MERIT_Catchments/pfaf_{{code}}_MERIT_Hydro_v07_Basins_v01.zip"
+_MERIT_RIVERS = f"{_MERIT_BASE_URL}/MERIT_Rivernet/pfaf_{{code}}_MERIT_Hydro_v07_Basins_v01_rivernet.zip"
+
+register_mirror_dataset(
+    MirrorDataset(
+        slug="merit_basins",
+        version="1",
+        display_name="MERIT-Basins — Pfaf-L1 catchments + river network",
+        description=(
+            "MERIT-Basins (Lin et al., 2019), nine Pfafstetter Level-1 regions, "
+            "each a catchments + rivernet shapefile pair (COMID / up1-3 "
+            "topology). Path-delivered; the subsetter traces upstream closure."
+        ),
+        sources=[
+            src
+            for code in [str(i) for i in range(1, 10)]
+            for src in (
+                MirrorSource(
+                    url=_MERIT_CATCHMENTS.format(code=code),
+                    archive_name=f"pfaf_{code}_MERIT_Hydro_v07_Basins_v01.zip",
+                    sha256=None,
+                    size_bytes_approx=400_000_000,
+                    unit=code,
+                    role="catchments",
+                ),
+                MirrorSource(
+                    url=_MERIT_RIVERS.format(code=code),
+                    archive_name=f"pfaf_{code}_MERIT_Hydro_v07_Basins_v01_rivernet.zip",
+                    sha256=None,
+                    size_bytes_approx=150_000_000,
+                    unit=code,
+                    role="rivernet",
+                ),
+            )
+        ],
+        delivery="path",
+        unit_scheme="Pfafstetter Level-1 region (codes 1-9)",
+        unit_processing="gpkg",
+        shapefile_patterns=["*riv_pfaf_*.shp", "*cat_pfaf_*.shp", "pfaf_*.shp", "*.shp"],
+        known_columns=["COMID", "NextDownID", "up1", "up2", "up3"],
+        license=MirrorLicense(
+            license="ODbL-1.0 OR CC-BY-NC-4.0 (user's choice; inherited from MERIT-Hydro)",
+            license_url="https://opendatacommons.org/licenses/odbl/1-0/",
+            license_verified=True,  # design §8: dual license verified
+            attribution="MERIT-Basins (Lin et al., 2019); MERIT-Hydro (Yamazaki et al., 2019)",
+            license_flags=["license-fork:odbl-or-cc-by-nc"],
+            requires_acknowledgment=False,
+            disclaimer=(
+                "Dual-licensed ODbL-1.0 OR CC-BY-NC-4.0 — pick ONE: ODbL adds "
+                "share-alike + attribution obligations; CC-BY-NC bars commercial "
+                "use. Never side-door the MERIT-Hydro rasters past their "
+                "registration form."
+            ),
+        ),
+        citation=(
+            "Lin, P., Pan, M., Beck, H.E., et al. (2019). Global reconstruction "
+            "of naturalized river flows at 2.94 million reaches. Water Resources "
+            "Research, 55, 6499-6516. Accessed {access_date}."
+        ),
+        approx_materialized_bytes=8_000_000_000,
+        disk_note="~1 GB per Pfaf-L1 region; ~8 GB for all 9.",
+    )
+)
+
+
+# ── TDX-Hydro / GEOGLOWS v2 ─────────────────────────────────────────
+#
+# ~125 VPUs, enumerated only via the upstream vpu-boundaries index — per-VPU
+# lazy is MANDATORY; `cas mirror sync tdx_hydro` without a unit is refused
+# (design §1: ~25-40 GB global). Catchments ship as GeoParquet, streams as
+# GeoPackage — kept as upstream ships them. Dual CC-BY-SA / CC-BY (design §8).
+_GEOGLOWS_S3 = "https://geoglows-v2.s3.us-west-2.amazonaws.com"
+_TDX_CATCHMENTS = f"{_GEOGLOWS_S3}/hydrography/vpu={{vpu}}/catchments_{{vpu}}.parquet"
+_TDX_STREAMS = f"{_GEOGLOWS_S3}/hydrography/vpu={{vpu}}/streams_{{vpu}}.gpkg"
+
+
+def _tdx_sources(ds: MirrorDataset, unit: str) -> list[MirrorSource]:
+    return [
+        MirrorSource(
+            url=_TDX_CATCHMENTS.format(vpu=unit),
+            archive_name=f"catchments_{unit}.parquet",
+            sha256=None,
+            size_bytes_approx=200_000_000,
+            unit=unit,
+            role="catchments",
+        ),
+        MirrorSource(
+            url=_TDX_STREAMS.format(vpu=unit),
+            archive_name=f"streams_{unit}.gpkg",
+            sha256=None,
+            size_bytes_approx=100_000_000,
+            unit=unit,
+            role="streams",
+        ),
+    ]
+
+
+register_unit_source_factory("tdx_hydro", _tdx_sources)
+register_mirror_dataset(
+    MirrorDataset(
+        slug="tdx_hydro",
+        version="2",
+        display_name="TDX-Hydro / GEOGLOWS v2 — per-VPU catchments + streams",
+        description=(
+            "GEOGLOWS v2 (TDX-Hydro), ~125 Virtual Processing Units. Catchments "
+            "(GeoParquet) + streams (GeoPackage) with streamID / LINKNO / "
+            "DSLINKNO topology. Per-VPU lazy only; resolved via the upstream "
+            "vpu-boundaries index."
+        ),
+        sources=[],  # built per-VPU by the factory above
+        delivery="path",
+        unit_scheme="VPU (~125, via the vpu-boundaries index)",
+        unit_processing="raw",  # parquet + gpkg kept byte-identical
+        dynamic_units=True,
+        units_required_for_sync=True,  # `sync --all` refused (design §1)
+        known_columns=["streamID", "LINKNO", "DSLINKNO", "USLINKNO1", "USLINKNO2"],
+        license=MirrorLicense(
+            license="TDX-Hydro CC-BY-SA-4.0 (© NGA 2023); GEOGLOWS distribution CC-BY-4.0",
+            license_url="https://creativecommons.org/licenses/by-sa/4.0/",
+            license_verified=True,  # design §8: both notices verified
+            attribution=(
+                "TDX-Hydro (© NGA 2023, CC-BY-SA 4.0); GEOGLOWS v2 "
+                "(CC-BY 4.0, https://data.geoglows.org)"
+            ),
+            license_flags=["share-alike"],
+            requires_acknowledgment=False,
+            disclaimer=(
+                "TDX-Hydro is CC-BY-SA 4.0: published derivatives must stay "
+                "CC-BY-SA. The GEOGLOWS distribution layer is CC-BY 4.0; carry "
+                "BOTH notices."
+            ),
+        ),
+        citation=(
+            "Sanchez Lozano, J., et al. (2021). A streamflow-based global river "
+            "network (GEOGLOWS v2 / TDX-Hydro). https://data.geoglows.org. "
+            "Accessed {access_date}."
+        ),
+        approx_materialized_bytes=40_000_000_000,
+        disk_note="~0.5 GB per VPU; ~25-40 GB for the full global set (refused).",
+    )
+)
+
+
+# ── NWS NextGen hydrofabric v2.2 ────────────────────────────────────
+#
+# Single CONUS unit: a 1.6 GB tar.gz expanding to a ~7 GB multi-layer
+# GeoPackage. License not stated at the bucket (live-probed); upstream
+# NOAA-OWP/Lynker ODbL 1.0 assumed (design §8).
+_NWS_URL = (
+    "https://communityhydrofabric.s3.us-east-1.amazonaws.com/"
+    "hydrofabrics/community/conus_nextgen.tar.gz"
+)
+
+register_mirror_dataset(
+    MirrorDataset(
+        slug="nws_hydrofabric",
+        version="2.2",
+        display_name="NWS NextGen hydrofabric v2.2 — CONUS (divides/flowpaths/network)",
+        description=(
+            "NOAA NextGen community hydrofabric, one CONUS-wide GeoPackage "
+            "(divides, flowpaths, network layers; divide_id / toid topology). "
+            "Path-delivered; the subsetter traces via the network table."
+        ),
+        sources=[
+            MirrorSource(
+                url=_NWS_URL,
+                archive_name="conus_nextgen.tar.gz",
+                sha256=None,
+                size_bytes_approx=1_741_084_439,  # live-probed content-length
+                unit="conus",
+                role="hydrofabric",
+            )
+        ],
+        delivery="path",
+        unit_scheme="single CONUS unit",
+        unit_processing="tar_member",
+        shapefile_patterns=["*conus_nextgen.gpkg", "*.gpkg"],
+        known_columns=["divide_id", "id", "toid"],
+        license=MirrorLicense(
+            license="not stated at source; upstream NOAA-OWP/Lynker ODbL-1.0 assumed",
+            license_url="https://www.lynker-spatial.com",
+            license_verified=False,  # design §8: live-probed, no license at bucket
+            attribution=(
+                "NextGen community hydrofabric (NOAA-OWP / Lynker-Spatial); "
+                "license not stated at source, upstream ODbL 1.0 assumed"
+            ),
+            license_flags=["license-unverified-at-source"],
+            requires_acknowledgment=False,
+            disclaimer=(
+                "PROVISIONAL data; license not stated at the distribution "
+                "bucket (live-probed). Upstream NOAA-OWP/Lynker ODbL 1.0 is "
+                "assumed — confirm before redistribution."
+            ),
+        ),
+        citation=(
+            "Johnson, J.M., et al. (2023). National Hydrologic Geospatial Fabric "
+            "(hydrofabric) for the NextGen framework. Community hydrofabric "
+            "v2.2. Accessed {access_date}."
+        ),
+        approx_materialized_bytes=7_000_000_000,
+        disk_note=(
+            "1.6 GB tar.gz download expands to a ~7 GB GeoPackage "
+            "(~9 GB transient during extraction). Single CONUS unit."
+        ),
+    )
+)

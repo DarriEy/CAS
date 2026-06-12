@@ -66,6 +66,60 @@ def build_fake_zip(tmp_path: Path, *, crs: str = "EPSG:4326", shp_name: str = "d
     return buf.getvalue()
 
 
+def _fake_gdf(*, crs: str = "EPSG:4326"):
+    import geopandas as gpd
+    from shapely.geometry import box
+
+    return gpd.GeoDataFrame(
+        {
+            "fid_int": [1, 2, 3, 4],
+            "name": FEATURE_NAMES,
+            "value": [1.0, 2.0, 3.0, 4.0],
+            "geometry": [
+                box(0.0, 0.0, 1.0, 1.0),
+                box(3.9, 3.9, 4.5, 4.5),
+                box(4.2, 4.2, 5.0, 5.0),
+                box(8.0, 8.0, 9.0, 9.0),
+            ],
+        },
+        crs=crs,
+    )
+
+
+def build_fake_gpkg_bytes(tmp_path: Path, *, layer: str = "data") -> bytes:
+    """A tiny single-layer GeoPackage as raw bytes (TDX streams, raw mode)."""
+    out = tmp_path / f"_gpkg_{layer}.gpkg"
+    _fake_gdf().to_file(out, driver="GPKG", layer=layer)
+    return out.read_bytes()
+
+
+def build_fake_parquet_bytes(tmp_path: Path) -> bytes:
+    """A tiny GeoParquet as raw bytes (TDX catchments, raw mode)."""
+    out = tmp_path / "_catch.parquet"
+    _fake_gdf().to_parquet(out)
+    return out.read_bytes()
+
+
+def build_fake_gpkg_tar(tmp_path: Path, *, member: str = "conus_nextgen.gpkg") -> bytes:
+    """A .tar.gz holding one GeoPackage member (NWS tar_member mode)."""
+    import io
+    import tarfile
+
+    gpkg = tmp_path / "_tar_src.gpkg"
+    _fake_gdf().to_file(gpkg, driver="GPKG", layer="divides")
+    raw = gpkg.read_bytes()
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w:gz") as tf:
+        info = tarfile.TarInfo(name=f"conus_nextgen/{member}")
+        info.size = len(raw)
+        tf.addfile(info, io.BytesIO(raw))
+        readme = b"decoy"
+        rinfo = tarfile.TarInfo(name="conus_nextgen/README.txt")
+        rinfo.size = len(readme)
+        tf.addfile(rinfo, io.BytesIO(readme))
+    return buf.getvalue()
+
+
 def make_fake_dataset(
     *,
     slug: str = "fakeveg",

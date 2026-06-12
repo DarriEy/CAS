@@ -37,6 +37,7 @@ from cas.mirror.datasets import (
     sources_for_unit,
     unregister_mirror_dataset,
 )
+from cas.mirror.fetch import mirror_fetch, mirror_fetch_sync
 from cas.mirror.models import (
     MirrorDataset,
     MirrorDatasetStatus,
@@ -69,6 +70,9 @@ __all__ = [
     # Query facade
     "mirror_subset",
     "mirror_subset_sync",
+    # Path-delivery facade (geofabrics)
+    "mirror_fetch",
+    "mirror_fetch_sync",
     # Registry
     "get_mirror_dataset",
     "list_mirror_datasets",

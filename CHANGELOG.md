@@ -9,6 +9,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Curated mirror tier (slice 2b): geofabrics as path delivery** — four
+  topology-complete geofabrics (HydroBASINS v1c, MERIT-Basins, TDX-Hydro /
+  GEOGLOWS v2, NWS NextGen v2.2) delivered through a new facade
+  `cas.mirror_fetch(...)` / `cas.mirror_fetch_sync(dataset_id, unit=|units=|
+  bbox=|point=, output_dir=None)` returning `MirrorFetchResult(paths, path,
+  format, notice_path, license…, disclaimer, provenance)`, distinct from
+  `mirror_subset`. The geofabric contract is **path delivery, never bbox
+  clipping** (design §3): CAS materializes versioned units and hands back
+  verified paths; upstream-trace closure stays in the consumer. `mirror_subset`
+  refuses path-delivery datasets and vice versa.
+  - **HydroBASINS v1c** — region×Pfaf-level units (`hydrobasins:na_lev06`),
+    shapefile→GeoPackage. Distributed under the bespoke WWF *HydroSHEDS v1
+    License Agreement* (NOT CC-BY): wires the slice-1 acknowledgment mechanism
+    for real (lazy `mirror_fetch` refuses un-acknowledged), and embeds the
+    **verbatim Exhibit B "Required Attributions" notice**
+    (`cas/mirror/notices/hydrosheds_v1_exhibit_b.txt`, extracted verbatim from
+    the HydroSHEDS TechDoc v1.4 PDF) next to every unit + referenced in the
+    manifest.
+  - **MERIT-Basins** — nine Pfaf-L1 regions, catchments+rivernet GeoPackage
+    pairs; dual ODbL-1.0/CC-BY-NC-4.0 surfaced as
+    `license_flags=["license-fork:odbl-or-cc-by-nc"]`.
+  - **TDX-Hydro / GEOGLOWS v2** — per-VPU (catchments GeoParquet + streams
+    GeoPackage, kept as upstream ships), resolved via the vpu-boundaries index;
+    per-VPU lazy only — `cas mirror sync tdx_hydro` without a unit is refused
+    (~25–40 GB global). `license_flags=["share-alike"]`.
+  - **NWS NextGen v2.2** — single CONUS unit, 1.6 GB tar.gz → ~7 GB GeoPackage
+    (member extracted from the tar); `license_flags=["license-unverified-at-
+    source"]` + provisional-data disclaimer (license not stated at the bucket,
+    live-probed; upstream ODbL 1.0 assumed). Disk cost noted before download.
+  - **bbox→unit selection helpers** in `cas.mirror.units`: static Pfaf-L1
+    (MERIT) and continental-region (HydroBASINS) extent tables, and an
+    index-driven VPU resolver (TDX vpu-boundaries.gpkg, cached under the
+    mirror root). New store processing modes `gpkg` (shapefile→GeoPackage,
+    recorded as a conversion), `raw` (byte-identical), and `tar_member`
+    (tar.gz member extraction).
+  - Live URL-pattern check (no download): HydroBASINS, TDX, NWS resolve (200);
+    MERIT's Princeton host no longer resolves (reachhydro.org migrated to
+    Google Drive) — the native-handler URL pattern is recorded faithfully with
+    a maintainer TODO to bake in the new direct URLs.
 - **Curated mirror tier (slice 2a): RGI 7.0 with the Earthdata credential
   flow** — the first **unit-structured** mirror dataset (19 RGI first-order
   regions, units `01`–`19`). Regions materialize lazily per unit under

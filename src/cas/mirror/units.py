@@ -122,3 +122,117 @@ def rgi_regions_for_bbox(bbox: Bbox) -> list[str]:
 
 
 register_unit_resolver("rgi7", lambda bbox, settings: rgi_regions_for_bbox(bbox))
+
+
+# ── HydroBASINS continental regions (geofabric, slice 2b) ───────────
+#
+# Units are ``{region}_lev{level}`` (e.g. ``na_lev06``). The static table
+# selects the continental region(s); the Pfafstetter level is the consumer's
+# choice and is carried in the unit id (see :func:`hydrobasins_units_for_bbox`).
+# Extents mirror the native SYMFLUENCE handler's region table.
+
+HYDROBASINS_REGION_BBOXES: dict[str, Bbox] = {
+    "af": (-20.0, -35.0, 55.0, 38.0),   # Africa
+    "ar": (-180.0, 51.0, 180.0, 84.0),  # Arctic (Greenland, Iceland, ...)
+    "as": (57.0, 1.0, 180.0, 56.0),     # Central-South Asia
+    "au": (95.0, -56.0, 180.0, 0.0),    # Australia-Oceania
+    "eu": (-25.0, 12.0, 70.0, 72.0),    # Europe-Middle East
+    "na": (-138.0, 5.0, -52.0, 63.0),   # North America
+    "sa": (-93.0, -56.0, -32.0, 15.0),  # South America
+    "si": (57.0, 45.0, 180.0, 84.0),    # Siberia
+}
+
+
+def hydrobasins_regions_for_bbox(bbox: Bbox) -> list[str]:
+    """HydroBASINS continental region codes intersecting an EPSG:4326 bbox."""
+    return sorted(
+        r for r, ext in HYDROBASINS_REGION_BBOXES.items() if _bbox_intersects(bbox, ext)
+    )
+
+
+def hydrobasins_units_for_bbox(bbox: Bbox, level: int) -> list[str]:
+    """Full ``{region}_lev{level}`` unit ids for a bbox at a Pfafstetter level."""
+    if not 1 <= level <= 12:
+        raise MirrorUnitError(f"HydroBASINS Pfafstetter level must be 1-12, got {level}.")
+    return [f"{r}_lev{level:02d}" for r in hydrobasins_regions_for_bbox(bbox)]
+
+
+# ── MERIT-Basins Pfafstetter Level-1 regions (geofabric, slice 2b) ──
+#
+# Nine continental Pfaf-L1 regions (codes 1-9); extents mirror the native
+# SYMFLUENCE handler's table.
+
+MERIT_PFAF_BBOXES: dict[str, Bbox] = {
+    "1": (-82.0, -35.0, -34.0, 15.0),   # South America — Amazon, eastern
+    "2": (-82.0, -56.0, -34.0, 15.0),   # South America — Parana, southern
+    "3": (-130.0, 5.0, -52.0, 62.0),    # North America — Atlantic/Gulf
+    "4": (-170.0, 5.0, -100.0, 72.0),   # North America — Pacific/Arctic
+    "5": (-15.0, 35.0, 60.0, 72.0),     # Europe
+    "6": (-20.0, -36.0, 55.0, 38.0),    # Africa
+    "7": (55.0, 0.0, 180.0, 78.0),      # Asia — North/Central
+    "8": (90.0, -12.0, 155.0, 55.0),    # Asia — Southeast / Oceania
+    "9": (110.0, -50.0, 180.0, -10.0),  # Australia / Oceania
+}
+
+
+def merit_pfaf_for_bbox(bbox: Bbox) -> list[str]:
+    """MERIT-Basins Pfaf-L1 region codes intersecting an EPSG:4326 bbox."""
+    return sorted(
+        (p for p, ext in MERIT_PFAF_BBOXES.items() if _bbox_intersects(bbox, ext)),
+        key=int,
+    )
+
+
+register_unit_resolver("merit_basins", lambda bbox, settings: merit_pfaf_for_bbox(bbox))
+
+
+# ── TDX-Hydro / GEOGLOWS v2 VPUs (geofabric, slice 2b) ──────────────
+#
+# ~125 VPUs that cannot be enumerated statically — they come from the
+# upstream ``vpu-boundaries.gpkg`` index (Hive-partitioned S3). The index is
+# cached under the mirror root; the resolver spatial-joins the query bbox to
+# the VPU boundaries (logic ported from the native tdx_hydro handler).
+
+_GEOGLOWS_S3_BASE = "https://geoglows-v2.s3.us-west-2.amazonaws.com"
+TDX_VPU_BOUNDARIES_URL = f"{_GEOGLOWS_S3_BASE}/hydrography-global/vpu-boundaries.gpkg"
+
+
+def _tdx_index_path(settings: Settings):
+    return settings.mirror_dir / "tdx_hydro" / "_index" / "vpu-boundaries.gpkg"
+
+
+def ensure_tdx_index(settings: Settings):
+    """Download (once) and return the cached VPU-boundaries GeoDataFrame."""
+    import httpx
+
+    from cas.mirror.convert import _import_geopandas
+
+    gpd = _import_geopandas()
+    index_path = _tdx_index_path(settings)
+    if not index_path.is_file():
+        index_path.parent.mkdir(parents=True, exist_ok=True)
+        part = index_path.with_suffix(".part")
+        with httpx.stream("GET", TDX_VPU_BOUNDARIES_URL, follow_redirects=True,
+                          timeout=httpx.Timeout(connect=30.0, read=600.0, write=600.0, pool=30.0)) as resp:
+            resp.raise_for_status()
+            with open(part, "wb") as fh:
+                for chunk in resp.iter_bytes(1 << 20):
+                    fh.write(chunk)
+        part.replace(index_path)
+    return gpd.read_file(index_path)
+
+
+def tdx_vpus_for_bbox(bbox: Bbox, settings: Settings) -> list[str]:
+    """TDX-Hydro VPU codes intersecting an EPSG:4326 bbox (via the index)."""
+    from shapely.geometry import box as shapely_box
+
+    index = ensure_tdx_index(settings)
+    if index.crs is not None and str(index.crs).upper() not in ("EPSG:4326", "OGC:CRS84"):
+        index = index.to_crs("EPSG:4326")
+    query = shapely_box(*bbox)
+    hits = index[index.geometry.intersects(query)]
+    col = "VPUCode" if "VPUCode" in hits.columns else hits.columns[0]
+    return sorted(str(v) for v in hits[col].unique())
+
+
+register_unit_resolver("tdx_hydro", tdx_vpus_for_bbox)

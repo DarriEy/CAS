@@ -71,7 +71,8 @@ from cas.core.models import (
 )
 from cas.core.registry import discover, get_connector, list_providers
 from cas.extract.engine import batch_extract, extract, extract_raster
-from cas.mirror.models import MirrorSubsetResult
+from cas.mirror.fetch import mirror_fetch, mirror_fetch_sync
+from cas.mirror.models import MirrorFetchResult, MirrorSubsetResult
 from cas.mirror.query import mirror_subset, mirror_subset_sync
 
 __version__ = "0.3.0"
@@ -88,7 +89,10 @@ __all__ = [
     # Curated mirror tier (in-process only)
     "mirror_subset",
     "mirror_subset_sync",
+    "mirror_fetch",
+    "mirror_fetch_sync",
     "MirrorSubsetResult",
+    "MirrorFetchResult",
     # Runtime configuration
     "configure",
     # Provider registry

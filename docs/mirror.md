@@ -159,6 +159,72 @@ import cas
 result = cas.mirror_subset_sync("rgi7", bbox=(-25, 63, -13, 67), output_dir="/tmp/rgi")
 ```
 
+## Geofabrics — path delivery, not subsetting
+
+Geofabrics (river-network + catchment topology) follow a **different contract**
+from attribute vectors. CAS materializes **topology-complete versioned units**
+and delivers **verified local paths** — it never bbox-clips them. A bbox cannot
+guarantee upstream closure, so clipping a geofabric before the consumer's
+upstream-trace would silently truncate drainage area (a correctness
+regression). The trace itself (NetworkX ancestors; the NWS `network` table)
+stays in the consumer — SYMFLUENCE's `GeofabricSubsetter`, which already reads
+the `.shp`/`.gpkg`/`.parquet` formats the mirror produces.
+
+```python
+import cas
+
+# Deliver one topology-complete unit by id (returns a list — one result per unit)
+(res,) = cas.mirror_fetch_sync("merit_basins", unit="7")
+res.path, res.paths["catchments"], res.paths["rivernet"], res.format
+
+# Or resolve the unit(s) from a domain bbox / pour point
+results = cas.mirror_fetch_sync("tdx_hydro", bbox=(-72, -13, -70, -11))
+results = cas.mirror_fetch_sync("nws_hydrofabric", point=(40.0, -105.0))
+```
+
+`mirror_fetch` (sync + async) takes exactly one selector — `unit=`, `units=`,
+`bbox=`, or `point=` — lazily materializes the resolved unit(s), and returns a
+`MirrorFetchResult` per unit carrying `paths` (role → path), `format`,
+`notice_path` (the verbatim license notice when one is mandated),
+`license`/`attribution`/`citation`/`disclaimer`, and `provenance`. With
+`output_dir=` the files (and notice) are copied there; otherwise the in-mirror
+paths are returned (true path delivery, no copy).
+
+Unit schemes and selection:
+
+| Dataset | Version | Unit scheme | Selector | Format delivered |
+|---|---|---|---|---|
+| HydroBASINS | v1c | continental region × Pfaf level (`na_lev06`) | explicit unit; `bbox` via region table | GeoPackage (from shapefile) |
+| MERIT-Basins | 1 | Pfaf-L1 region (codes 1–9) | `bbox`/`point` via Pfaf table | GeoPackage pair (catchments + rivernet) |
+| TDX-Hydro / GEOGLOWS | v2 | VPU (~125) | `bbox` via the vpu-boundaries index | GeoParquet (catchments) + GeoPackage (streams), as upstream ships |
+| NWS NextGen | v2.2 | single CONUS unit | `unit="conus"` / any CONUS `point` | GeoPackage (extracted from the tar.gz) |
+
+`cas mirror sync tdx_hydro` **without a unit is refused** — the global set is
+~25–40 GB; name the VPU(s) you need (`cas mirror sync tdx_hydro:714`) or let
+`mirror_fetch(..., bbox=...)` resolve them. HydroBASINS likewise can't be
+fully synced (region × 12 levels); name a unit.
+
+### Geofabric disk costs (surfaced by `cas mirror sync`/`status` before download)
+
+| Dataset | Per-unit download | Materialized | Notes |
+|---|---|---|---|
+| HydroBASINS v1c | 0.05–0.3 GB / (region, level) | ~0.1–0.3 GB | varies sharply with Pfaf level |
+| MERIT-Basins | 0.4 GB (catch) + 0.15 GB (riv) / region | ~1 GB / region; ~8 GB all 9 | |
+| TDX-Hydro / GEOGLOWS | 0.1–0.3 GB / VPU | ~0.5 GB / VPU; ~25–40 GB global (refused) | per-VPU lazy mandatory |
+| NWS NextGen | 1.6 GB tar.gz | ~7 GB GeoPackage (~9 GB transient) | single CONUS unit |
+
+### HydroBASINS license acknowledgment + Exhibit B
+
+HydroBASINS v1c is **not** CC-BY: it is distributed under the bespoke WWF
+*HydroSHEDS v1 License Agreement* (design §8). CAS therefore requires a
+**one-time acknowledgment** before downloading (interactive prompt,
+`--accept-licenses`, or `CAS_MIRROR_ACCEPT_LICENSES=hydrobasins`; the lazy
+`mirror_fetch` path refuses outright otherwise), and copies the verbatim
+**Exhibit B "Required Attributions"** notice
+(`src/cas/mirror/notices/hydrosheds_v1_exhibit_b.txt`, extracted verbatim from
+the HydroSHEDS TechDoc v1.4) next to every materialized unit, referencing it in
+the manifest and on the fetch result.
+
 ## Datasets and licenses
 
 License verdicts below are verbatim from the design's verification pass for a
@@ -172,6 +238,7 @@ are embedded in every subset output's metadata and carried on the result.
 | WOKAM | 1 | BGR GSTC; GeoNutzV likely prevails but **unconfirmed by BGR for this product** | none | global | License field = "BGR terms (GeoNutzV-eligible, unconfirmed)"; attribution "Datenquelle: WHYMAP WOKAM, © BGR Berlin, IAH Reading, KIT Karlsruhe, UNESCO Paris 2017"; never republish the layer |
 | RGI | 7.0 | CC-BY 4.0 — verified; distribution Earthdata-gated (live-probed 401→URS) | **Earthdata** | 19 regions | NSIDC citation with access date (filled from `retrieved_at`); doi:10.5067/f6jmovy5navz |
 
-Later slices add the geofabric path-delivery datasets (HydroBASINS,
-MERIT-Basins, TDX-Hydro, NWS NextGen), which carry verbatim license notices
-and, for HydroBASINS, the acknowledgment prompt.
+| HydroBASINS | v1c | WWF *HydroSHEDS v1 License Agreement* — **NOT CC-BY** (verified) | none | path / region×level | One-time acknowledgment + verbatim Exhibit B notice next to every unit |
+| MERIT-Basins | 1 | ODbL-1.0 **OR** CC-BY-NC-4.0 (dual; user's choice) | none | path / Pfaf-L1 | `license-fork:odbl-or-cc-by-nc` flag; never side-door MERIT-Hydro rasters |
+| TDX-Hydro / GEOGLOWS | v2 | TDX-Hydro CC-BY-**SA** 4.0 (© NGA); GEOGLOWS dist. CC-BY 4.0 | none | path / VPU | `share-alike` flag; carry BOTH notices |
+| NWS NextGen | v2.2 | not stated at source (live-probed); upstream NOAA-OWP/Lynker ODbL 1.0 assumed | none | path / CONUS | `license-unverified-at-source`; PROVISIONAL-data disclaimer |

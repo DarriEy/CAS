@@ -659,7 +659,7 @@ def _materialize_unit_locked(
         shutil.rmtree(extract_dir, ignore_errors=True)
         for path in cleanup:
             path.unlink(missing_ok=True)
-        for part in ddir.glob("*.part"):
+        for part in (*ddir.glob("*.part"), *ddir.rglob("*.part.gpkg")):
             part.unlink(missing_ok=True)
 
 
@@ -737,7 +737,8 @@ def _convert_to_gpkg(source: Path, dest: Path):  # -> tuple[ConversionRecord, in
     import pyogrio
 
     gdf = gpd.read_file(source)
-    tmp = dest.with_name(dest.name + ".part")
+    # Keep a .gpkg suffix on the temp so the GPKG driver doesn't warn.
+    tmp = dest.with_name(dest.stem + ".part.gpkg")
     gdf.to_file(tmp, driver="GPKG", layer=dest.stem)
     tmp.replace(dest)
     columns = [c for c in gdf.columns if c != gdf.geometry.name]

@@ -209,3 +209,45 @@ class TestUnitSyncCli:
         result = CliRunner().invoke(cli, ["mirror", "sync", "wokam:7"])
         assert result.exit_code == 1
         assert "no unit" in result.output.lower()
+
+
+class TestGeofabricCli:
+    def test_tdx_sync_all_refused(self, mirror_root):
+        result = CliRunner().invoke(cli, ["mirror", "sync", "tdx_hydro"])
+        assert result.exit_code == 1
+        assert "refused" in result.output.lower()
+
+    def test_hydrobasins_noninteractive_ack_refusal(self, mirror_root):
+        # Lazy/explicit non-interactive sync of an ack-requiring geofabric.
+        result = CliRunner().invoke(cli, ["mirror", "sync", "hydrobasins:na_lev06"])
+        assert result.exit_code == 1
+        assert "acknowledgment" in result.output.lower()
+
+    def test_status_shows_geofabric_disk_notes(self, mirror_root):
+        result = CliRunner().invoke(cli, ["mirror", "status"])
+        assert result.exit_code == 0
+        assert "nws_hydrofabric==2.2" in result.output
+        # The disk-cost note is surfaced before any download.
+        assert "GeoPackage" in result.output or "tar.gz" in result.output
+
+    @respx.mock
+    def test_hydrobasins_sync_with_accept_flag_embeds_notice(self, mirror_root, tmp_path):
+        from cas.mirror import get_mirror_dataset
+        from cas.mirror.datasets import sources_for_unit
+
+        ds = get_mirror_dataset("hydrobasins")
+        (src,) = sources_for_unit(ds, "eu_lev05")
+        respx.get(src.url).mock(
+            return_value=httpx.Response(
+                200, content=build_fake_zip(tmp_path, shp_name="hybas_eu_lev05_v1c")
+            )
+        )
+        result = CliRunner().invoke(
+            cli, ["mirror", "sync", "hydrobasins:eu_lev05", "--accept-licenses"]
+        )
+        assert result.exit_code == 0, result.output
+        assert "hydrobasins:eu_lev05" in result.output
+        from cas.mirror import load_manifest
+
+        manifest = load_manifest(ds)
+        assert any(f.role == "license_notice" for f in manifest.files)
