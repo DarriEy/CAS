@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Curated mirror tier (slice 1)** — version-pinned, checksummed local
+  mirrors of bulk-download-only vector datasets, materialized on *your* disk
+  under `CAS_MIRROR_DIR` (default `~/.cas/mirror`) on first use or by explicit
+  sync. CAS is only ever a download client + local subsetter: it never hosts
+  or redistributes mirror data, and the HTTP API mounts **no** mirror
+  endpoints (asserted by test). Ships the three cleanest datasets — **GLHYMPS
+  2.0, HydroLAKES 1.0, WOKAM v1** — with RGI (Earthdata) and the geofabric
+  path-delivery datasets designed to slot in as later slices.
+  - New in-process facade `cas.mirror_subset(...)` / `cas.mirror_subset_sync(
+    dataset_id, bbox, output_dir, columns=None, buffer_deg=None)` returning a
+    `MirrorSubsetResult`. Bbox subset uses GeoParquet row-group pruning, the
+    per-dataset default buffer (0.1° GLHYMPS/HydroLAKES, 0.5° WOKAM),
+    source-CRS-reprojected filtering, and writes a single-layer **GeoPackage**
+    with license/attribution/citation/provenance embedded in the metadata.
+  - **Materialization engine**: layout `{mirror_dir}/{slug}/{version}/` with a
+    schema-versioned `manifest.json` (sources, sha256, sizes, kept archive
+    members, license fields, citation, conversion provenance, acknowledgments,
+    `retrieved_at`, `cas_version`). Concurrency-safe via an exclusive `fcntl`
+    lock plus download-to-`*.part` + checksum + atomic rename; a second process
+    blocks on the lock then returns the finished manifest. Read-only roots
+    serve reads but fail materialization with an actionable error.
+  - **GeoParquet conversion at mirror time** (hilbert-sorted, GeoParquet 1.1
+    covering bbox, 65 536-row groups); the source archive and extracted
+    shapefile are dropped post-conversion (checksums retained in the manifest).
+  - **Trust-on-first-fetch** checksums recorded into the manifest; a baked-in
+    registry sha256 upgrades TOFU to verified and a mismatch is a hard
+    `MirrorIntegrityError` carrying both hashes.
+  - **CLI**: `cas mirror sync|status|verify|remove <dataset>[==version]`, with a
+    `--accept-licenses` flag and a generic **license-acknowledgment mechanism**
+    (interactive prompt / flag / `CAS_MIRROR_ACCEPT_LICENSES`; the lazy path
+    refuses un-acknowledged datasets). No slice-1 dataset requires it, but the
+    mechanism ships now (unit-tested against a fake ack-requiring dataset).
+  - New settings `mirror_dir`, `mirror_offline`, `mirror_auto_materialize`,
+    `mirror_accept_licenses` (env `CAS_MIRROR_*`); a new optional `[mirror]`
+    extra (geopandas/pyogrio/pyarrow) keeps the core install geopandas-free.
+  - WOKAM ships with an explicit `unconfirmed` license flag and the verbatim
+    BGR attribution string per the design's license verification (§8).
+  - New "Curated Mirror (in-process)" documentation page (`docs/mirror.md`).
+
 ## [0.3.0] — 2026-06-11
 
 ### Added

@@ -37,6 +37,7 @@ nav:
   - HTTP API: api.md
   - Python API (embedded): python-api.md
   - Raster Mode (in-process): rasters.md
+  - Curated Mirror (in-process): mirror.md
   - Python SDK (HTTP client): sdk.md
   - CLI: cli.md
   - SYMFLUENCE Plugin: symfluence.md
