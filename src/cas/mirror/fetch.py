@@ -175,7 +175,10 @@ def mirror_fetch_sync(
         primary = paths.get("catchments") or paths.get("basins") or next(iter(paths.values()))
         relevant = [a for a in manifest.archives if a.unit == u]
         archive_notes = "; ".join(
-            f"{a.url} (sha256 {a.sha256[:16]}…)" for a in relevant
+            f"{a.url} (sha256 {a.sha256[:16]}…"
+            + (f", manual-import from {a.imported_from}" if a.imported_from else "")
+            + ")"
+            for a in relevant
         )
         notice_note = f"; notice {notice.name}" if notice else ""
         provenance = (

@@ -196,7 +196,10 @@ def mirror_subset_sync(
         a for a in manifest.archives if a.unit is None or a.unit in units
     ]
     archive_notes = "; ".join(
-        f"{a.url} (sha256 {a.sha256[:16]}…)" for a in relevant
+        f"{a.url} (sha256 {a.sha256[:16]}…"
+        + (f", manual-import from {a.imported_from}" if a.imported_from else "")
+        + ")"
+        for a in relevant
     )
     unit_note = f"; units {','.join(units)}" if units else ""
     provenance = (

@@ -290,6 +290,7 @@ def ensure_materialized(
     explicit: bool = False,
     licenses_accepted: bool = False,
     ack_via: str | None = None,
+    local_archives: dict[str, Path] | None = None,
 ) -> Path:
     """Materialize a *global* dataset version if needed; return the
     query-layer path.
@@ -302,6 +303,10 @@ def ensure_materialized(
     in-process path (``explicit=False``) additionally honors
     ``mirror_auto_materialize`` and refuses ack-requiring datasets that were
     not pre-accepted via the environment.
+
+    ``local_archives`` (archive_name → local path) substitutes user-supplied
+    archives for downloads — the ``cas mirror import`` path; everything after
+    acquisition (verify/extract/convert/manifest) is identical.
     """
     settings = settings or get_settings()
     ds = get_mirror_dataset(spec) if isinstance(spec, str) else spec
@@ -318,7 +323,8 @@ def ensure_materialized(
     if is_materialized(ds, settings):
         return query_layer_path(ds, settings)
 
-    _check_offline_and_lazy(ds, settings, explicit)
+    if local_archives is None:
+        _check_offline_and_lazy(ds, settings, explicit)
     ack = _resolve_acknowledgment(ds, settings, licenses_accepted, ack_via)
     ddir = _writable_dataset_dir(ds, settings)
 
@@ -329,7 +335,7 @@ def ensure_materialized(
             # A concurrent materializer may have finished while we waited.
             if is_materialized(ds, settings):
                 return query_layer_path(ds, settings)
-            return _materialize_global_locked(ds, settings, ddir, ack)
+            return _materialize_global_locked(ds, settings, ddir, ack, local_archives)
         finally:
             fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
 
@@ -339,8 +345,9 @@ def _materialize_global_locked(
     settings: Settings,
     ddir: Path,
     ack: AcknowledgmentRecord | None,
+    local_archives: dict[str, Path] | None = None,
 ) -> Path:
-    """Download → verify → extract → convert → manifest, under the lock."""
+    """Download (or stage) → verify → extract → convert → manifest, locked."""
     archives: list[ArchiveRecord] = []
     kept_members: list[str] = []
     extract_dir = ddir / "_extract"
@@ -350,21 +357,9 @@ def _materialize_global_locked(
     try:
         for source in ds.sources:
             archive = ddir / source.archive_name
-            logger.info(
-                "mirror.download", dataset=ds.spec, url=source.url,
-                approx_bytes=source.size_bytes_approx,
-            )
-            digest, size = _download(source.url, archive, source.sha256, auth=ds.auth)
+            local = (local_archives or {}).get(source.archive_name)
+            archives.append(_obtain_archive(ds, source, archive, local))
             archive_paths.append(archive)
-            archives.append(
-                ArchiveRecord(
-                    url=source.url,
-                    archive_name=source.archive_name,
-                    sha256=digest,
-                    size_bytes=size,
-                    sha256_source="registry" if source.sha256 else "tofu",
-                )
-            )
 
             members = _extract_layer(archive, extract_dir, ds.shapefile_patterns)
             kept_members.extend(members)
@@ -380,7 +375,9 @@ def _materialize_global_locked(
 
         logger.info("mirror.convert", dataset=ds.spec, layer=str(shp_path))
         parquet = query_layer_path(ds, settings)
-        conversion, feature_count, columns, crs = convert_to_geoparquet(shp_path, parquet)
+        conversion, feature_count, columns, crs = convert_to_geoparquet(
+            shp_path, parquet, assumed_crs=ds.assumed_crs
+        )
         digest, size = _hash_file(parquet)
 
         manifest = MirrorManifest(
@@ -476,6 +473,7 @@ def ensure_units_materialized(
     explicit: bool = False,
     licenses_accepted: bool = False,
     ack_via: str | None = None,
+    local_archives: dict[str, Path] | None = None,
 ) -> dict[str, dict[str, Path]]:
     """Materialize the requested units of a unit-structured dataset.
 
@@ -483,6 +481,9 @@ def ensure_units_materialized(
     units are downloaded; the manifest accumulates units as they land (each
     unit is committed to the manifest individually, so a failure mid-way
     keeps every completed unit valid).
+
+    ``local_archives`` (archive_name → local path) substitutes user-supplied
+    archives for downloads (the ``cas mirror import`` path).
     """
     settings = settings or get_settings()
     ds = get_mirror_dataset(spec) if isinstance(spec, str) else spec
@@ -500,7 +501,8 @@ def ensure_units_materialized(
     if not missing:
         return {u: unit_paths(ds, u, settings) for u in wanted}
 
-    _check_offline_and_lazy(ds, settings, explicit)
+    if local_archives is None:
+        _check_offline_and_lazy(ds, settings, explicit)
     ack = _resolve_acknowledgment(ds, settings, licenses_accepted, ack_via)
     ddir = _writable_dataset_dir(ds, settings)
 
@@ -512,7 +514,7 @@ def ensure_units_materialized(
                 # A concurrent materializer may have landed this unit.
                 if is_unit_materialized(ds, unit, settings):
                     continue
-                _materialize_unit_locked(ds, unit, settings, ddir, ack)
+                _materialize_unit_locked(ds, unit, settings, ddir, ack, local_archives)
         finally:
             fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
             _rebuild_index(settings)
@@ -525,8 +527,9 @@ def _materialize_unit_locked(
     settings: Settings,
     ddir: Path,
     ack: AcknowledgmentRecord | None,
+    local_archives: dict[str, Path] | None = None,
 ) -> None:
-    """Download → verify → process → merge manifest, for one unit."""
+    """Download (or stage) → verify → process → merge manifest, one unit."""
     sources = sources_for_unit(ds, unit)
     udir = unit_dir(ds, unit, settings)
     udir.mkdir(parents=True, exist_ok=True)
@@ -544,31 +547,20 @@ def _materialize_unit_locked(
     try:
         for source in sources:
             archive = ddir / source.archive_name
-            logger.info(
-                "mirror.download", dataset=ds.spec, unit=unit, url=source.url,
-                approx_bytes=source.size_bytes_approx,
-            )
-            digest, size = _download(source.url, archive, source.sha256, auth=ds.auth)
-            archives.append(
-                ArchiveRecord(
-                    url=source.url,
-                    archive_name=source.archive_name,
-                    sha256=digest,
-                    size_bytes=size,
-                    sha256_source="registry" if source.sha256 else "tofu",
-                    unit=unit,
-                )
-            )
+            local = (local_archives or {}).get(source.archive_name)
+            record = _obtain_archive(ds, source, archive, local, unit=unit)
+            archives.append(record)
 
             if ds.unit_processing == "raw":
                 # The download *is* the artifact — keep it byte-identical.
+                _validate_raw_format(archive, source.archive_name, ds)
                 dest = udir / source.archive_name
                 archive.replace(dest)
                 files.append(
                     FileRecord(
                         path=str(dest.relative_to(ddir)),
-                        sha256=digest,
-                        size_bytes=size,
+                        sha256=record.sha256,
+                        size_bytes=record.size_bytes,
                         role=source.role,
                         unit=unit,
                     )
@@ -598,42 +590,66 @@ def _materialize_unit_locked(
                     )
                 continue
 
-            # zip → shapefile → GeoParquet ("geoparquet") or GeoPackage ("gpkg")
-            members = _extract_layer(archive, extract_dir, ds.shapefile_patterns)
-            shp_path = next(
-                (extract_dir / Path(m).name for m in members if m.lower().endswith(".shp")),
-                None,
+            # zip → shapefile(s) → GeoParquet ("geoparquet") or GeoPackage
+            # ("gpkg"). One archive may carry several layers to materialize
+            # (MERIT-Basins: cat_pfaf_* + riv_pfaf_* in one zip) — declared
+            # per source as role → member patterns.
+            role_patterns = (
+                list(source.members.items())
+                if source.members
+                else [(source.role, ds.shapefile_patterns)]
             )
-            if shp_path is None:
-                raise MirrorError(
-                    f"No member matching {ds.shapefile_patterns} found in "
-                    f"{source.archive_name} for '{ds.spec}' unit {unit} — "
-                    f"upstream layout changed?"
+            for role, patterns in role_patterns:
+                members = _extract_layer(archive, extract_dir, patterns)
+                shp_path = next(
+                    (extract_dir / Path(m).name for m in members if m.lower().endswith(".shp")),
+                    None,
                 )
-            kept_members.extend(members)
+                if shp_path is None:
+                    raise MirrorError(
+                        f"No member matching {patterns} found in "
+                        f"{source.archive_name} for '{ds.spec}' unit {unit} "
+                        f"(role {role}) — upstream layout changed, or the "
+                        f"wrong archive was supplied to `cas mirror import`?"
+                    )
+                kept_members.extend(members)
 
-            if ds.unit_processing == "geoparquet":
-                out = udir / f"{shp_path.stem}.parquet"
-                conversion, count, columns, crs = convert_to_geoparquet(shp_path, out)
-            elif ds.unit_processing == "gpkg":
-                out = udir / f"{shp_path.stem}.gpkg"
-                conversion, count, columns, crs = _convert_to_gpkg(shp_path, out)
-            else:
-                raise MirrorError(
-                    f"Unknown unit_processing '{ds.unit_processing}' for '{ds.spec}'."
+                if ds.unit_processing == "geoparquet":
+                    out = udir / f"{shp_path.stem}.parquet"
+                    converted = convert_to_geoparquet(
+                        shp_path, out, assumed_crs=ds.assumed_crs
+                    )
+                elif ds.unit_processing == "gpkg":
+                    out = udir / f"{shp_path.stem}.gpkg"
+                    converted = _convert_to_gpkg(
+                        shp_path, out, assumed_crs=ds.assumed_crs
+                    )
+                else:
+                    raise MirrorError(
+                        f"Unknown unit_processing '{ds.unit_processing}' for '{ds.spec}'."
+                    )
+                # The manifest keeps ONE conversion record per dataset; when
+                # several layers convert (MERIT cat+riv), carry an
+                # assumed_crs note forward so it is never silently dropped
+                # (the cat layer has no .prj, the riv layer does).
+                prev_assumed = (
+                    conversion.parameters.get("assumed_crs") if conversion else None
                 )
-            feature_count += count
-            fdigest, fsize = _hash_file(out)
-            files.append(
-                FileRecord(
-                    path=str(out.relative_to(ddir)),
-                    sha256=fdigest,
-                    size_bytes=fsize,
-                    role=source.role,
-                    unit=unit,
+                conversion, count, columns, crs = converted
+                if prev_assumed and "assumed_crs" not in conversion.parameters:
+                    conversion.parameters["assumed_crs"] = prev_assumed
+                feature_count += count
+                fdigest, fsize = _hash_file(out)
+                files.append(
+                    FileRecord(
+                        path=str(out.relative_to(ddir)),
+                        sha256=fdigest,
+                        size_bytes=fsize,
+                        role=role,
+                        unit=unit,
+                    )
                 )
-            )
-            shutil.rmtree(extract_dir, ignore_errors=True)
+                shutil.rmtree(extract_dir, ignore_errors=True)
 
         if ds.notice_file:
             notice = _copy_notice(ds, udir)
@@ -723,13 +739,17 @@ def _copy_notice(ds: MirrorDataset, udir: Path) -> Path:
     return dest
 
 
-def _convert_to_gpkg(source: Path, dest: Path):  # -> tuple[ConversionRecord, int, list[str], str]
+def _convert_to_gpkg(
+    source: Path, dest: Path, *, assumed_crs: str = ""
+):  # -> tuple[ConversionRecord, int, list[str], str]
     """Shapefile → single-layer GeoPackage (recorded as a conversion).
 
     Used for shapefile-distributed geofabric units: the consumer's reader
     (SYMFLUENCE ``GeofabricSubsetter``) reads GeoPackage natively, and gpkg
     carries an R-tree index plus lossless column names. All columns —
-    including the topology columns — are kept untouched.
+    including the topology columns — are kept untouched. ``assumed_crs`` is
+    assigned (never reprojected) when the layer ships without a CRS
+    (MERIT-Basins catchments have no ``.prj``) and recorded as provenance.
     """
     from cas.mirror.convert import _import_geopandas
 
@@ -737,6 +757,10 @@ def _convert_to_gpkg(source: Path, dest: Path):  # -> tuple[ConversionRecord, in
     import pyogrio
 
     gdf = gpd.read_file(source)
+    crs_assumed = False
+    if gdf.crs is None and assumed_crs:
+        gdf = gdf.set_crs(assumed_crs)
+        crs_assumed = True
     # Keep a .gpkg suffix on the temp so the GPKG driver doesn't warn.
     tmp = dest.with_name(dest.stem + ".part.gpkg")
     gdf.to_file(tmp, driver="GPKG", layer=dest.stem)
@@ -749,6 +773,7 @@ def _convert_to_gpkg(source: Path, dest: Path):  # -> tuple[ConversionRecord, in
             "format": "GPKG",
             "source_format": source.suffix.lstrip(".") or "unknown",
             "columns_kept": "all",
+            **({"assumed_crs": assumed_crs} if crs_assumed else {}),
         },
     )
     return record, len(gdf), columns, crs
@@ -761,6 +786,78 @@ def _render_citation(ds: MirrorDataset) -> str:
 
 
 # ── Download / extraction primitives ────────────────────────────────
+
+
+def _obtain_archive(
+    ds: MirrorDataset,
+    source,  # MirrorSource
+    archive: Path,
+    local: Path | None,
+    *,
+    unit: str | None = None,
+) -> ArchiveRecord:
+    """Land one source archive at ``archive`` — by download, or by staging a
+    user-supplied local copy (``cas mirror import``) — and record provenance.
+
+    A registry-pinned sha256 is enforced either way; a local archive that
+    matches it upgrades straight to ``registry``-verified, otherwise the
+    import is recorded as ``tofu-import`` with the origin path.
+    """
+    if local is None:
+        logger.info(
+            "mirror.download", dataset=ds.spec, unit=unit, url=source.url,
+            approx_bytes=source.size_bytes_approx,
+        )
+        digest, size = _download(source.url, archive, source.sha256, auth=ds.auth)
+        return ArchiveRecord(
+            url=source.url,
+            archive_name=source.archive_name,
+            sha256=digest,
+            size_bytes=size,
+            sha256_source="registry" if source.sha256 else "tofu",
+            unit=unit,
+        )
+    logger.info(
+        "mirror.import_archive", dataset=ds.spec, unit=unit, path=str(local),
+    )
+    digest, size = _stage_local_archive(local, archive, source.sha256)
+    return ArchiveRecord(
+        url=source.url,
+        archive_name=source.archive_name,
+        sha256=digest,
+        size_bytes=size,
+        sha256_source="registry" if source.sha256 else "tofu-import",
+        unit=unit,
+        source="manual-import",
+        imported_from=str(local),
+    )
+
+
+def _stage_local_archive(
+    src: Path, dest: Path, expected_sha256: str | None
+) -> tuple[str, int]:
+    """Copy a user-supplied archive into the dataset dir while hashing;
+    verify against a registry checksum when one is pinned; atomic rename.
+    The original file is never modified or removed."""
+    part = dest.with_name(dest.name + ".part")
+    hasher = hashlib.sha256()
+    with open(src, "rb") as fh, open(part, "wb") as out:
+        while chunk := fh.read(_CHUNK):
+            hasher.update(chunk)
+            out.write(chunk)
+    digest = hasher.hexdigest()
+    if expected_sha256 and digest != expected_sha256:
+        part.unlink(missing_ok=True)
+        raise MirrorIntegrityError(
+            f"Imported archive {src} does not match the registry checksum for "
+            f"this dataset version — wrong file, wrong version, or a modified "
+            f"copy; refusing to import",
+            expected=expected_sha256,
+            actual=digest,
+        )
+    size = part.stat().st_size
+    part.replace(dest)
+    return digest, size
 
 
 def _download(
@@ -776,7 +873,16 @@ def _download(
     elif auth is not None:
         raise MirrorError(f"Unknown mirror auth scheme '{auth}' for {url}.")
     else:
-        stream_cm = httpx.stream("GET", url, follow_redirects=True, timeout=_DOWNLOAD_TIMEOUT)
+        from cas.mirror.gdrive import gdrive_stream, is_gdrive_url
+
+        if is_gdrive_url(url):
+            # Google Drive public files (MERIT-Basins) need the virus-scan
+            # confirm dance; quota interstitials fail actionably.
+            stream_cm = gdrive_stream(url)
+        else:
+            stream_cm = httpx.stream(
+                "GET", url, follow_redirects=True, timeout=_DOWNLOAD_TIMEOUT
+            )
     with stream_cm as response:
         response.raise_for_status()
         with open(part, "wb") as fh:
@@ -807,7 +913,15 @@ def _extract_layer(archive: Path, extract_dir: Path, patterns: list[str]) -> lis
     (zip-slip safe). Returns the kept member names as found in the archive.
     """
     extract_dir.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(archive) as zf:
+    try:
+        zf_cm = zipfile.ZipFile(archive)
+    except zipfile.BadZipFile as exc:
+        raise MirrorError(
+            f"{archive.name} is not a valid zip archive — a truncated "
+            f"download, an upstream interstitial page, or (for `cas mirror "
+            f"import`) the wrong file."
+        ) from exc
+    with zf_cm as zf:
         names = [info.filename for info in zf.infolist() if not info.is_dir()]
         selected: str | None = None
         for pattern in patterns:
@@ -824,6 +938,32 @@ def _extract_layer(archive: Path, extract_dir: Path, patterns: list[str]) -> lis
             with zf.open(member) as src, open(target, "wb") as dst:
                 shutil.copyfileobj(src, dst)
         return family
+
+
+_RAW_MAGIC = {
+    ".parquet": b"PAR1",
+    ".gpkg": b"SQLite format 3\x00",
+}
+
+
+def _validate_raw_format(path: Path, archive_name: str, ds: MirrorDataset) -> None:
+    """Cheap magic-byte check for ``unit_processing="raw"`` artifacts.
+
+    Catches an upstream HTML error page saved as ``.parquet``/``.gpkg`` and,
+    on the ``cas mirror import`` path, the wrong file supplied for the role.
+    """
+    suffix = Path(archive_name).suffix.lower()
+    magic = _RAW_MAGIC.get(suffix)
+    if magic is None:
+        return
+    with open(path, "rb") as fh:
+        head = fh.read(len(magic))
+    if head != magic:
+        raise MirrorError(
+            f"{archive_name} for '{ds.spec}' does not look like a "
+            f"{suffix.lstrip('.')} file (bad magic bytes) — a truncated/HTML "
+            f"download, or the wrong file supplied to `cas mirror import`."
+        )
 
 
 def _extract_tar_members(

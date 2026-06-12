@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`cas mirror import` — manual-staging escape hatch** for distributions CAS
+  cannot download itself (Globus-only MERIT-Basins, registration-gated
+  upstreams, Drive-quota moments). New facade `cas.mirror_import` /
+  `cas.mirror_import_sync(dataset, source, unit=...)` returning
+  `MirrorImportResult`. The user-obtained archive is verified against the
+  registry (exact archive names, expected member names/format per processing
+  mode, magic-byte checks for raw parquet/gpkg, pinned sha256 enforced — a
+  match upgrades straight to registry-verified), recorded as
+  `sha256_source="tofu-import"` with `source="manual-import"` + the local
+  origin path in the manifest, then run through the **same**
+  extraction/conversion/manifest pipeline as `sync`. Subset/fetch provenance
+  strings carry the manual-import note. Acknowledgment-requiring datasets
+  (HydroBASINS) still require acknowledgment at import. Already-materialized
+  datasets/units are never silently replaced.
+- **Google Drive download flow** (`cas.mirror.gdrive`): public-file downloads
+  through Drive's virus-scan confirm interstitial (no API key); quota
+  interstitials and unrecognized HTML answers fail actionably, naming
+  `cas mirror import`.
+- **Multi-layer archives**: `MirrorSource.members` (role → member patterns)
+  materializes several vector layers from ONE archive (MERIT-Basins ships
+  cat+riv in a single zip per region); `MirrorDataset.assumed_crs` assigns —
+  never reprojects — a CRS to layers shipped without one (MERIT catchments
+  have no `.prj`), recorded in the conversion provenance.
 - **Curated mirror tier (slice 2c): GLHYMPS `extract()` stats-over-mirror** —
   a new `MirrorVectorConnector` base (`cas/connectors/protocols/mirror.py`):
   a `BaseConnector` whose `extract()` reads the local GeoParquet mirror instead
@@ -138,6 +161,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - WOKAM ships with an explicit `unconfirmed` license flag and the verbatim
     BGR attribution string per the design's license verification (§8).
   - New "Curated Mirror (in-process)" documentation page (`docs/mirror.md`).
+
+### Changed
+
+- **MERIT-Basins registry migrated to the live distribution** (verified
+  2026-06-12): `hydrology.princeton.edu` is DNS-dead and reachhydro.org now
+  distributes via a public Google Drive folder + Globus (no authoritative
+  per-file plain-HTTPS mirror exists). The registry records the stable Drive
+  file ids (one zip per Pfaf-L1 region, exact probed sizes), bakes in the
+  region 9 sha256 (fetched + recorded by a maintainer), and the Pfaf-L1
+  selection table now follows the **official ReadMe mapping** (1 Africa …
+  7 North America, 9 Greenland; region 9's extent verified against the
+  shipped shapefiles) — the table inherited from the native SYMFLUENCE
+  handler (1=Amazon, 9=Australia) contradicts the official mapping and was
+  wrong. Validated live end-to-end: real Drive sync of region 9 through the
+  interstitial AND `cas mirror import` of the same zip, both
+  registry-verified with identical feature counts.
 
 ## [0.3.0] — 2026-06-11
 

@@ -38,10 +38,12 @@ from cas.mirror.datasets import (
     unregister_mirror_dataset,
 )
 from cas.mirror.fetch import mirror_fetch, mirror_fetch_sync
+from cas.mirror.importer import mirror_import, mirror_import_sync
 from cas.mirror.models import (
     MirrorDataset,
     MirrorDatasetStatus,
     MirrorFetchResult,
+    MirrorImportResult,
     MirrorLicense,
     MirrorManifest,
     MirrorSource,
@@ -73,6 +75,9 @@ __all__ = [
     # Path-delivery facade (geofabrics)
     "mirror_fetch",
     "mirror_fetch_sync",
+    # Manual-staging import (Globus-only / registration-gated upstreams)
+    "mirror_import",
+    "mirror_import_sync",
     # Registry
     "get_mirror_dataset",
     "list_mirror_datasets",
@@ -104,6 +109,7 @@ __all__ = [
     "MirrorDataset",
     "MirrorDatasetStatus",
     "MirrorFetchResult",
+    "MirrorImportResult",
     "MirrorLicense",
     "MirrorManifest",
     "MirrorSource",

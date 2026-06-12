@@ -67,6 +67,12 @@ class MirrorSource(BaseModel):
     role: str = "data"
     """Distinguishes multiple files per unit (e.g. MERIT-Basins
     ``catchments`` / ``rivernet``; TDX ``catchments`` / ``streams``)."""
+    members: dict[str, list[str]] | None = None
+    """Role → member patterns for archives carrying **several** vector layers
+    that must each be materialized (MERIT-Basins ships ONE zip per region
+    holding both the ``cat_pfaf_*`` and ``riv_pfaf_*`` shapefiles). ``None``
+    ⇒ single-layer behavior: the dataset's ``shapefile_patterns`` select one
+    layer recorded under this source's ``role``."""
 
 
 class MirrorDataset(BaseModel):
@@ -117,6 +123,10 @@ class MirrorDataset(BaseModel):
     """Ordered, case-insensitive glob preferences selecting the vector layer
     inside the archive; the first pattern with matches wins, sidecar files
     sharing the stem are kept alongside."""
+    assumed_crs: str = ""
+    """CRS assigned when a layer ships without one (MERIT-Basins catchment
+    shapefiles carry no ``.prj``; the ReadMe documents WGS84). Recorded in the
+    conversion provenance; never used to *re*project."""
     source_crs_note: str = ""
     default_buffer_deg: float = 0.1
     """Default bbox buffer for subset queries (matches native handler behavior)."""
@@ -163,8 +173,14 @@ class ArchiveRecord(BaseModel):
     size_bytes: int
     sha256_source: str = "tofu"
     """``registry`` if verified against a shipped checksum, ``tofu`` if
-    recorded trust-on-first-fetch."""
+    recorded trust-on-first-fetch, ``tofu-import`` if recorded from a
+    manually supplied archive (``cas mirror import``)."""
     unit: str | None = None
+    source: str = "download"
+    """``download`` (CAS fetched the bytes from ``url``) or ``manual-import``
+    (the user supplied the archive; ``url`` records what it corresponds to)."""
+    imported_from: str | None = None
+    """Local path the archive was imported from (``manual-import`` only)."""
 
 
 class FileRecord(BaseModel):
@@ -277,6 +293,35 @@ class MirrorFetchResult(BaseModel):
     disclaimer: str = ""
     provenance: str = ""
     elapsed_ms: int = 0
+
+
+class MirrorImportResult(BaseModel):
+    """Result of a manual-staging import (``cas mirror import``, design §2's
+    escape hatch for Globus-only / registration-gated distributions).
+
+    The archive was obtained by the *user*; CAS verified it against the
+    registry expectations and ran the same extraction/conversion/manifest
+    pipeline as ``sync``. Checksums are recorded as ``tofu-import`` and the
+    manifest carries ``source="manual-import"`` plus the local origin path.
+    """
+
+    dataset_id: str
+    slug: str
+    version: str
+    unit: str | None = None
+    """The imported regional unit (``None`` for single-archive globals)."""
+    paths: dict[str, Path]
+    """Role → materialized path (globals: ``{"query_layer": ...}``)."""
+    path: Path
+    """Primary materialized path."""
+    imported_from: str
+    """The local archive/directory the import consumed (provenance)."""
+    archives: list[ArchiveRecord] = Field(default_factory=list)
+    license: str = ""
+    license_flags: list[str] = Field(default_factory=list)
+    attribution: str = ""
+    citation: str = ""
+    provenance: str = ""
 
 
 class MirrorDatasetStatus(BaseModel):

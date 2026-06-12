@@ -159,19 +159,27 @@ def hydrobasins_units_for_bbox(bbox: Bbox, level: int) -> list[str]:
 
 # ── MERIT-Basins Pfafstetter Level-1 regions (geofabric, slice 2b) ──
 #
-# Nine continental Pfaf-L1 regions (codes 1-9); extents mirror the native
-# SYMFLUENCE handler's table.
+# Nine continental Pfaf-L1 regions (codes 1-9). The mapping follows the
+# OFFICIAL MERIT-Basins ReadMe (reachhydro Drive folder, read 2026-06-12):
+# "1: Africa, 2: Europe, 3: North Asia, 4: South Asia, 5: Oceania and South
+# Asian Islands, 6: South America, 7: North America, 8: Arctic Region,
+# 9: Greenland" — and region 9's extent was verified empirically against the
+# distributed shapefiles (lon -73..-12, lat 60..84 — Greenland+Iceland).
+# NOTE: the native SYMFLUENCE handler ships a DIFFERENT table (1=Amazon,
+# 9=Australia, ...) that contradicts the official mapping; it is wrong, not
+# this one. Boxes are generous selection boxes (overlap is safe; a missed
+# region silently drops features).
 
 MERIT_PFAF_BBOXES: dict[str, Bbox] = {
-    "1": (-82.0, -35.0, -34.0, 15.0),   # South America — Amazon, eastern
-    "2": (-82.0, -56.0, -34.0, 15.0),   # South America — Parana, southern
-    "3": (-130.0, 5.0, -52.0, 62.0),    # North America — Atlantic/Gulf
-    "4": (-170.0, 5.0, -100.0, 72.0),   # North America — Pacific/Arctic
-    "5": (-15.0, 35.0, 60.0, 72.0),     # Europe
-    "6": (-20.0, -36.0, 55.0, 38.0),    # Africa
-    "7": (55.0, 0.0, 180.0, 78.0),      # Asia — North/Central
-    "8": (90.0, -12.0, 155.0, 55.0),    # Asia — Southeast / Oceania
-    "9": (110.0, -50.0, 180.0, -10.0),  # Australia / Oceania
+    "1": (-20.0, -36.0, 56.0, 38.0),    # Africa
+    "2": (-25.0, 12.0, 70.0, 72.0),     # Europe (incl. Middle East fringe)
+    "3": (55.0, 40.0, 180.0, 84.0),     # North Asia / Siberia
+    "4": (55.0, 0.0, 150.0, 56.0),      # South Asia (Middle East to E Asia)
+    "5": (90.0, -56.0, 180.0, 21.0),    # Oceania + South Asian islands
+    "6": (-93.0, -56.0, -32.0, 15.0),   # South America
+    "7": (-170.0, 5.0, -52.0, 62.0),    # North America
+    "8": (-180.0, 50.0, -50.0, 84.0),   # Arctic Region (N. American Arctic)
+    "9": (-75.0, 58.0, -10.0, 84.0),    # Greenland (verified: -73..-12, 60..84)
 }
 
 

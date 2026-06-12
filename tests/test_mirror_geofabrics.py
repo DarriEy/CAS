@@ -75,15 +75,20 @@ class TestGeofabricRegistry:
     def test_merit_nine_regions_with_pairs_and_fork_flag(self):
         ds = get_mirror_dataset("merit_basins")
         assert ds.unit_ids() == [str(i) for i in range(1, 10)]
-        roles = {s.role for s in ds.sources_for_unit("7")}
-        assert roles == {"catchments", "rivernet"}
+        # One Google Drive zip per region (the Princeton host is DNS-dead;
+        # reachhydro moved to Drive/Globus — verified live 2026-06-12),
+        # carrying BOTH layers as per-role member patterns.
+        (src,) = ds.sources_for_unit("7")
+        assert src.url.startswith("https://drive.google.com/uc?export=download&id=")
+        assert src.archive_name == "pfaf_7_MERIT_Hydro_v07_Basins_v01.zip"
+        assert set(src.members) == {"catchments", "rivernet"}
+        assert src.members["catchments"] == ["cat_pfaf_7_*.shp"]
         assert ds.license.license_flags == ["license-fork:odbl-or-cc-by-nc"]
-        # MERIT URL pattern matches the native handler (Princeton).
-        cat = next(s for s in ds.sources_for_unit("7") if s.role == "catchments")
-        assert cat.url == (
-            "http://hydrology.princeton.edu/data/mpan/MERIT_Basins/"
-            "MERIT_Catchments/pfaf_7_MERIT_Hydro_v07_Basins_v01.zip"
-        )
+        # Region 9 was fetched by a maintainer: sha256 baked in (TOFU → verified).
+        (src9,) = ds.sources_for_unit("9")
+        assert src9.sha256 is not None
+        # Catchment shapefiles ship without .prj; WGS84 is assigned + recorded.
+        assert ds.assumed_crs == "EPSG:4326"
 
     def test_tdx_dynamic_and_sync_all_refused(self):
         ds = get_mirror_dataset("tdx_hydro")
@@ -278,12 +283,18 @@ class TestHydroBasinsAck:
 
 class TestGeofabricUnitResolution:
     def test_merit_pfaf_for_bbox(self):
+        # Official ReadMe mapping: 1 Africa … 6 South America, 7 North
+        # America, 9 Greenland (NOT the native handler's table).
         from cas.mirror.units import merit_pfaf_for_bbox
 
-        # Amazon basin → Pfaf region 1.
-        assert "1" in merit_pfaf_for_bbox((-70.0, -5.0, -60.0, 0.0))
-        # Europe → region 5.
-        assert merit_pfaf_for_bbox((5.0, 45.0, 10.0, 50.0)) == ["5"]
+        # Amazon basin → region 6 (South America).
+        assert "6" in merit_pfaf_for_bbox((-70.0, -5.0, -60.0, 0.0))
+        # Alps → region 2 (Europe).
+        assert merit_pfaf_for_bbox((5.0, 45.0, 10.0, 50.0)) == ["2"]
+        # Greenland east coast → region 9 (empirically verified extent).
+        assert "9" in merit_pfaf_for_bbox((-40.0, 64.0, -38.0, 66.0))
+        # Logan/Bear box → region 7 (North America).
+        assert "7" in merit_pfaf_for_bbox((-112.5, 41.0, -111.0, 42.5))
 
     def test_hydrobasins_regions_for_bbox(self):
         from cas.mirror.units import hydrobasins_regions_for_bbox, hydrobasins_units_for_bbox

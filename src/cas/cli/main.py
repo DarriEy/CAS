@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from pathlib import Path
 
 import click
 import structlog
@@ -522,6 +523,58 @@ def mirror_sync(datasets, accept_licenses):
             click.echo(f"  FAIL  {spec}: {e}", err=True)
     if failures:
         raise SystemExit(1)
+
+
+@mirror.command("import")
+@click.argument("dataset")
+@click.argument("source", type=click.Path(exists=True, path_type=Path))
+@click.option("--unit", "unit", default=None,
+              help="Regional unit being imported (required for unit-structured "
+                   "datasets, e.g. --unit 7 for a MERIT Pfaf region).")
+@click.option("--accept-licenses", is_flag=True,
+              help="Accept license terms of acknowledgment-requiring datasets "
+                   "(recorded in the manifest with a timestamp).")
+def mirror_import(dataset, source, unit, accept_licenses):
+    """Stage a manually obtained archive as DATASET (the escape hatch for
+    Globus-only or registration-gated distributions).
+
+    SOURCE is the archive file, or a directory holding every expected archive
+    under its exact registry name. CAS verifies the content against the
+    registry (member names/format; pinned sha256 when one exists), records
+    the checksum as tofu-import with manual-import provenance + the local
+    path, then runs the SAME extraction/conversion/manifest pipeline as
+    ``cas mirror sync``. Examples:
+
+    \b
+      cas mirror import merit_basins pfaf_7_MERIT_Hydro_v07_Basins_v01.zip --unit 7
+      cas mirror import merit_basins:7 ~/globus-staging/   (unit via spec)
+      cas mirror import glhymps==2.0 GLHYMPS.zip
+    """
+    from cas.core.exceptions import MirrorError
+    from cas.mirror import get_mirror_dataset, mirror_import_sync, parse_unit_spec
+
+    base_spec, spec_unit = parse_unit_spec(dataset)
+    if spec_unit and unit and spec_unit != unit:
+        raise click.ClickException(
+            f"Conflicting units: '{dataset}' names unit {spec_unit} but "
+            f"--unit says {unit}."
+        )
+    unit = unit or spec_unit
+    try:
+        ds = get_mirror_dataset(base_spec)
+        accepted, via = _ack_or_fail(ds, accept_licenses)
+        result = mirror_import_sync(
+            base_spec, source, unit=unit,
+            licenses_accepted=accepted, ack_via=via,
+        )
+    except MirrorError as e:
+        raise click.ClickException(str(e)) from e
+    unit_note = f" unit {result.unit}" if result.unit else ""
+    click.echo(f"  OK  {result.dataset_id}{unit_note} imported from {result.imported_from}")
+    for role, p in sorted(result.paths.items()):
+        click.echo(f"      {role}: {p}")
+    for a in result.archives:
+        click.echo(f"      sha256 {a.sha256} ({a.sha256_source})")
 
 
 @mirror.command("status")

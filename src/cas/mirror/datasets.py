@@ -474,19 +474,41 @@ register_mirror_dataset(
 
 # ── MERIT-Basins ────────────────────────────────────────────────────
 #
-# Nine Pfaf-L1 regions, each a catchments + rivernet shapefile pair. Dual
-# license ODbL-1.0 OR CC-BY-NC-4.0 (design §8) → a license-fork flag.
+# Nine Pfaf-L1 regions; ONE zip per region carrying BOTH the catchments
+# (cat_pfaf_N, no .prj — WGS84 per the official ReadMe) and rivernet
+# (riv_pfaf_N) shapefiles. Dual license ODbL-1.0 OR CC-BY-NC-4.0 (design §8)
+# → a license-fork flag.
 #
-# URL pattern is the one the native SYMFLUENCE handler (merit_basins.py)
-# ships. NOTE (verified 2026-06-12): the Princeton host
-# hydrology.princeton.edu no longer resolves (DNS NXDOMAIN) and reachhydro.org
-# has migrated MERIT-Basins distribution to Google Drive / Globus folders that
-# have no stable per-region direct-download URL. The pattern below is recorded
-# faithfully from the native handler; a maintainer should bake in the new
-# direct URLs (and expected sha256) once reachhydro publishes them.
-_MERIT_BASE_URL = "http://hydrology.princeton.edu/data/mpan/MERIT_Basins"
-_MERIT_CATCHMENTS = f"{_MERIT_BASE_URL}/MERIT_Catchments/pfaf_{{code}}_MERIT_Hydro_v07_Basins_v01.zip"
-_MERIT_RIVERS = f"{_MERIT_BASE_URL}/MERIT_Rivernet/pfaf_{{code}}_MERIT_Hydro_v07_Basins_v01_rivernet.zip"
+# Distribution reality (verified live 2026-06-12): the Princeton host
+# (hydrology.princeton.edu) is DNS-dead (NXDOMAIN); reachhydro.org now
+# distributes via a public Google Drive folder
+# (https://drive.google.com/drive/folders/1uCQFmdxFbjwoT9OYJxw-pXaP8q_GYH1a,
+# subfolder zip/pfaf_level_01) and Globus. No authoritative per-file plain
+# HTTPS mirror exists (HydroShare hosts a North-America-only derivative;
+# Zenodo re-packages carry a narrowed CC-BY-NC-SA license). The Drive *file*
+# ids below are stable and public; downloads go through the virus-scan
+# confirm flow in cas.mirror.gdrive. Globus remains the manual path —
+# `cas mirror import merit_basins <zip> --unit N`. A "v0.7/v1.0_bugfix1"
+# distribution (minor coastline fixes) exists in a sibling Drive folder
+# (1J8vyqCnSdquY1cRI1PPsXzMBLBXKzzoW) and can land as a future version.
+_MERIT_DRIVE_IDS: dict[str, tuple[str, int]] = {
+    # unit → (Drive file id, exact content-length probed 2026-06-12)
+    "1": ("1GTz5sItFBpMFHeLhBWqwyVlRQgTUeieM", 1_089_741_146),
+    "2": ("1Ygj2de11ZDs6l6p90l2WBMZKXbd2dCEr", 746_690_950),
+    "3": ("13OLqyc1QtNJs0itJTCfuz3l-AB7aztD_", 574_134_554),
+    "4": ("1HhzYKcQ_2WKObvp2xL4cO1aS-sJ3q8G-", 744_792_507),
+    "5": ("1udPibrTbyUku3ZIQtjPMTMzOwyvdQS2K", 367_626_481),
+    "6": ("1vZKI9V1_kGj9mPD1aoVgN6oCBYlR_bgs", 597_765_953),
+    "7": ("1zaJH8r6dFCJL6TmCya12Oq6XKRlNJHMz", 583_538_015),
+    "8": ("1Lt78g4ouTRc4j28HB9O5YMltE-N0sJdw", 276_891_052),
+    "9": ("1sPcZVKlyABUN41tmCj6LbC0s2-NwVC4P", 181_106_561),
+}
+
+# Fetched and recorded by a maintainer (region 9, 2026-06-12) — TOFU upgraded
+# to registry-verified for that unit; the rest record on first fetch.
+_MERIT_SHA256: dict[str, str | None] = {
+    "9": "0803480cd3712ea34bb65c96d24349fb1a3536f9637236578c0007e6518e7d31",
+}
 
 register_mirror_dataset(
     MirrorDataset(
@@ -494,35 +516,39 @@ register_mirror_dataset(
         version="1",
         display_name="MERIT-Basins — Pfaf-L1 catchments + river network",
         description=(
-            "MERIT-Basins (Lin et al., 2019), nine Pfafstetter Level-1 regions, "
-            "each a catchments + rivernet shapefile pair (COMID / up1-3 "
-            "topology). Path-delivered; the subsetter traces upstream closure."
+            "MERIT-Basins (Lin et al., 2019), nine Pfafstetter Level-1 regions "
+            "(1 Africa, 2 Europe, 3 North Asia, 4 South Asia, 5 Oceania+South "
+            "Asian islands, 6 South America, 7 North America, 8 Arctic, "
+            "9 Greenland — per the official ReadMe). One zip per region "
+            "carrying the catchments + rivernet shapefile pair (COMID / up1-3 "
+            "topology). Path-delivered; the subsetter traces upstream closure. "
+            "Distributed via reachhydro.org's Google Drive folder (Globus is "
+            "the manual alternative: `cas mirror import`)."
         ),
         sources=[
-            src
-            for code in [str(i) for i in range(1, 10)]
-            for src in (
-                MirrorSource(
-                    url=_MERIT_CATCHMENTS.format(code=code),
-                    archive_name=f"pfaf_{code}_MERIT_Hydro_v07_Basins_v01.zip",
-                    sha256=None,
-                    size_bytes_approx=400_000_000,
-                    unit=code,
-                    role="catchments",
+            MirrorSource(
+                url=(
+                    "https://drive.google.com/uc?export=download&id="
+                    f"{file_id}"
                 ),
-                MirrorSource(
-                    url=_MERIT_RIVERS.format(code=code),
-                    archive_name=f"pfaf_{code}_MERIT_Hydro_v07_Basins_v01_rivernet.zip",
-                    sha256=None,
-                    size_bytes_approx=150_000_000,
-                    unit=code,
-                    role="rivernet",
-                ),
+                archive_name=f"pfaf_{code}_MERIT_Hydro_v07_Basins_v01.zip",
+                sha256=_MERIT_SHA256.get(code),
+                size_bytes_approx=size,
+                unit=code,
+                role="data",
+                members={
+                    "catchments": [f"cat_pfaf_{code}_*.shp"],
+                    "rivernet": [f"riv_pfaf_{code}_*.shp"],
+                },
             )
+            for code, (file_id, size) in _MERIT_DRIVE_IDS.items()
         ],
         delivery="path",
         unit_scheme="Pfafstetter Level-1 region (codes 1-9)",
         unit_processing="gpkg",
+        # cat_pfaf_* shapefiles ship without a .prj; the official ReadMe and
+        # the rivernet .prj both say WGS84 — assigned, never reprojected.
+        assumed_crs="EPSG:4326",
         shapefile_patterns=["*riv_pfaf_*.shp", "*cat_pfaf_*.shp", "pfaf_*.shp", "*.shp"],
         known_columns=["COMID", "NextDownID", "up1", "up2", "up3"],
         license=MirrorLicense(
@@ -545,7 +571,10 @@ register_mirror_dataset(
             "Research, 55, 6499-6516. Accessed {access_date}."
         ),
         approx_materialized_bytes=8_000_000_000,
-        disk_note="~1 GB per Pfaf-L1 region; ~8 GB for all 9.",
+        disk_note=(
+            "0.2-1.1 GB zip per Pfaf-L1 region (Google Drive); "
+            "~1 GB materialized per region, ~8 GB for all 9."
+        ),
     )
 )
 

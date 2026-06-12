@@ -42,11 +42,16 @@ def convert_to_geoparquet(
     dest: Path,
     *,
     row_group_size: int = ROW_GROUP_SIZE,
+    assumed_crs: str = "",
 ) -> tuple[ConversionRecord, int, list[str], str]:
     """Convert a vector layer to hilbert-sorted GeoParquet.
 
     Writes to a ``dest.part`` temp file and atomically renames, so a crashed
     conversion never leaves a plausible-looking query layer behind.
+
+    ``assumed_crs`` is assigned (never reprojected) when the source layer
+    ships without a CRS (e.g. MERIT-Basins catchment shapefiles have no
+    ``.prj``); the assumption is recorded in the conversion provenance.
 
     Returns ``(conversion_record, feature_count, columns, crs)`` — the
     provenance and layer facts recorded in the manifest.
@@ -56,6 +61,10 @@ def convert_to_geoparquet(
     import pyogrio
 
     gdf = gpd.read_file(source)
+    crs_assumed = False
+    if gdf.crs is None and assumed_crs:
+        gdf = gdf.set_crs(assumed_crs)
+        crs_assumed = True
     sort = "none"
     if len(gdf) > 1:
         try:
@@ -92,6 +101,7 @@ def convert_to_geoparquet(
             "write_covering_bbox": True,
             "compression": "snappy",
             "source_format": source.suffix.lstrip(".") or "unknown",
+            **({"assumed_crs": assumed_crs} if crs_assumed else {}),
         },
     )
     return record, len(gdf), columns, crs

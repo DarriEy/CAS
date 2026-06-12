@@ -72,6 +72,7 @@ file under the same version is never silently accepted.
 ```console
 $ cas mirror sync wokam            # materialize explicitly (HPC pre-staging, CI)
 $ cas mirror sync glhymps==2.0     # pin a version
+$ cas mirror import merit_basins:7 pfaf_7.zip   # stage a manually obtained archive
 $ cas mirror status                # per-dataset disk use, version, license, checksum state
 $ cas mirror verify [wokam]        # full sha256 re-checksum against the manifest
 $ cas mirror remove wokam          # reclaim disk
@@ -83,10 +84,39 @@ compute nodes. Set `CAS_MIRROR_OFFLINE=1` to turn materialization into a hard
 error (compute-node safety); reads of already-materialized data still work.
 Set `CAS_MIRROR_AUTO_MATERIALIZE=false` to forbid lazy download-on-first-use.
 
+### Manual staging — `cas mirror import`
+
+Some distributions cannot be downloaded by CAS at all: Globus-only mirrors
+(the reachhydro MERIT-Basins collection), registration-gated upstreams
+(MSWEP-style), or a Google-Drive file that is quota-limited right now. The
+escape hatch is to obtain the archive yourself and let CAS verify + ingest it:
+
+```console
+$ cas mirror import merit_basins pfaf_7_MERIT_Hydro_v07_Basins_v01.zip --unit 7
+$ cas mirror import merit_basins:7 ~/globus-staging/      # unit via spec; dir by exact names
+$ cas mirror import glhymps==2.0 GLHYMPS.zip
+```
+
+CAS verifies the archive against the registry expectations — exact archive
+names (for directories / multi-file units), the expected member names and
+format for the dataset's processing mode, and the registry sha256 when one is
+pinned (a mismatch is a hard `MirrorIntegrityError`; a match upgrades the
+import straight to registry-verified). The checksum is recorded as
+`tofu-import` with provenance `source="manual-import"` plus the local path it
+came from, and then the **same** extraction/conversion/manifest pipeline as
+`sync` runs — subsequent `mirror_subset`/`mirror_fetch` calls work identically
+and carry the manual-import note in their provenance strings.
+Acknowledgment-requiring datasets (HydroBASINS) still require acknowledgment
+at import: CAS never accepts license terms silently, even when it moved none
+of the bytes. In Python: `cas.mirror_import_sync(dataset, source, unit=...)`
+(async: `cas.mirror_import`).
+
+An already-materialized dataset/unit is never silently replaced — run
+`cas mirror remove` first.
+
 ### License acknowledgment
 
-Some datasets (none in this slice, but the mechanism ships now — e.g.
-HydroBASINS in a later slice) require explicit license acknowledgment before
+Some datasets (HydroBASINS) require explicit license acknowledgment before
 CAS downloads them on your behalf. `cas mirror sync` surfaces the terms and
 records acceptance with a timestamp in the manifest; it never accepts
 silently. In non-interactive contexts pass `--accept-licenses` or set
@@ -246,9 +276,32 @@ fully synced (region × 12 levels); name a unit.
 | Dataset | Per-unit download | Materialized | Notes |
 |---|---|---|---|
 | HydroBASINS v1c | 0.05–0.3 GB / (region, level) | ~0.1–0.3 GB | varies sharply with Pfaf level |
-| MERIT-Basins | 0.4 GB (catch) + 0.15 GB (riv) / region | ~1 GB / region; ~8 GB all 9 | |
+| MERIT-Basins | 0.2–1.1 GB single zip / region | ~1 GB / region; ~8 GB all 9 | one zip carries both layers |
 | TDX-Hydro / GEOGLOWS | 0.1–0.3 GB / VPU | ~0.5 GB / VPU; ~25–40 GB global (refused) | per-VPU lazy mandatory |
 | NWS NextGen | 1.6 GB tar.gz | ~7 GB GeoPackage (~9 GB transient) | single CONUS unit |
+
+### MERIT-Basins distribution (migrated 2026)
+
+The Princeton host the community's tooling pointed at
+(`hydrology.princeton.edu`) no longer resolves (DNS NXDOMAIN).
+reachhydro.org now distributes MERIT-Basins via a **public Google Drive
+folder** and **Globus**; no authoritative per-file plain-HTTPS mirror exists
+(HydroShare carries a North-America-only derivative; Zenodo re-packages carry
+a narrowed CC-BY-NC-SA license). The CAS registry records the stable public
+Drive file ids — one zip per Pfaf-L1 region carrying **both** the catchments
+and rivernet shapefiles — and downloads them through Drive's virus-scan
+confirm flow (no API key). A Drive quota interstitial fails actionably,
+naming `cas mirror import`; Globus is the manual path through the same
+command. The region 9 archive's sha256 is baked into the registry
+(registry-verified); the others record trust-on-first-fetch.
+
+Two upstream quirks are handled and recorded: the catchment shapefiles ship
+without a `.prj` (EPSG:4326 is assigned per the official ReadMe and noted in
+the conversion provenance), and the official Pfaf-L1 mapping is
+**1 Africa, 2 Europe, 3 North Asia, 4 South Asia, 5 Oceania + South Asian
+islands, 6 South America, 7 North America, 8 Arctic, 9 Greenland** (the
+table some older tooling ships — 1=Amazon, 9=Australia — contradicts the
+official ReadMe and the shipped data; CAS follows the data).
 
 ### HydroBASINS license acknowledgment + Exhibit B
 
