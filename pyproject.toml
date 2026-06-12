@@ -45,6 +45,13 @@ stac = [
     "pystac-client>=0.7",
     "planetary-computer>=1.0",
 ]
+# Curated-mirror tier: GeoParquet conversion + bbox subsetting of mirrored
+# vector datasets. Deliberately optional — CAS core stays geopandas-free.
+mirror = [
+    "geopandas>=1.0",
+    "pyogrio>=0.8",
+    "pyarrow>=15.0",
+]
 climate = [
     "xarray>=2024.0",
     "zarr>=2.18",
