@@ -29,6 +29,14 @@ class ProtocolError(ConnectorError):
     """Protocol-level operation failed (WCS, STAC, OPeNDAP)."""
 
 
+class RasterUnsupportedError(ConnectorError):
+    """Provider/protocol cannot produce raster output (capability error).
+
+    v1 raster mode covers STAC/COG and WCS connectors only; every other
+    protocol is stats-only and raster requests to it raise this error.
+    """
+
+
 class GeometryError(CASError):
     """Input geometry is invalid or unsupported."""
 
