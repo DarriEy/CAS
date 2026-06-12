@@ -178,6 +178,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   interstitial AND `cas mirror import` of the same zip, both
   registry-verified with identical feature counts.
 
+### Validated
+
+- **Mirror-vs-native parity** (deprecation gate for the native SYMFLUENCE
+  vector handlers; full table in `docs/mirror.md`): WOKAM (Alps), RGI 7.0
+  region 06 (Iceland), HydroLAKES (Logan/Bear) and GLHYMPS (live, 2.6 GB)
+  all **PASS** with exact feature sets, attribute equality on the consumed
+  columns and exact geometry (1e-7° where the native side reprojects);
+  HydroBASINS na_lev06 **PASS** at whole-unit level (HYBAS_ID/NEXT_DOWN
+  topology intact; GPKG MultiPolygon promotion documented as lossless).
+  MERIT structural (native dead upstream); TDX/NWS structural-only (sizes
+  prohibitive; live HEAD probes match the registry).
+
 ## [0.3.0] — 2026-06-11
 
 ### Added
