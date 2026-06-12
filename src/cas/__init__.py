@@ -35,9 +35,21 @@ tile-mosaicked, native-resolution, EPSG:4326 GeoTIFF with correct nodata to
 the caller-supplied directory and return a :class:`RasterResult` carrying
 the path — the contract SYMFLUENCE discretization consumes.
 
+Curated-mirror tier (in-process **only** — the HTTP API mounts no mirror
+endpoints): version-pinned, checksummed local mirrors of bulk-download-only
+vector datasets (GLHYMPS, HydroLAKES, WOKAM), materialized on *your* disk
+under ``CAS_MIRROR_DIR`` on first use or via ``cas mirror sync``:
+
+>>> result = cas.mirror_subset_sync(
+...     "wokam",
+...     bbox=(9.0, 46.0, 13.0, 47.5),
+...     output_dir="/tmp/karst",
+... )
+>>> result.path, result.feature_count, result.attribution
+
 For talking to a *deployed* CAS service over HTTP, use :mod:`cas.client`,
-which returns these same response models (stats only; raster mode is not
-served over HTTP).
+which returns these same response models (stats only; neither raster mode
+nor mirrors are served over HTTP).
 """
 
 from cas.api_sync import batch_extract_sync, extract_raster_sync, extract_sync
@@ -59,6 +71,8 @@ from cas.core.models import (
 )
 from cas.core.registry import discover, get_connector, list_providers
 from cas.extract.engine import batch_extract, extract, extract_raster
+from cas.mirror.models import MirrorSubsetResult
+from cas.mirror.query import mirror_subset, mirror_subset_sync
 
 __version__ = "0.3.0"
 
@@ -71,6 +85,10 @@ __all__ = [
     "extract_sync",
     "batch_extract_sync",
     "extract_raster_sync",
+    # Curated mirror tier (in-process only)
+    "mirror_subset",
+    "mirror_subset_sync",
+    "MirrorSubsetResult",
     # Runtime configuration
     "configure",
     # Provider registry
