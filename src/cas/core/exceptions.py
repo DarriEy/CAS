@@ -106,5 +106,18 @@ class MirrorLicenseError(MirrorError):
     """Dataset license terms require explicit acknowledgment that is absent."""
 
 
+class MirrorAuthError(MirrorError):
+    """An auth-gated mirror source (e.g. NASA Earthdata) rejected the request.
+
+    The message is actionable: where to register, where credentials go.
+    Credentials are never stored in manifests or logged.
+    """
+
+
+class MirrorUnitError(MirrorError):
+    """Unit selection failed: unknown unit id, no unit intersects the query,
+    or a unit-structured dataset was synced without required units."""
+
+
 class MirrorDependencyError(MirrorError):
     """The optional [mirror] dependencies (geopandas/pyarrow) are missing."""

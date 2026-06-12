@@ -9,6 +9,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Curated mirror tier (slice 2a): RGI 7.0 with the Earthdata credential
+  flow** — the first **unit-structured** mirror dataset (19 RGI first-order
+  regions, units `01`–`19`). Regions materialize lazily per unit under
+  `units/<unit>/`; the manifest accumulates units as they land.
+  - **NASA Earthdata Login** download path (`cas.mirror.earthdata`): walks the
+    NSIDC → URS → data-host redirect dance explicitly (httpx strips
+    `Authorization` on cross-host redirects), applying a bearer token on every
+    hop and Basic credentials only on the URS host. Credential precedence
+    `EARTHDATA_TOKEN` → `~/.netrc` → `EARTHDATA_USERNAME`/`PASSWORD`; a 401 with
+    no credentials raises an actionable `MirrorAuthError`. Credentials are
+    **never** written to manifests or logs (verified by test). Live-smoke
+    verified: RGI region 06 (Iceland, 568 glaciers) fetched end-to-end.
+  - **bbox → region selection** (`cas.mirror.units`): `mirror_subset("rgi7",
+    bbox=...)` resolves the intersecting RGI regions from a static extent table
+    (multi-lobe extents so an Iceland domain doesn't drag Greenland; an
+    antimeridian guard for the far Aleutians) and materializes only those —
+    producing an honest empty result, downloading nothing, for an unglaciated
+    bbox. RGI 7.0 has 19 regions, not 20 (live-verified against NSIDC).
+  - **Unit-aware store**: `ensure_units_materialized(slug, units)` with the
+    same fcntl-lock + `*.part` + atomic-rename concurrency safety; per-unit
+    GeoParquet conversion; manifest gains per-record `unit` tags; new
+    `is_unit_materialized`/`unit_paths`/`unit_notice_path` helpers. Registry
+    entries gain `delivery`, `unit_scheme`, `unit_processing`, `auth`,
+    `units_required_for_sync`, `notice_file`, `disk_note`; sources gain
+    `unit`/`role`. New exceptions `MirrorAuthError`, `MirrorUnitError`.
+  - **CLI**: `cas mirror sync rgi7:06` (unit spec), full-region sync via
+    `cas mirror sync rgi7`, and `cas mirror status` now shows an
+    `N/total units` materialized fraction and per-dataset disk notes.
+  - Docs: `docs/mirror.md` gains the Earthdata credential flow, lazy region
+    selection, and the RGI row in the license table.
 - **Curated mirror tier (slice 1)** — version-pinned, checksummed local
   mirrors of bulk-download-only vector datasets, materialized on *your* disk
   under `CAS_MIRROR_DIR` (default `~/.cas/mirror`) on first use or by explicit

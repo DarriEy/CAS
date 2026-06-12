@@ -118,19 +118,60 @@ keeps all source columns); empty results are valid (e.g. WOKAM outside karst
 regions). The first query lazily materializes the dataset unless offline mode
 is set. An `await cas.mirror_subset(...)` async form is also exported.
 
-## Slice-1 datasets and licenses
+## Unit-structured datasets and lazy region selection
+
+Some datasets are distributed as regional units rather than one global
+archive. CAS materializes only the units a query (or an explicit
+`cas mirror sync slug:unit`) needs, under `units/<unit>/`, and the manifest
+accumulates units as they land. A `slug:unit` spec names a unit
+(`rgi7:11`, `rgi7==7.0:06`); `cas mirror sync rgi7` without a unit syncs every
+region. For subset datasets a **bbox → unit** resolver picks the intersecting
+units lazily, so `mirror_subset("rgi7", bbox=...)` pulls only the regions the
+domain touches (and produces an honest empty result, downloading nothing, when
+the bbox is unglaciated).
+
+## RGI 7.0 — NASA Earthdata credential flow
+
+RGI 7.0 glacier outlines are distributed by NSIDC behind **Earthdata Login**.
+CAS fetches with **your** credentials (it is your download agent; credentials
+are never written to the manifest or logged). The redirect dance —
+`daacdata.apps.nsidc.org` → `urs.earthdata.nasa.gov` → back with an auth code —
+is walked explicitly; a bearer token rides every hop, while Basic credentials
+are applied only on the URS host.
+
+Provide credentials by any one of (precedence order):
+
+```console
+$ export EARTHDATA_TOKEN=<token>            # URS → My Profile → Generate Token
+# or ~/.netrc:  machine urs.earthdata.nasa.gov login <user> password <pass>
+# or:  export EARTHDATA_USERNAME=<user> EARTHDATA_PASSWORD=<pass>
+```
+
+Without credentials a sync/subset fails with an actionable `MirrorAuthError`
+(where to register at <https://urs.earthdata.nasa.gov/users/new>, where
+credentials go). RGI 7.0 has **19** first-order regions (units `01`–`19`);
+the bbox→region table lives in `cas.mirror.units`. Rasterization and HRU
+intersection stay in the consumer (SYMFLUENCE).
+
+```python
+import cas
+# Iceland domain — pulls only region 06 (~2.3 MB), CC-BY 4.0
+result = cas.mirror_subset_sync("rgi7", bbox=(-25, 63, -13, 67), output_dir="/tmp/rgi")
+```
+
+## Datasets and licenses
 
 License verdicts below are verbatim from the design's verification pass for a
 **local-only** mirror (CAS = download client; no hosting). Attribution strings
 are embedded in every subset output's metadata and carried on the result.
 
-| Dataset | Version | License (verified) | Buffer | Attribution / obligation |
-|---|---|---|---|---|
-| GLHYMPS | 2.0 | CC-BY 4.0 (Borealis record, `termsOfUse: none`) — verified | 0.1° | Cite Huscroft et al. 2018 + DOI 10.5683/SP2/TTJNIU |
-| HydroLAKES | 1.0 | CC-BY 4.0 — verified | 0.1° | Cite Messager et al. 2016 |
-| WOKAM | 1 | BGR GSTC; GeoNutzV likely prevails but **unconfirmed by BGR for this product** | 0.5° | License field = "BGR terms (GeoNutzV-eligible, unconfirmed)"; attribution "Datenquelle: WHYMAP WOKAM, © BGR Berlin, IAH Reading, KIT Karlsruhe, UNESCO Paris 2017"; never republish the layer |
+| Dataset | Version | License (verified) | Auth | Units | Attribution / obligation |
+|---|---|---|---|---|---|
+| GLHYMPS | 2.0 | CC-BY 4.0 (Borealis record, `termsOfUse: none`) — verified | none | global | Cite Huscroft et al. 2018 + DOI 10.5683/SP2/TTJNIU |
+| HydroLAKES | 1.0 | CC-BY 4.0 — verified | none | global | Cite Messager et al. 2016 |
+| WOKAM | 1 | BGR GSTC; GeoNutzV likely prevails but **unconfirmed by BGR for this product** | none | global | License field = "BGR terms (GeoNutzV-eligible, unconfirmed)"; attribution "Datenquelle: WHYMAP WOKAM, © BGR Berlin, IAH Reading, KIT Karlsruhe, UNESCO Paris 2017"; never republish the layer |
+| RGI | 7.0 | CC-BY 4.0 — verified; distribution Earthdata-gated (live-probed 401→URS) | **Earthdata** | 19 regions | NSIDC citation with access date (filled from `retrieved_at`); doi:10.5067/f6jmovy5navz |
 
-Later slices add RGI 7.0 (Earthdata credential flow) and the geofabric
-path-delivery datasets (HydroBASINS, MERIT-Basins, TDX-Hydro, NWS NextGen),
-the last of which carry verbatim license notices and, for HydroBASINS, the
-acknowledgment prompt.
+Later slices add the geofabric path-delivery datasets (HydroBASINS,
+MERIT-Basins, TDX-Hydro, NWS NextGen), which carry verbatim license notices
+and, for HydroBASINS, the acknowledgment prompt.

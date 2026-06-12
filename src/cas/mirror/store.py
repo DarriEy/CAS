@@ -9,6 +9,20 @@ Layout (design §2)::
       glhymps/2.0/
         manifest.json
         glhymps_v2.0.parquet      # query layer (converted at mirror time)
+      rgi7/7.0/
+        manifest.json
+        units/06/RGI2000-v7.0-G-06_iceland.parquet   # per-unit subdirs
+
+Two materialization shapes share one engine:
+
+- **Global subset datasets** (GLHYMPS, HydroLAKES, WOKAM): one archive →
+  one GeoParquet query layer (:func:`ensure_materialized`).
+- **Unit-structured datasets** (RGI regions; geofabric regions/VPUs): lazy
+  per-unit materialization under ``units/<unit>/``
+  (:func:`ensure_units_materialized`), with the manifest accumulating units
+  as they land. Per-unit processing is declared on the registry entry
+  (``unit_processing``): zip→GeoParquet, zip→GeoPackage, raw passthrough,
+  or tar.gz member extraction.
 
 Concurrency (design §1, decision 2 — non-deferrable): materialization takes
 an **exclusive fcntl lock** on ``<dataset dir>/.lock`` and downloads to
@@ -28,6 +42,10 @@ manifest. Once a registry entry ships an expected sha256, TOFU upgrades to
 verified and a mismatch is a hard :class:`MirrorIntegrityError` carrying
 both hashes (upstream silently replacing a file under the same version must
 never be silently accepted). These are static releases: no TTL, ever.
+
+Auth (design §4): Earthdata-gated sources (RGI 7.0) download through
+:mod:`cas.mirror.earthdata` with the *user's* credentials; credentials are
+never written to manifests or logs.
 """
 
 from __future__ import annotations
@@ -38,6 +56,7 @@ import hashlib
 import json
 import os
 import shutil
+import tarfile
 import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
@@ -51,13 +70,19 @@ from cas.core.exceptions import (
     MirrorIntegrityError,
     MirrorLicenseError,
     MirrorOfflineError,
+    MirrorUnitError,
     MirrorWriteError,
 )
 from cas.mirror.convert import convert_to_geoparquet
-from cas.mirror.datasets import get_mirror_dataset, list_mirror_datasets
+from cas.mirror.datasets import (
+    get_mirror_dataset,
+    list_mirror_datasets,
+    sources_for_unit,
+)
 from cas.mirror.models import (
     AcknowledgmentRecord,
     ArchiveRecord,
+    ConversionRecord,
     FileRecord,
     MirrorDataset,
     MirrorDatasetStatus,
@@ -68,6 +93,8 @@ logger = structlog.get_logger(__name__)
 
 _DOWNLOAD_TIMEOUT = httpx.Timeout(connect=30.0, read=600.0, write=600.0, pool=30.0)
 _CHUNK = 1 << 20  # 1 MiB
+
+NOTICE_ROLE = "license_notice"
 
 
 # ── Layout helpers ──────────────────────────────────────────────────
@@ -84,8 +111,13 @@ def manifest_path(ds: MirrorDataset, settings: Settings | None = None) -> Path:
 
 
 def query_layer_path(ds: MirrorDataset, settings: Settings | None = None) -> Path:
-    """The converted GeoParquet query layer for an attribute-vector dataset."""
+    """The converted GeoParquet query layer for a *global* attribute vector."""
     return dataset_dir(ds, settings) / f"{ds.slug}_v{ds.version}.parquet"
+
+
+def unit_dir(ds: MirrorDataset, unit: str, settings: Settings | None = None) -> Path:
+    """``{dataset dir}/units/{unit}/`` for a unit-structured dataset."""
+    return dataset_dir(ds, settings) / "units" / unit
 
 
 def load_manifest(ds: MirrorDataset, settings: Settings | None = None) -> MirrorManifest | None:
@@ -104,18 +136,68 @@ def load_manifest(ds: MirrorDataset, settings: Settings | None = None) -> Mirror
         return None
 
 
-def is_materialized(ds: MirrorDataset, settings: Settings | None = None) -> bool:
-    """Cheap read-path check: manifest parses and every file exists with the
-    recorded size (full sha256 is ``cas mirror verify``'s job, design §2)."""
-    manifest = load_manifest(ds, settings)
-    if manifest is None:
+def _files_present(manifest: MirrorManifest, ddir: Path, *, unit: str | None = None) -> bool:
+    records = [r for r in manifest.files if unit is None or r.unit == unit]
+    if unit is not None and not records:
         return False
-    ddir = dataset_dir(ds, settings)
-    for record in manifest.files:
+    for record in records:
         f = ddir / record.path
         if not f.is_file() or f.stat().st_size != record.size_bytes:
             return False
     return True
+
+
+def is_materialized(ds: MirrorDataset, settings: Settings | None = None) -> bool:
+    """Cheap read-path check: manifest parses and every recorded file exists
+    with the recorded size (full sha256 is ``cas mirror verify``'s job).
+
+    For unit-structured datasets this means "every *recorded* unit is
+    intact" — use :func:`is_unit_materialized` for a specific unit.
+    """
+    manifest = load_manifest(ds, settings)
+    if manifest is None:
+        return False
+    if not manifest.files:
+        return False
+    return _files_present(manifest, dataset_dir(ds, settings))
+
+
+def is_unit_materialized(ds: MirrorDataset, unit: str, settings: Settings | None = None) -> bool:
+    """Whether one regional unit is recorded in the manifest and intact."""
+    manifest = load_manifest(ds, settings)
+    if manifest is None or not manifest.units or unit not in manifest.units:
+        return False
+    return _files_present(manifest, dataset_dir(ds, settings), unit=unit)
+
+
+def unit_paths(
+    ds: MirrorDataset, unit: str, settings: Settings | None = None
+) -> dict[str, Path]:
+    """Role → absolute path for one materialized unit (data files only;
+    the license notice, when present, is alongside under role
+    ``license_notice`` in the manifest)."""
+    manifest = load_manifest(ds, settings)
+    if manifest is None:
+        return {}
+    ddir = dataset_dir(ds, settings)
+    return {
+        r.role: ddir / r.path
+        for r in manifest.files
+        if r.unit == unit and r.role != NOTICE_ROLE
+    }
+
+
+def unit_notice_path(
+    ds: MirrorDataset, unit: str, settings: Settings | None = None
+) -> Path | None:
+    manifest = load_manifest(ds, settings)
+    if manifest is None:
+        return None
+    ddir = dataset_dir(ds, settings)
+    for r in manifest.files:
+        if r.unit == unit and r.role == NOTICE_ROLE:
+            return ddir / r.path
+    return None
 
 
 # ── Acknowledgment gate ─────────────────────────────────────────────
@@ -162,32 +244,10 @@ def _resolve_acknowledgment(
     )
 
 
-# ── Materialization ─────────────────────────────────────────────────
+# ── Shared materialization plumbing ─────────────────────────────────
 
 
-def ensure_materialized(
-    spec: str | MirrorDataset,
-    settings: Settings | None = None,
-    *,
-    explicit: bool = False,
-    licenses_accepted: bool = False,
-    ack_via: str | None = None,
-) -> Path:
-    """Materialize a dataset version if needed; return the query-layer path.
-
-    ``explicit=True`` marks a ``cas mirror sync`` invocation; the lazy
-    in-process path (``explicit=False``) additionally honors
-    ``mirror_auto_materialize`` and refuses ack-requiring datasets that were
-    not pre-accepted via the environment.
-    """
-    settings = settings or get_settings()
-    ds = get_mirror_dataset(spec) if isinstance(spec, str) else spec
-
-    # Read path first: a materialized dataset is served regardless of
-    # offline mode, read-only roots, or acknowledgment state.
-    if is_materialized(ds, settings):
-        return query_layer_path(ds, settings)
-
+def _check_offline_and_lazy(ds: MirrorDataset, settings: Settings, explicit: bool) -> None:
     if settings.mirror_offline:
         raise MirrorOfflineError(
             f"Mirror dataset '{ds.spec}' is not materialized and CAS_MIRROR_OFFLINE "
@@ -200,8 +260,9 @@ def ensure_materialized(
             f"materialization is disabled (CAS_MIRROR_AUTO_MATERIALIZE=false). "
             f"Run `cas mirror sync {ds.spec}` explicitly."
         )
-    ack = _resolve_acknowledgment(ds, settings, licenses_accepted, ack_via)
 
+
+def _writable_dataset_dir(ds: MirrorDataset, settings: Settings) -> Path:
     ddir = dataset_dir(ds, settings)
     try:
         ddir.mkdir(parents=True, exist_ok=True)
@@ -216,6 +277,50 @@ def ensure_materialized(
             f"first query materialize it) — or, on a shared read-only mirror, ask "
             f"the mirror administrator to sync this dataset into the shared root."
         )
+    return ddir
+
+
+# ── Global (single-archive) materialization ─────────────────────────
+
+
+def ensure_materialized(
+    spec: str | MirrorDataset,
+    settings: Settings | None = None,
+    *,
+    explicit: bool = False,
+    licenses_accepted: bool = False,
+    ack_via: str | None = None,
+) -> Path:
+    """Materialize a *global* dataset version if needed; return the
+    query-layer path.
+
+    Unit-structured datasets (RGI, geofabrics) go through
+    :func:`ensure_units_materialized` instead; calling this for one raises
+    with that pointer.
+
+    ``explicit=True`` marks a ``cas mirror sync`` invocation; the lazy
+    in-process path (``explicit=False``) additionally honors
+    ``mirror_auto_materialize`` and refuses ack-requiring datasets that were
+    not pre-accepted via the environment.
+    """
+    settings = settings or get_settings()
+    ds = get_mirror_dataset(spec) if isinstance(spec, str) else spec
+    if ds.is_unit_structured:
+        raise MirrorUnitError(
+            f"Mirror dataset '{ds.spec}' is unit-structured "
+            f"({ds.unit_scheme or 'regional units'}); use "
+            f"ensure_units_materialized()/mirror_fetch()/mirror_subset() "
+            f"instead of the global query-layer path."
+        )
+
+    # Read path first: a materialized dataset is served regardless of
+    # offline mode, read-only roots, or acknowledgment state.
+    if is_materialized(ds, settings):
+        return query_layer_path(ds, settings)
+
+    _check_offline_and_lazy(ds, settings, explicit)
+    ack = _resolve_acknowledgment(ds, settings, licenses_accepted, ack_via)
+    ddir = _writable_dataset_dir(ds, settings)
 
     lock_path = ddir / ".lock"
     with open(lock_path, "w") as lock_file:
@@ -224,12 +329,12 @@ def ensure_materialized(
             # A concurrent materializer may have finished while we waited.
             if is_materialized(ds, settings):
                 return query_layer_path(ds, settings)
-            return _materialize_locked(ds, settings, ddir, ack)
+            return _materialize_global_locked(ds, settings, ddir, ack)
         finally:
             fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
 
 
-def _materialize_locked(
+def _materialize_global_locked(
     ds: MirrorDataset,
     settings: Settings,
     ddir: Path,
@@ -249,7 +354,7 @@ def _materialize_locked(
                 "mirror.download", dataset=ds.spec, url=source.url,
                 approx_bytes=source.size_bytes_approx,
             )
-            digest, size = _download(source.url, archive, source.sha256)
+            digest, size = _download(source.url, archive, source.sha256, auth=ds.auth)
             archive_paths.append(archive)
             archives.append(
                 ArchiveRecord(
@@ -291,7 +396,7 @@ def _materialize_locked(
             feature_count=feature_count,
             columns=columns,
             license=ds.license,
-            citation=ds.citation,
+            citation=_render_citation(ds),
             conversion=conversion,
             acknowledgments=[ack] if ack else [],
             units=None,
@@ -314,11 +419,364 @@ def _materialize_locked(
         _rebuild_index(settings)
 
 
-def _download(url: str, dest: Path, expected_sha256: str | None) -> tuple[str, int]:
+# ── Unit-structured materialization ─────────────────────────────────
+
+
+def resolve_unit_ids(
+    ds: MirrorDataset, units: list[str] | None, *, explicit: bool = False
+) -> list[str]:
+    """Validate/expand a unit-id request against the registry entry.
+
+    ``units=None`` expands to *all* statically declared units — except for
+    datasets marked ``units_required_for_sync`` (TDX-Hydro: ~25–40 GB
+    global), which refuse with guidance (design §1: ``sync --all`` refused).
+    """
+    _ = explicit
+    if units is None:
+        if ds.units_required_for_sync or ds.dynamic_units:
+            raise MirrorUnitError(
+                f"'{ds.spec}' is materialized per {ds.unit_scheme or 'unit'} only — "
+                f"a full sync would be ~{_approx_total(ds)} and is refused by design. "
+                f"Name the unit(s) you need (e.g. `cas mirror sync "
+                f"{ds.slug}:<unit>`) or let mirror_fetch(..., bbox=...) resolve "
+                f"them from your domain."
+            )
+        return ds.unit_ids()
+    known = ds.unit_ids()
+    if known:
+        unknown = sorted(set(units) - set(known))
+        if unknown:
+            raise MirrorUnitError(
+                f"Unknown unit(s) {unknown} for '{ds.spec}'. "
+                f"Known units: {', '.join(known)}."
+            )
+    return list(dict.fromkeys(units))
+
+
+def _approx_total(ds: MirrorDataset) -> str:
+    if ds.approx_materialized_bytes:
+        return _human_bytes(ds.approx_materialized_bytes)
+    return "many GB"
+
+
+def _human_bytes(n: int) -> str:
+    size = float(n)
+    for suffix in ("B", "KB", "MB", "GB"):
+        if size < 1024 or suffix == "GB":
+            return f"{int(size)} B" if suffix == "B" else f"{size:.1f} {suffix}"
+        size /= 1024
+    return f"{size:.1f} GB"
+
+
+def ensure_units_materialized(
+    spec: str | MirrorDataset,
+    units: list[str] | None = None,
+    settings: Settings | None = None,
+    *,
+    explicit: bool = False,
+    licenses_accepted: bool = False,
+    ack_via: str | None = None,
+) -> dict[str, dict[str, Path]]:
+    """Materialize the requested units of a unit-structured dataset.
+
+    Returns ``{unit: {role: path}}`` for the requested units. Only missing
+    units are downloaded; the manifest accumulates units as they land (each
+    unit is committed to the manifest individually, so a failure mid-way
+    keeps every completed unit valid).
+    """
+    settings = settings or get_settings()
+    ds = get_mirror_dataset(spec) if isinstance(spec, str) else spec
+    if not ds.is_unit_structured:
+        raise MirrorUnitError(
+            f"Mirror dataset '{ds.spec}' is not unit-structured; use "
+            f"ensure_materialized()/mirror_subset() instead."
+        )
+    wanted = resolve_unit_ids(ds, units, explicit=explicit)
+    if not wanted:
+        raise MirrorUnitError(f"No units requested for '{ds.spec}'.")
+
+    # Read path first.
+    missing = [u for u in wanted if not is_unit_materialized(ds, u, settings)]
+    if not missing:
+        return {u: unit_paths(ds, u, settings) for u in wanted}
+
+    _check_offline_and_lazy(ds, settings, explicit)
+    ack = _resolve_acknowledgment(ds, settings, licenses_accepted, ack_via)
+    ddir = _writable_dataset_dir(ds, settings)
+
+    lock_path = ddir / ".lock"
+    with open(lock_path, "w") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        try:
+            for unit in missing:
+                # A concurrent materializer may have landed this unit.
+                if is_unit_materialized(ds, unit, settings):
+                    continue
+                _materialize_unit_locked(ds, unit, settings, ddir, ack)
+        finally:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+            _rebuild_index(settings)
+    return {u: unit_paths(ds, u, settings) for u in wanted}
+
+
+def _materialize_unit_locked(
+    ds: MirrorDataset,
+    unit: str,
+    settings: Settings,
+    ddir: Path,
+    ack: AcknowledgmentRecord | None,
+) -> None:
+    """Download → verify → process → merge manifest, for one unit."""
+    sources = sources_for_unit(ds, unit)
+    udir = unit_dir(ds, unit, settings)
+    udir.mkdir(parents=True, exist_ok=True)
+    extract_dir = ddir / "_extract"
+
+    archives: list[ArchiveRecord] = []
+    files: list[FileRecord] = []
+    kept_members: list[str] = []
+    conversion: ConversionRecord | None = None
+    crs = ""
+    feature_count = 0
+    columns: list[str] = []
+    cleanup: list[Path] = []
+
+    try:
+        for source in sources:
+            archive = ddir / source.archive_name
+            logger.info(
+                "mirror.download", dataset=ds.spec, unit=unit, url=source.url,
+                approx_bytes=source.size_bytes_approx,
+            )
+            digest, size = _download(source.url, archive, source.sha256, auth=ds.auth)
+            archives.append(
+                ArchiveRecord(
+                    url=source.url,
+                    archive_name=source.archive_name,
+                    sha256=digest,
+                    size_bytes=size,
+                    sha256_source="registry" if source.sha256 else "tofu",
+                    unit=unit,
+                )
+            )
+
+            if ds.unit_processing == "raw":
+                # The download *is* the artifact — keep it byte-identical.
+                dest = udir / source.archive_name
+                archive.replace(dest)
+                files.append(
+                    FileRecord(
+                        path=str(dest.relative_to(ddir)),
+                        sha256=digest,
+                        size_bytes=size,
+                        role=source.role,
+                        unit=unit,
+                    )
+                )
+                continue
+
+            cleanup.append(archive)
+            if ds.unit_processing == "tar_member":
+                produced = _extract_tar_members(archive, udir, ds.shapefile_patterns)
+                if not produced:
+                    raise MirrorError(
+                        f"No member matching {ds.shapefile_patterns} found in "
+                        f"{source.archive_name} for '{ds.spec}' unit {unit} — "
+                        f"upstream layout changed?"
+                    )
+                kept_members.extend(name for name, _ in produced)
+                for _name, out in produced:
+                    fdigest, fsize = _hash_file(out)
+                    files.append(
+                        FileRecord(
+                            path=str(out.relative_to(ddir)),
+                            sha256=fdigest,
+                            size_bytes=fsize,
+                            role=source.role,
+                            unit=unit,
+                        )
+                    )
+                continue
+
+            # zip → shapefile → GeoParquet ("geoparquet") or GeoPackage ("gpkg")
+            members = _extract_layer(archive, extract_dir, ds.shapefile_patterns)
+            shp_path = next(
+                (extract_dir / Path(m).name for m in members if m.lower().endswith(".shp")),
+                None,
+            )
+            if shp_path is None:
+                raise MirrorError(
+                    f"No member matching {ds.shapefile_patterns} found in "
+                    f"{source.archive_name} for '{ds.spec}' unit {unit} — "
+                    f"upstream layout changed?"
+                )
+            kept_members.extend(members)
+
+            if ds.unit_processing == "geoparquet":
+                out = udir / f"{shp_path.stem}.parquet"
+                conversion, count, columns, crs = convert_to_geoparquet(shp_path, out)
+            elif ds.unit_processing == "gpkg":
+                out = udir / f"{shp_path.stem}.gpkg"
+                conversion, count, columns, crs = _convert_to_gpkg(shp_path, out)
+            else:
+                raise MirrorError(
+                    f"Unknown unit_processing '{ds.unit_processing}' for '{ds.spec}'."
+                )
+            feature_count += count
+            fdigest, fsize = _hash_file(out)
+            files.append(
+                FileRecord(
+                    path=str(out.relative_to(ddir)),
+                    sha256=fdigest,
+                    size_bytes=fsize,
+                    role=source.role,
+                    unit=unit,
+                )
+            )
+            shutil.rmtree(extract_dir, ignore_errors=True)
+
+        if ds.notice_file:
+            notice = _copy_notice(ds, udir)
+            ndigest, nsize = _hash_file(notice)
+            files.append(
+                FileRecord(
+                    path=str(notice.relative_to(ddir)),
+                    sha256=ndigest,
+                    size_bytes=nsize,
+                    role=NOTICE_ROLE,
+                    unit=unit,
+                )
+            )
+
+        _merge_manifest(
+            ds, settings, unit=unit, archives=archives, files=files,
+            kept_members=kept_members, conversion=conversion, crs=crs,
+            feature_count=feature_count, columns=columns, ack=ack,
+        )
+        logger.info("mirror.unit_materialized", dataset=ds.spec, unit=unit,
+                    files=len(files))
+    finally:
+        shutil.rmtree(extract_dir, ignore_errors=True)
+        for path in cleanup:
+            path.unlink(missing_ok=True)
+        for part in ddir.glob("*.part"):
+            part.unlink(missing_ok=True)
+
+
+def _merge_manifest(
+    ds: MirrorDataset,
+    settings: Settings,
+    *,
+    unit: str,
+    archives: list[ArchiveRecord],
+    files: list[FileRecord],
+    kept_members: list[str],
+    conversion: ConversionRecord | None,
+    crs: str,
+    feature_count: int,
+    columns: list[str],
+    ack: AcknowledgmentRecord | None,
+) -> None:
+    """Fold one freshly materialized unit into the dataset manifest."""
+    manifest = load_manifest(ds, settings)
+    if manifest is None:
+        manifest = MirrorManifest(
+            slug=ds.slug,
+            version=ds.version,
+            display_name=ds.display_name,
+            retrieved_at=datetime.now(UTC),
+            license=ds.license,
+            citation=_render_citation(ds),
+            units=[],
+        )
+    # Replace any stale records for this unit (re-sync after corruption).
+    manifest.archives = [a for a in manifest.archives if a.unit != unit] + archives
+    manifest.files = [f for f in manifest.files if f.unit != unit] + files
+    manifest.source_urls = sorted(set(manifest.source_urls) | {a.url for a in archives})
+    manifest.kept_members = sorted(set(manifest.kept_members) | set(kept_members))
+    manifest.units = sorted(set(manifest.units or []) | {unit})
+    manifest.retrieved_at = datetime.now(UTC)
+    manifest.citation = _render_citation(ds)
+    if conversion is not None:
+        manifest.conversion = conversion
+    if crs:
+        manifest.crs = crs
+    if columns and not manifest.columns:
+        manifest.columns = columns
+    manifest.feature_count += feature_count
+    if ack and not any(
+        a.license == ack.license for a in manifest.acknowledgments
+    ):
+        manifest.acknowledgments.append(ack)
+    manifest.cas_version = _cas_version()
+    _write_manifest(manifest_path(ds, settings), manifest)
+
+
+def _copy_notice(ds: MirrorDataset, udir: Path) -> Path:
+    """Copy the packaged verbatim license notice next to the unit's files."""
+    from importlib import resources
+
+    assert ds.notice_file is not None
+    ref = resources.files("cas.mirror") / "notices" / ds.notice_file
+    dest = udir / ds.notice_file
+    dest.write_bytes(ref.read_bytes())
+    return dest
+
+
+def _convert_to_gpkg(source: Path, dest: Path):  # -> tuple[ConversionRecord, int, list[str], str]
+    """Shapefile → single-layer GeoPackage (recorded as a conversion).
+
+    Used for shapefile-distributed geofabric units: the consumer's reader
+    (SYMFLUENCE ``GeofabricSubsetter``) reads GeoPackage natively, and gpkg
+    carries an R-tree index plus lossless column names. All columns —
+    including the topology columns — are kept untouched.
+    """
+    from cas.mirror.convert import _import_geopandas
+
+    gpd = _import_geopandas()
+    import pyogrio
+
+    gdf = gpd.read_file(source)
+    tmp = dest.with_name(dest.name + ".part")
+    gdf.to_file(tmp, driver="GPKG", layer=dest.stem)
+    tmp.replace(dest)
+    columns = [c for c in gdf.columns if c != gdf.geometry.name]
+    crs = str(gdf.crs) if gdf.crs is not None else ""
+    record = ConversionRecord(
+        tool_versions={"geopandas": gpd.__version__, "pyogrio": pyogrio.__version__},
+        parameters={
+            "format": "GPKG",
+            "source_format": source.suffix.lstrip(".") or "unknown",
+            "columns_kept": "all",
+        },
+    )
+    return record, len(gdf), columns, crs
+
+
+def _render_citation(ds: MirrorDataset) -> str:
+    """Fill the ``{access_date}`` placeholder (NSIDC-style citations require
+    the access date; the manifest's ``retrieved_at`` is the authority)."""
+    return ds.citation.replace("{access_date}", datetime.now(UTC).date().isoformat())
+
+
+# ── Download / extraction primitives ────────────────────────────────
+
+
+def _download(
+    url: str, dest: Path, expected_sha256: str | None, *, auth: str | None = None
+) -> tuple[str, int]:
     """Stream to ``dest.part`` while hashing; verify; atomically rename."""
     part = dest.with_name(dest.name + ".part")
     hasher = hashlib.sha256()
-    with httpx.stream("GET", url, follow_redirects=True, timeout=_DOWNLOAD_TIMEOUT) as response:
+    if auth == "earthdata":
+        from cas.mirror.earthdata import earthdata_stream
+
+        stream_cm = earthdata_stream(url)
+    elif auth is not None:
+        raise MirrorError(f"Unknown mirror auth scheme '{auth}' for {url}.")
+    else:
+        stream_cm = httpx.stream("GET", url, follow_redirects=True, timeout=_DOWNLOAD_TIMEOUT)
+    with stream_cm as response:
         response.raise_for_status()
         with open(part, "wb") as fh:
             for chunk in response.iter_bytes(_CHUNK):
@@ -365,6 +823,33 @@ def _extract_layer(archive: Path, extract_dir: Path, patterns: list[str]) -> lis
             with zf.open(member) as src, open(target, "wb") as dst:
                 shutil.copyfileobj(src, dst)
         return family
+
+
+def _extract_tar_members(
+    archive: Path, dest_dir: Path, patterns: list[str]
+) -> list[tuple[str, Path]]:
+    """Stream members matching ``patterns`` out of a tar(.gz) archive.
+
+    Members are flattened to their basenames (path-traversal safe) and
+    written via ``*.part`` + atomic rename. Returns (member name, path).
+    """
+    produced: list[tuple[str, Path]] = []
+    with tarfile.open(archive, "r:*") as tf:
+        for member in tf:
+            if not member.isfile():
+                continue
+            if not any(fnmatch.fnmatch(member.name.lower(), p.lower()) for p in patterns):
+                continue
+            target = dest_dir / Path(member.name).name
+            part = target.with_name(target.name + ".part")
+            src = tf.extractfile(member)
+            if src is None:  # pragma: no cover - directories filtered above
+                continue
+            with src, open(part, "wb") as dst:
+                shutil.copyfileobj(src, dst, length=_CHUNK)
+            part.replace(target)
+            produced.append((member.name, target))
+    return produced
 
 
 def _hash_file(path: Path) -> tuple[str, int]:
@@ -460,6 +945,7 @@ def status(settings: Settings | None = None) -> list[MirrorDatasetStatus]:
         else:
             checksum_state = "unverified"
         ddir = dataset_dir(ds, settings)
+        static_units = ds.unit_ids()
         rows.append(
             MirrorDatasetStatus(
                 slug=ds.slug,
@@ -471,6 +957,10 @@ def status(settings: Settings | None = None) -> list[MirrorDatasetStatus]:
                 license_flags=ds.license.license_flags,
                 checksum_state=checksum_state,
                 path=str(ddir),
+                delivery=ds.delivery,
+                units_total=len(static_units) if static_units else None,
+                units_materialized=list(manifest.units or []) if manifest else [],
+                disk_note=ds.disk_note,
             )
         )
     return rows
@@ -508,3 +998,25 @@ def _rebuild_index(settings: Settings) -> None:
         tmp.replace(root / "index.json")
     except OSError:  # read-only or vanished root — index is advisory only
         logger.debug("mirror.index_skip", root=str(root))
+
+
+# Re-exported for the CLI and tests.
+__all__ = [
+    "dataset_dir",
+    "manifest_path",
+    "query_layer_path",
+    "unit_dir",
+    "unit_paths",
+    "unit_notice_path",
+    "load_manifest",
+    "is_materialized",
+    "is_unit_materialized",
+    "ensure_materialized",
+    "ensure_units_materialized",
+    "resolve_unit_ids",
+    "acknowledgment_error",
+    "verify",
+    "remove",
+    "status",
+    "NOTICE_ROLE",
+]

@@ -20,13 +20,19 @@ upgrades to verified and mismatches become hard errors (design §2).
 
 from __future__ import annotations
 
-from cas.core.exceptions import MirrorDatasetNotFoundError
+from collections.abc import Callable
+
+from cas.core.exceptions import MirrorDatasetNotFoundError, MirrorUnitError
 from cas.mirror.models import MirrorDataset, MirrorLicense, MirrorSource
 
 _CC_BY_4 = "https://creativecommons.org/licenses/by/4.0/"
 
 _REGISTRY: dict[str, dict[str, MirrorDataset]] = {}
 _DEFAULT_VERSIONS: dict[str, str] = {}
+
+_UNIT_SOURCE_FACTORIES: dict[str, Callable[[MirrorDataset, str], list[MirrorSource]]] = {}
+"""slug → factory building per-unit sources for ``dynamic_units`` datasets
+(TDX-Hydro VPUs cannot be enumerated statically)."""
 
 
 def register_mirror_dataset(dataset: MirrorDataset, *, default: bool = True) -> None:
@@ -63,6 +69,38 @@ def parse_dataset_spec(spec: str) -> tuple[str, str | None]:
         slug, _, version = spec.partition("==")
         return slug.strip(), version.strip() or None
     return spec.strip(), None
+
+
+def parse_unit_spec(spec: str) -> tuple[str, str | None]:
+    """Split ``slug[==version][:unit]`` into (dataset spec, unit).
+
+    e.g. ``"rgi7:11"`` → ``("rgi7", "11")``;
+    ``"hydrobasins:na_lev06"`` → ``("hydrobasins", "na_lev06")``.
+    """
+    base, _, unit = spec.partition(":")
+    return base.strip(), unit.strip() or None
+
+
+def register_unit_source_factory(
+    slug: str, factory: Callable[[MirrorDataset, str], list[MirrorSource]]
+) -> None:
+    """Register a per-unit source builder for a ``dynamic_units`` dataset."""
+    _UNIT_SOURCE_FACTORIES[slug] = factory
+
+
+def sources_for_unit(ds: MirrorDataset, unit: str) -> list[MirrorSource]:
+    """Sources for one unit — static registry entries or the dynamic factory."""
+    static = ds.sources_for_unit(unit)
+    if static:
+        return static
+    factory = _UNIT_SOURCE_FACTORIES.get(ds.slug)
+    if factory is not None:
+        return factory(ds, unit)
+    known = ds.unit_ids()
+    raise MirrorUnitError(
+        f"Unknown unit '{unit}' for mirror dataset '{ds.spec}'. "
+        f"Known units: {', '.join(known) or '(none declared)'}."
+    )
 
 
 def get_mirror_dataset(spec: str) -> MirrorDataset:
@@ -235,5 +273,107 @@ register_mirror_dataset(
             "https://doi.org/10.1007/s10040-020-02139-5"
         ),
         approx_materialized_bytes=500_000_000,
+    )
+)
+
+
+# ── RGI 7.0 (slice 2a) — per-region units behind Earthdata Login ────
+
+# Exact archive names and sizes live-verified against the NSIDC listing
+# (authenticated GET of regional_files/RGI2000-v7.0-G/, 2026-06-12).
+# RGI 7.0 has 19 first-order regions — not 20; older tooling's "region 20"
+# does not exist upstream. The bbox→region table is cas.mirror.units.
+_RGI_BASE_URL = (
+    "https://daacdata.apps.nsidc.org/pub/DATASETS/nsidc0770_rgi_v7/"
+    "regional_files/RGI2000-v7.0-G/"
+)
+
+_RGI_REGION_FILES: dict[str, tuple[str, int]] = {
+    # unit → (region name slug, approx archive bytes from the NSIDC listing)
+    "01": ("alaska", 83_000_000),
+    "02": ("western_canada_usa", 24_000_000),
+    "03": ("arctic_canada_north", 15_000_000),
+    "04": ("arctic_canada_south", 24_000_000),
+    "05": ("greenland_periphery", 69_000_000),
+    "06": ("iceland", 2_300_000),
+    "07": ("svalbard_jan_mayen", 6_100_000),
+    "08": ("scandinavia", 5_100_000),
+    "09": ("russian_arctic", 3_800_000),
+    "10": ("north_asia", 8_900_000),
+    "11": ("central_europe", 6_600_000),
+    "12": ("caucasus_middle_east", 4_300_000),
+    "13": ("central_asia", 92_000_000),
+    "14": ("south_asia_west", 50_000_000),
+    "15": ("south_asia_east", 26_000_000),
+    "16": ("low_latitudes", 4_100_000),
+    "17": ("southern_andes", 45_000_000),
+    "18": ("new_zealand", 5_100_000),
+    "19": ("subantarctic_antarctic_islands", 15_000_000),
+}
+
+
+def rgi_archive_name(unit: str) -> str:
+    name, _ = _RGI_REGION_FILES[unit]
+    return f"RGI2000-v7.0-G-{unit}_{name}.zip"
+
+
+register_mirror_dataset(
+    MirrorDataset(
+        slug="rgi7",
+        version="7.0",
+        display_name="RGI 7.0 — Randolph Glacier Inventory (glacier outlines)",
+        description=(
+            "Global glacier outlines (RGI2000-v7.0-G), distributed by NSIDC "
+            "as 19 first-order regional shapefiles behind NASA Earthdata "
+            "Login. Materialized lazily per region; rasterization and HRU "
+            "intersection stay in the consumer (SYMFLUENCE)."
+        ),
+        sources=[
+            MirrorSource(
+                url=f"{_RGI_BASE_URL}{rgi_archive_name(unit)}",
+                archive_name=rgi_archive_name(unit),
+                sha256=None,
+                size_bytes_approx=size,
+                unit=unit,
+                role="outlines",
+            )
+            for unit, (_name, size) in _RGI_REGION_FILES.items()
+        ],
+        delivery="subset",
+        unit_scheme="RGI first-order region (19 regions, e.g. rgi7:11 Central Europe)",
+        unit_processing="geoparquet",
+        auth="earthdata",
+        shapefile_patterns=["*rgi2000*-g-*.shp", "*.shp"],
+        # The native handler clips outlines to the exact domain box (no
+        # buffer); subset semantics match it.
+        default_buffer_deg=0.0,
+        # Design §0: the SYMFLUENCE consumer reads the glacier id
+        # (rgi_id/RGIId/glac_id) and the debris-cover fraction when present
+        # (the v7.0 G outlines may not carry a debris column; the consumer
+        # tolerates absence with debris fraction 0). The mirror keeps ALL
+        # source columns regardless.
+        known_columns=["rgi_id", "glims_id", "cenlon", "cenlat", "area_km2"],
+        license=MirrorLicense(
+            license="CC-BY-4.0",
+            license_url=_CC_BY_4,
+            license_verified=True,  # CC-BY 4.0; distribution Earthdata-gated (design §8)
+            attribution=(
+                "Randolph Glacier Inventory v7.0 (RGI Consortium, 2023), "
+                "CC-BY 4.0, NSIDC doi:10.5067/f6jmovy5navz"
+            ),
+            license_flags=[],
+            requires_acknowledgment=False,
+        ),
+        # NSIDC requires the access date in citations; {access_date} is
+        # filled from the materialization clock and recorded in the manifest
+        # (retrieved_at is the authority).
+        citation=(
+            "RGI Consortium. (2023). Randolph Glacier Inventory - A Dataset "
+            "of Global Glacier Outlines, Version 7.0. Boulder, Colorado USA. "
+            "NSIDC: National Snow and Ice Data Center. "
+            "https://doi.org/10.5067/f6jmovy5navz. Date Accessed {access_date}."
+        ),
+        approx_materialized_bytes=3_000_000_000,
+        disk_note="~3 GB if all 19 regions are synced; a typical domain needs 1-2 regions.",
     )
 )

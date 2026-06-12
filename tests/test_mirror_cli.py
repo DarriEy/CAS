@@ -13,22 +13,17 @@ from click.testing import CliRunner
 pytest.importorskip("geopandas")
 pytest.importorskip("pyarrow")
 
-import cas
 from cas.cli.main import cli
 
-from .mirror_utils import FAKE_URL, build_fake_zip, make_fake_dataset, registered
+from .mirror_utils import (
+    FAKE_URL,
+    build_fake_zip,
+    make_fake_dataset,
+    make_fake_unit_dataset,
+    registered,
+)
 
-
-@pytest.fixture
-def mirror_root(tmp_path):
-    from cas.core.config import _overrides, get_settings
-
-    saved = dict(_overrides)
-    cas.configure(mirror_dir=tmp_path / "mirror")
-    yield tmp_path / "mirror"
-    _overrides.clear()
-    _overrides.update(saved)
-    get_settings.cache_clear()
+# mirror_root fixture is shared from conftest.py.
 
 
 def test_mirror_group_help():
@@ -69,6 +64,35 @@ class TestSyncCommand:
         result = CliRunner().invoke(cli, ["mirror", "sync", "nope"])
         assert result.exit_code == 1
         assert "FAIL" in result.output
+
+    @respx.mock
+    def test_sync_single_unit_spec(self, mirror_root, tmp_path):
+        from .mirror_utils import make_fake_unit_dataset
+
+        respx.get("https://mirror.invalid/fakeunits_a.zip").mock(
+            return_value=httpx.Response(
+                200, content=build_fake_zip(tmp_path, shp_name="data_a")
+            )
+        )
+        with registered(make_fake_unit_dataset()):
+            result = CliRunner().invoke(cli, ["mirror", "sync", "fakeunits:a"])
+            assert result.exit_code == 0, result.output
+            assert "fakeunits:a" in result.output
+
+            status = CliRunner().invoke(cli, ["mirror", "status"])
+            assert "1/2 units" in status.output
+
+    @respx.mock
+    def test_sync_unit_on_global_dataset_fails(self, mirror_root):
+        with registered(make_fake_dataset()):
+            result = CliRunner().invoke(cli, ["mirror", "sync", "fakeveg:a"])
+            assert result.exit_code == 1
+            assert "no" in result.output and "unit" in result.output
+
+    def test_rgi_status_shows_disk_note(self, mirror_root):
+        result = CliRunner().invoke(cli, ["mirror", "status"])
+        assert "rgi7==7.0" in result.output
+        assert "19 regions" in result.output or "1-2 regions" in result.output
 
 
 class TestAckCli:
@@ -143,3 +167,45 @@ class TestVerifyRemoveCli:
         result = CliRunner().invoke(cli, ["mirror", "verify"])
         assert result.exit_code == 0
         assert "Nothing materialized" in result.output
+
+
+UNIT_URL = "https://mirror.invalid/fakeunits_{unit}.zip"
+
+
+class TestUnitSyncCli:
+    @respx.mock
+    def test_sync_single_unit(self, mirror_root, tmp_path):
+        for u in ("a", "b"):
+            respx.get(UNIT_URL.format(unit=u)).mock(
+                return_value=httpx.Response(200, content=build_fake_zip(tmp_path, shp_name=f"data_{u}"))
+            )
+        with registered(make_fake_unit_dataset()):
+            result = CliRunner().invoke(cli, ["mirror", "sync", "fakeunits:a"])
+            assert result.exit_code == 0, result.output
+            assert "fakeunits:a" in result.output
+            # Only unit 'a' was fetched.
+            from cas.mirror import get_mirror_dataset, load_manifest
+
+            assert load_manifest(get_mirror_dataset("fakeunits")).units == ["a"]
+
+    @respx.mock
+    def test_status_shows_units_fraction(self, mirror_root, tmp_path):
+        respx.get(UNIT_URL.format(unit="a")).mock(
+            return_value=httpx.Response(200, content=build_fake_zip(tmp_path, shp_name="data_a"))
+        )
+        with registered(make_fake_unit_dataset()):
+            CliRunner().invoke(cli, ["mirror", "sync", "fakeunits:a"])
+            status = CliRunner().invoke(cli, ["mirror", "status"])
+            assert "1/2 units" in status.output
+
+    def test_sync_all_refused_for_units_required(self, mirror_root):
+        ds = make_fake_unit_dataset(slug="bigunits", units_required_for_sync=True)
+        with registered(ds):
+            result = CliRunner().invoke(cli, ["mirror", "sync", "bigunits"])
+            assert result.exit_code == 1
+            assert "refused" in result.output.lower()
+
+    def test_unit_on_global_dataset_is_rejected(self, mirror_root):
+        result = CliRunner().invoke(cli, ["mirror", "sync", "wokam:7"])
+        assert result.exit_code == 1
+        assert "no unit" in result.output.lower()

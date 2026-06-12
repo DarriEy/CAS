@@ -454,28 +454,69 @@ def _ack_or_fail(ds, accept_licenses: bool) -> tuple[bool, str | None]:
               help="Accept license terms of acknowledgment-requiring datasets "
                    "(recorded in the manifest with a timestamp).")
 def mirror_sync(datasets, accept_licenses):
-    """Materialize DATASETS (e.g. ``wokam`` or ``glhymps==2.0``) explicitly.
+    """Materialize DATASETS (e.g. ``wokam``, ``glhymps==2.0``, ``rgi7:11``).
+
+    Unit-structured datasets take a ``slug:unit`` form (RGI region
+    ``rgi7:11``, HydroBASINS ``hydrobasins:na_lev06``, TDX VPU
+    ``tdx_hydro:714``); without a unit, all declared units are synced —
+    except datasets whose full sync is refused by design (TDX-Hydro).
 
     The same code path as lazy first-use materialization — run it on an HPC
     login node to pre-stage data for offline compute nodes.
     """
     from cas.core.exceptions import MirrorError
-    from cas.mirror import ensure_materialized, get_mirror_dataset, load_manifest
+    from cas.mirror import (
+        ensure_materialized,
+        ensure_units_materialized,
+        get_mirror_dataset,
+        load_manifest,
+        parse_unit_spec,
+        sources_for_unit,
+    )
+    from cas.mirror.store import resolve_unit_ids
 
     failures = 0
     for spec in datasets:
         try:
-            ds = get_mirror_dataset(spec)
+            base_spec, unit = parse_unit_spec(spec)
+            ds = get_mirror_dataset(base_spec)
             accepted, via = _ack_or_fail(ds, accept_licenses)
-            click.echo(f"Syncing {ds.spec} from {ds.sources[0].url} "
-                       f"(~{_human_bytes(ds.sources[0].size_bytes_approx)}) ...")
-            path = ensure_materialized(
-                ds, explicit=True, licenses_accepted=accepted, ack_via=via,
-            )
-            manifest = load_manifest(ds)
-            features = manifest.feature_count if manifest else "?"
-            click.echo(f"  OK  {ds.spec}: {features} features, "
-                       f"{_human_bytes(path.stat().st_size)} at {path}")
+            if ds.disk_note:
+                click.echo(f"  Note: {ds.disk_note}")
+            if ds.is_unit_structured:
+                units = [unit] if unit else None
+                resolved = resolve_unit_ids(ds, units, explicit=True)
+                approx = sum(
+                    s.size_bytes_approx for u in resolved for s in sources_for_unit(ds, u)
+                )
+                click.echo(
+                    f"Syncing {ds.spec} unit(s) {', '.join(resolved)} "
+                    f"(~{_human_bytes(approx)} download) ..."
+                )
+                paths = ensure_units_materialized(
+                    ds, resolved, explicit=True,
+                    licenses_accepted=accepted, ack_via=via,
+                )
+                for u in resolved:
+                    listing = ", ".join(
+                        f"{role}: {p.name}" for role, p in sorted(paths[u].items())
+                    )
+                    click.echo(f"  OK  {ds.slug}:{u}  {listing}")
+            else:
+                if unit:
+                    raise MirrorError(
+                        f"'{ds.spec}' is a single global dataset; it has no "
+                        f"unit '{unit}'."
+                    )
+                click.echo(f"Syncing {ds.spec} from {ds.sources[0].url} "
+                           f"(~{_human_bytes(ds.sources[0].size_bytes_approx)}) ...")
+                path = ensure_materialized(
+                    ds, explicit=True, licenses_accepted=accepted, ack_via=via,
+                )
+                manifest = load_manifest(ds)
+                features = manifest.feature_count if manifest else "?"
+                click.echo(f"  OK  {ds.spec}: {features} features, "
+                           f"{_human_bytes(path.stat().st_size)} at {path}")
         except MirrorError as e:
             failures += 1
             click.echo(f"  FAIL  {spec}: {e}", err=True)
@@ -493,13 +534,21 @@ def mirror_status():
     click.echo(f"Mirror root: {get_settings().mirror_dir}\n")
     total = 0
     for r in rows:
-        state = "synced" if r.materialized else "not synced"
+        if r.units_materialized:
+            denom = f"/{r.units_total}" if r.units_total else ""
+            state = f"{len(r.units_materialized)}{denom} units"
+        elif r.units_total or r.delivery == "path":
+            state = "not synced"
+        else:
+            state = "synced" if r.materialized else "not synced"
         flags = f" [{', '.join(r.license_flags)}]" if r.license_flags else ""
         click.echo(
-            f"  {r.slug + '==' + r.version:24s} {state:11s} "
+            f"  {r.slug + '==' + r.version:24s} {state:13s} "
             f"{_human_bytes(r.disk_bytes):>10s}  {r.checksum_state:18s} "
             f"{r.license}{flags}"
         )
+        if r.disk_note:
+            click.echo(f"  {'':24s} note: {r.disk_note}")
         total += r.disk_bytes
     click.echo(f"\n  Total disk use: {_human_bytes(total)}")
 

@@ -33,12 +33,17 @@ from pathlib import Path
 import structlog
 
 from cas.core.config import Settings, get_settings
-from cas.core.exceptions import MirrorError
+from cas.core.exceptions import MirrorError, MirrorUnitError
 from cas.core.models import BoundingBox
 from cas.mirror.convert import _import_geopandas
 from cas.mirror.datasets import get_mirror_dataset
 from cas.mirror.models import MirrorSubsetResult
-from cas.mirror.store import ensure_materialized, load_manifest
+from cas.mirror.store import (
+    ensure_materialized,
+    ensure_units_materialized,
+    load_manifest,
+)
+from cas.mirror.units import units_for_bbox
 
 logger = structlog.get_logger(__name__)
 
@@ -96,13 +101,15 @@ def mirror_subset_sync(
     start = time.monotonic()
     settings = settings or get_settings()
     ds = get_mirror_dataset(dataset_id)
+    if ds.delivery == "path":
+        raise MirrorError(
+            f"Mirror dataset '{ds.spec}' is a path-delivery geofabric: CAS "
+            f"materializes topology-complete units and delivers paths — a bbox "
+            f"subset cannot guarantee upstream closure (design §3). Use "
+            f"cas.mirror_fetch('{ds.slug}', unit=...) instead."
+        )
     gpd = _import_geopandas()
     import pyproj
-
-    parquet = ensure_materialized(ds, settings)
-    manifest = load_manifest(ds, settings)
-    if manifest is None:  # pragma: no cover - ensure_materialized just wrote it
-        raise MirrorError(f"manifest for '{ds.spec}' vanished after materialization")
 
     requested = _normalize_bbox(bbox)
     buffer = ds.default_buffer_deg if buffer_deg is None else float(buffer_deg)
@@ -113,9 +120,35 @@ def mirror_subset_sync(
         requested[3] + buffer,
     )
 
+    units: list[str] = []
+    if ds.is_unit_structured:
+        # Lazily materialize ONLY the regional units intersecting the query
+        # (RGI: bbox → regions via the static extent table).
+        units = units_for_bbox(ds.slug, buffered, settings)
+        unit_files = ensure_units_materialized(ds, units, settings) if units else {}
+        parquets = [
+            path
+            for unit in units
+            for path in unit_files[unit].values()
+            if path.suffix == ".parquet"
+        ]
+    else:
+        parquets = [ensure_materialized(ds, settings)]
+
+    if not parquets:
+        # Honest empty answer: the bbox touches no regional unit (e.g. an
+        # unglaciated domain for RGI). Schema-light but valid GeoPackage.
+        return _empty_subset_result(
+            ds, gpd, requested, buffer, output_dir, units, start
+        )
+
+    manifest = load_manifest(ds, settings)
+    if manifest is None:  # pragma: no cover - just materialized above
+        raise MirrorError(f"manifest for '{ds.spec}' vanished after materialization")
+
     # Reproject the buffered EPSG:4326 bbox into the layer CRS for the filter
     # (the native GLHYMPS handler does the same; design §3).
-    crs, geometry_column = _geo_metadata(parquet)
+    crs, geometry_column = _geo_metadata(parquets[0])
 
     read_columns = None
     if columns is not None:
@@ -135,31 +168,47 @@ def mirror_subset_sync(
         transformer = pyproj.Transformer.from_crs("EPSG:4326", crs, always_xy=True)
         filter_bbox = transformer.transform_bounds(*buffered, densify_pts=21)
 
-    gdf = gpd.read_parquet(parquet, bbox=filter_bbox, columns=read_columns)
     # Row-group pruning + the bbox covering column give envelope candidates;
     # refine to exact geometry-intersects against the buffered query box.
     from shapely.geometry import box as shapely_box
 
     query_box = shapely_box(*filter_bbox)
-    if len(gdf):
-        gdf = gdf[gdf.geometry.intersects(query_box)]
+    frames = []
+    for parquet in parquets:
+        part = gpd.read_parquet(parquet, bbox=filter_bbox, columns=read_columns)
+        if len(part):
+            part = part[part.geometry.intersects(query_box)]
+        frames.append(part)
+    if len(frames) == 1:
+        gdf = frames[0]
+    else:
+        import pandas as pd
+
+        gdf = gpd.GeoDataFrame(
+            pd.concat(frames, ignore_index=True), crs=frames[0].crs
+        )
 
     out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"{ds.slug}_v{ds.version}_subset.gpkg"
 
+    relevant = [
+        a for a in manifest.archives if a.unit is None or a.unit in units
+    ]
     archive_notes = "; ".join(
-        f"{a.url} (sha256 {a.sha256[:16]}…)" for a in manifest.archives
+        f"{a.url} (sha256 {a.sha256[:16]}…)" for a in relevant
     )
+    unit_note = f"; units {','.join(units)}" if units else ""
     provenance = (
-        f"cas {manifest.cas_version} curated mirror {ds.spec}; "
+        f"cas {manifest.cas_version} curated mirror {ds.spec}{unit_note}; "
         f"source {archive_notes}; retrieved {manifest.retrieved_at.isoformat()}; "
         f"GeoParquet row-group bbox subset, bbox={requested}, buffer={buffer} deg"
     )
+    citation = manifest.citation or ds.citation
     metadata = {
         "license": ds.license.license,
         "attribution": ds.license.attribution,
-        "citation": ds.citation,
+        "citation": citation,
         "provenance": provenance,
     }
     try:
@@ -180,6 +229,49 @@ def mirror_subset_sync(
         feature_count=len(gdf),
         columns=[c for c in gdf.columns if c != gdf.geometry.name],
         crs=manifest.crs,
+        bbox=requested,
+        buffer_deg=buffer,
+        license=ds.license.license,
+        license_verified=ds.license.license_verified,
+        license_flags=ds.license.license_flags,
+        attribution=ds.license.attribution,
+        citation=citation,
+        provenance=provenance,
+        elapsed_ms=elapsed_ms,
+    )
+
+
+def _empty_subset_result(
+    ds, gpd, requested, buffer, output_dir, units, start
+) -> MirrorSubsetResult:
+    """A schema-light but valid empty GeoPackage for a query that touches no
+    regional unit (e.g. an unglaciated domain for RGI)."""
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / f"{ds.slug}_v{ds.version}_subset.gpkg"
+    empty = gpd.GeoDataFrame({"geometry": []}, geometry="geometry", crs="EPSG:4326")
+    provenance = (
+        f"curated mirror {ds.spec}; bbox={requested}, buffer={buffer} deg "
+        f"intersects no regional unit — empty result, nothing materialized"
+    )
+    try:
+        empty.to_file(out_path, driver="GPKG", layer=ds.slug)
+    except Exception as exc:  # pragma: no cover - driver quirks
+        raise MirrorUnitError(
+            f"bbox {requested} intersects no unit of '{ds.spec}' and an empty "
+            f"GeoPackage could not be written: {exc}"
+        ) from exc
+    elapsed_ms = int((time.monotonic() - start) * 1000)
+    logger.info("mirror.subset_empty", dataset=ds.spec, path=str(out_path))
+    _ = units
+    return MirrorSubsetResult(
+        dataset_id=ds.spec,
+        slug=ds.slug,
+        version=ds.version,
+        path=out_path,
+        feature_count=0,
+        columns=[],
+        crs="EPSG:4326",
         bbox=requested,
         buffer_deg=buffer,
         license=ds.license.license,

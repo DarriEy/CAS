@@ -102,6 +102,60 @@ def make_fake_dataset(
     )
 
 
+def make_fake_unit_dataset(
+    *,
+    slug: str = "fakeunits",
+    version: str = "1.0",
+    units: tuple[str, ...] = ("a", "b"),
+    url_template: str = "https://mirror.invalid/{slug}_{unit}.zip",
+    unit_processing: str = "geoparquet",
+    delivery: str = "subset",
+    auth: str | None = None,
+    requires_acknowledgment: bool = False,
+    units_required_for_sync: bool = False,
+    notice_file: str | None = None,
+    roles: tuple[str, ...] = ("data",),
+) -> MirrorDataset:
+    """A unit-structured dataset with one source per (unit, role)."""
+    return MirrorDataset(
+        slug=slug,
+        version=version,
+        display_name="Fake Unit-Structured Test Dataset",
+        sources=[
+            MirrorSource(
+                url=url_template.format(slug=slug, unit=unit) + (
+                    f"?role={role}" if role != "data" else ""
+                ),
+                archive_name=f"{slug}_{unit}" + (f"_{role}" if role != "data" else "") + ".zip",
+                sha256=None,
+                size_bytes_approx=10_000,
+                unit=unit,
+                role=role,
+            )
+            for unit in units
+            for role in roles
+        ],
+        delivery=delivery,
+        unit_scheme="test unit",
+        unit_processing=unit_processing,
+        auth=auth,
+        units_required_for_sync=units_required_for_sync,
+        notice_file=notice_file,
+        shapefile_patterns=["*data*.shp"],
+        default_buffer_deg=0.0,
+        known_columns=FAKE_COLUMNS,
+        license=MirrorLicense(
+            license="FAKE-ACK-1.0" if requires_acknowledgment else "CC-BY-4.0",
+            license_url="https://mirror.invalid/license",
+            license_verified=not requires_acknowledgment,
+            attribution="Fake Data Consortium 2026",
+            license_flags=["unconfirmed"] if requires_acknowledgment else [],
+            requires_acknowledgment=requires_acknowledgment,
+        ),
+        citation="Fake et al. (2026). Accessed {access_date}.",
+    )
+
+
 @contextlib.contextmanager
 def registered(dataset: MirrorDataset):
     """Register a dataset in the mirror registry for the duration of a test."""

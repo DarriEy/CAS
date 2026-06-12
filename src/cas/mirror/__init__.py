@@ -31,12 +31,16 @@ from cas.mirror.datasets import (
     get_mirror_dataset,
     list_mirror_datasets,
     parse_dataset_spec,
+    parse_unit_spec,
     register_mirror_dataset,
+    register_unit_source_factory,
+    sources_for_unit,
     unregister_mirror_dataset,
 )
 from cas.mirror.models import (
     MirrorDataset,
     MirrorDatasetStatus,
+    MirrorFetchResult,
     MirrorLicense,
     MirrorManifest,
     MirrorSource,
@@ -46,14 +50,20 @@ from cas.mirror.query import mirror_subset, mirror_subset_sync
 from cas.mirror.store import (
     dataset_dir,
     ensure_materialized,
+    ensure_units_materialized,
     is_materialized,
+    is_unit_materialized,
     load_manifest,
     manifest_path,
     query_layer_path,
     remove,
     status,
+    unit_dir,
+    unit_notice_path,
+    unit_paths,
     verify,
 )
+from cas.mirror.units import register_unit_resolver, units_for_bbox
 
 __all__ = [
     # Query facade
@@ -63,21 +73,33 @@ __all__ = [
     "get_mirror_dataset",
     "list_mirror_datasets",
     "parse_dataset_spec",
+    "parse_unit_spec",
     "register_mirror_dataset",
+    "register_unit_source_factory",
+    "sources_for_unit",
     "unregister_mirror_dataset",
+    # Units
+    "register_unit_resolver",
+    "units_for_bbox",
     # Store
     "dataset_dir",
     "ensure_materialized",
+    "ensure_units_materialized",
     "is_materialized",
+    "is_unit_materialized",
     "load_manifest",
     "manifest_path",
     "query_layer_path",
     "remove",
     "status",
+    "unit_dir",
+    "unit_notice_path",
+    "unit_paths",
     "verify",
     # Models
     "MirrorDataset",
     "MirrorDatasetStatus",
+    "MirrorFetchResult",
     "MirrorLicense",
     "MirrorManifest",
     "MirrorSource",
