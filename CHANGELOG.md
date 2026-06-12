@@ -9,6 +9,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **In-process raster mode** (`output="raster"`): bbox-mode extraction of
+  the gridded data itself as a GeoTIFF, via the new embedded entry points
+  `cas.extract_raster(dataset_id, bbox, output_dir, ...)` and
+  `cas.extract_raster_sync(...)`, returning a new `RasterResult` model
+  (provider, dataset_id, crs, transform/shape, nodata, license, provenance,
+  **path** — never bytes). The written file honors the discretization-grade
+  contract SYMFLUENCE consumes: a domain-bbox, tile-mosaicked,
+  native-resolution, EPSG:4326 GeoTIFF with correct nodata.
+  - `AttributeRequest` gains `output` ("stats" default, behavior unchanged),
+    `bbox` (rectangular domain, raster-only), `target_resolution`, and
+    `resampling`; a model validator keeps the two shapes mutually
+    exclusive. v1 limitation enforced at validation: raster output is a
+    native-CRS passthrough (`target_crs` must stay `EPSG:4326`).
+  - **STAC mosaic**: the STAC mixin's raster path merges *all* catalog
+    items intersecting the bbox (windowed `rasterio.merge` of per-item
+    bbox windows) instead of the stats path's single-item truncation — a
+    basin spanning Copernicus DEM 1° tiles comes back as one seamless
+    raster, bbox-clipped, native-resolution, nodata carried through. Wired
+    on `copernicus_dem`, `cop_dem_90`, `usgs_3dep`, `nasadem`, `alos_dem`,
+    `esa_worldcover`; any other COG-backed connector opts in with two
+    class attributes.
+  - **WCS passthrough**: native-resolution GetCoverage GeoTIFF written
+    verbatim and validated on open; wired on `tandem_x`.
+  - Capability gating: `BaseConnector.supports_raster` defaults to False;
+    non-STAC/WCS protocols fail raster requests with a clear
+    `RasterUnsupportedError` (new exception).
+  - The engine raster path bypasses the JSON TTL result cache and the
+    scalar QC layer; failures raise instead of degrading into warnings.
+  - **HTTP exclusion**: the FastAPI layer rejects `output="raster"` at
+    request validation (422) with a message pointing at the in-process
+    facade — CAS the service stays a stats-only, no-storage passthrough
+    and never redistributes provider rasters.
+  - New "Raster Mode (in-process)" documentation page (`docs/rasters.md`).
 - **SYMFLUENCE integration** (`cas.integrations.symfluence`), wired at two
   seams:
   - *Primary*: a `CASAttributeProcessor` attribute processor registered
