@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Curated mirror tier (slice 2c): GLHYMPS `extract()` stats-over-mirror** —
+  a new `MirrorVectorConnector` base (`cas/connectors/protocols/mirror.py`):
+  a `BaseConnector` whose `extract()` reads the local GeoParquet mirror instead
+  of HTTP, so a mirror-backed vector dataset serves zonal **stats** through the
+  unchanged engine (`cas.extract` / `extract_sync` / `batch`).
+  - **Resurrects the disabled GLHYMPS connector** with global coverage
+    (replacing the broken pygeoglim/CONUS-only HTTP connector). Registered as
+    provider `glhymps` with three variables — `permeability` (`logK_Ice`),
+    `permeability_permafrost_free` (`logK_Ferr`), `porosity` (`Porosity`).
+  - **Area-weighted means** via geometry-intersection areas in an equal-area
+    CRS (GLHYMPS's source CRS is already World Cylindrical Equal Area, so areas
+    are taken directly there; the generic path reprojects to a query-centred
+    LAEA). `coverage_fraction` = intersected-area fraction; point queries
+    return the covering polygon; off-coverage queries return `MISSING`.
+  - **Manifest-integrity health** (design §5): mirror connectors expose
+    `kind="mirror"`; `monitor.health.check_provider` detects it and reports
+    HEALTHY (materialized + intact) / DEGRADED (not synced — not an outage) /
+    DOWN (integrity failure) without a network probe or a download, and the
+    reachability sweep skips their non-existent endpoints. Removes a class of
+    false reds from the scheduled Provider Health Check.
+  - `inventory/providers.yaml` regenerated (228 → 229 providers; glhymps now
+    `protocol: mirror`).
 - **Curated mirror tier (slice 2b): geofabrics as path delivery** — four
   topology-complete geofabrics (HydroBASINS v1c, MERIT-Basins, TDX-Hydro /
   GEOGLOWS v2, NWS NextGen v2.2) delivered through a new facade

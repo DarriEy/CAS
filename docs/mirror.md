@@ -159,6 +159,43 @@ import cas
 result = cas.mirror_subset_sync("rgi7", bbox=(-25, 63, -13, 67), output_dir="/tmp/rgi")
 ```
 
+## Stats over a mirror — GLHYMPS `extract()`
+
+A mirror-backed dataset can also serve **zonal statistics** through the normal
+extraction engine (`cas.extract` / `extract_sync` / `batch`), not just
+`mirror_subset`. GLHYMPS is the motivating case: its old HTTP connector was
+disabled (pygeoglim's real API is CONUS-only), and the mirror resurrects it
+with **global** coverage.
+
+```python
+import cas
+
+req = cas.AttributeRequest(
+    geometry={"type": "Polygon", "coordinates": [[[7, 45], [11, 45], [11, 47], [7, 47], [7, 45]]]},
+    dataset_ids=["glhymps:permeability", "glhymps:porosity"],
+)
+resp = cas.extract_sync(req)
+for r in resp.results:
+    print(r.dataset_id, r.value, r.units, r.coverage_fraction)
+```
+
+`glhymps:permeability` (column `logK_Ice`), `glhymps:permeability_permafrost_free`
+(`logK_Ferr`) and `glhymps:porosity` (`Porosity`) are **area-weighted means**
+over the query polygon. GLHYMPS's source CRS is already World Cylindrical
+Equal Area, so intersection areas are measured directly in the layer CRS (the
+generic path reprojects to an equal-area CRS centred on the query).
+`coverage_fraction` is the intersected-area fraction — the honest "how much of
+your polygon the mirror covered" signal; a query off coverage returns
+`MISSING`. A point query returns the value of the covering polygon. The first
+call lazily materializes the GLHYMPS mirror (a multi-GB download); pre-stage
+with `cas mirror sync glhymps` on a networked node.
+
+Mirror-backed connectors report **manifest-integrity health**, never a network
+probe (design §5): HEALTHY when the mirror is materialized and intact,
+DEGRADED when not yet synced ("not synced" is not an outage), DOWN on an
+integrity failure. The scheduled Provider Health Check and the reachability
+sweep both skip mirror connectors' (non-existent) network endpoints.
+
 ## Geofabrics — path delivery, not subsetting
 
 Geofabrics (river-network + catchment topology) follow a **different contract**
