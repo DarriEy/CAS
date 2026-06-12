@@ -1,43 +1,54 @@
 # SPDX-License-Identifier: MIT
 # Copyright (C) 2024-2026 CAS Contributors
-"""SYMFLUENCE acquisition-handler adapter for CAS.
+"""SYMFLUENCE integration for CAS.
 
-This module lets `SYMFLUENCE <https://github.com/DarriEy/SYMFLUENCE>`_ acquire
-per-HRU zonal attributes from any CAS dataset as part of its
-``acquire_attributes`` workflow step. It is discovered automatically through
-the ``symfluence.plugins`` entry point declared in CAS's ``pyproject.toml``;
-a plain ``import symfluence`` (with CAS installed in the same environment)
-calls :func:`register`, which
+This module lets `SYMFLUENCE <https://github.com/DarriEy/SYMFLUENCE>`_ source
+per-HRU zonal attributes from any CAS dataset. It plugs into SYMFLUENCE at two
+seams, both declared as entry points in CAS's ``pyproject.toml``:
 
-* registers :class:`CASAttributeAcquirer` in SYMFLUENCE's acquisition registry
-  under the key ``'CAS'``, and
-* appends a ``ProfileDataset`` entry to **every** attribute profile
-  (``core`` / ``camels_spat`` / ``full``), so the handler runs whatever profile
-  is selected.
+**Primary — attribute processor** (``symfluence.attribute_processors``)
+    :class:`CASAttributeProcessor` subclasses SYMFLUENCE's
+    ``BaseAttributeProcessor`` and is discovered by
+    ``discover_attribute_plugins()``. SYMFLUENCE's attribute machinery
+    (``attributeProcessor._process_plugin_attributes``) constructs it with
+    ``(config, logger)`` and merges its ``.process() -> dict`` output into the
+    same results dict the in-tree elevation/soil/climate processors feed, so
+    CAS attributes flow into the merged per-HRU attribute table like any
+    native attribute. Gate with ``ATTRIBUTE_PLUGINS_ENABLED`` /
+    ``ATTRIBUTE_PLUGINS_EXCLUDE`` on the SYMFLUENCE side.
 
-Auto-registration in every profile is safe because the handler is a strict
-no-op until the user sets ``CAS_DATASETS`` in their SYMFLUENCE configuration
-(and it can always be disabled outright with ``DOWNLOAD_CAS: false``).
+**Secondary — acquisition handler** (``symfluence.plugins``)
+    :func:`register` adds :class:`CASAttributeAcquirer` to SYMFLUENCE's
+    acquisition registry under the key ``'CAS'`` for *explicit* use (custom
+    profiles, scripted acquisition). It writes an analysis-oriented per-HRU
+    CSV to ``data/attributes/cas/``; it is **not** auto-appended to the
+    built-in attribute profiles — the processor seam supersedes that.
+
+Both seams are strict no-ops until ``CAS_DATASETS`` is set in the SYMFLUENCE
+configuration.
 
 The module is intentionally decoupled, following the climaclass precedent:
 
-* The request-building / CSV-shaping helpers (:func:`parse_dataset_ids`,
-  :func:`build_batch_requests`, :func:`responses_to_rows`,
-  :func:`quality_summary`) are pure functions with no SYMFLUENCE dependency
-  and are unit-tested standalone.
-* The SYMFLUENCE base class is resolved defensively at import time; if
-  SYMFLUENCE is absent the class still imports (its base degrades to
+* The request-building / result-shaping helpers (:func:`parse_dataset_ids`,
+  :func:`build_batch_requests`, :func:`responses_to_attributes`,
+  :func:`responses_to_rows`, :func:`quality_summary`) are pure functions with
+  no SYMFLUENCE dependency and are unit-tested standalone.
+* The SYMFLUENCE base classes are resolved defensively at import time; if
+  SYMFLUENCE is absent the classes still import (their bases degrade to
   ``object``) so ``import cas`` never fails.
 
-Output contract
----------------
-``download()`` writes ``{DOMAIN_NAME}_cas_attributes.csv`` into the directory
-SYMFLUENCE passes it (``data/attributes/cas/`` by profile convention): one row
-per HRU sorted by HRU id, one numeric column per CAS dataset (categorical
-``distribution`` results expand to one ``{dataset}_{class}`` fraction column
-per class), mirroring the shape of SYMFLUENCE's attribute-processor CSVs. An
-explicit ``hru_id`` column plus per-dataset ``*_units`` / ``*_quality`` /
-``*_coverage_fraction`` columns are carried as extras.
+Output contracts
+----------------
+``CASAttributeProcessor.process()`` returns the flat dict shape SYMFLUENCE's
+attribute pipeline consumes: ``{"cas.{dataset}": value}`` for lumped domains,
+``{"HRU_{id}_cas.{dataset}": value}`` for distributed ones (categorical
+``distribution`` results expand to one ``cas.{dataset}_{class}`` key per
+class; ``*_quality`` / ``*_coverage_fraction`` metadata keys ride along).
+
+``CASAttributeAcquirer.download()`` writes ``{DOMAIN_NAME}_cas_attributes.csv``
+into the directory SYMFLUENCE passes it: one row per HRU sorted by HRU id,
+one numeric column per CAS dataset, plus an explicit ``hru_id`` column and
+per-dataset ``*_units`` / ``*_quality`` / ``*_coverage_fraction`` extras.
 """
 
 from __future__ import annotations
@@ -50,24 +61,31 @@ from typing import Any
 
 from cas.core.models import AttributeResponse, BatchAttributeRequest, Geometry
 
-# Resolve the SYMFLUENCE base class defensively so importing this module (and
-# therefore ``import cas``) never hard-fails when SYMFLUENCE is not installed.
+# Resolve the SYMFLUENCE base classes defensively so importing this module
+# (and therefore ``import cas``) never hard-fails when SYMFLUENCE is missing.
 try:  # pragma: no cover - exercised only with SYMFLUENCE present
-    from symfluence.data.acquisition.base import BaseAcquisitionHandler as _Base
+    from symfluence.data.acquisition.base import BaseAcquisitionHandler as _AcquirerBase
+    from symfluence.data.preprocessing.attribute_processors.base import (
+        BaseAttributeProcessor as _ProcessorBase,
+    )
 
     HAVE_SYMFLUENCE = True
 except Exception:  # noqa: BLE001 - any import failure means "not available"
-    _Base = object  # type: ignore[assignment, misc]
+    _AcquirerBase = object  # type: ignore[assignment, misc]
+    _ProcessorBase = object  # type: ignore[assignment, misc]
     HAVE_SYMFLUENCE = False
 
 #: Hard limit on geometries per request (``BatchAttributeRequest`` constraint).
 MAX_GEOMETRIES_PER_REQUEST = 1000
 
-#: Registry key and profile entry constants (single source for register()).
+#: Acquisition-registry key for the secondary (handler) seam.
 HANDLER_NAME = "CAS"
-PROFILE_OUTPUT_SUBDIR = "cas"
-PROFILE_OVERRIDE_KEY = "DOWNLOAD_CAS"
-PROFILE_DESCRIPTION = "Community Attribute Service (CAS) zonal attributes"
+
+#: Namespace prefix for attribute keys returned by the processor seam,
+#: mirroring the in-tree ``elevation.`` / ``soil.`` / ``climate.`` categories.
+ATTRIBUTE_NAMESPACE = "cas."
+
+_NO_DATASETS_MESSAGE = "CAS_DATASETS not configured; skipping"
 
 
 # ---------------------------------------------------------------------------
@@ -80,7 +98,7 @@ def parse_dataset_ids(raw: Any) -> list[str]:
 
     Accepts a comma-separated string (``"copernicus_dem:elevation,
     isric_soilgrids:clay_0-5cm"``) or an already-split list/tuple. Empty or
-    ``None`` input yields an empty list (the handler's no-op signal).
+    ``None`` input yields an empty list (the integration's no-op signal).
     """
     if raw is None:
         return []
@@ -89,7 +107,7 @@ def parse_dataset_ids(raw: Any) -> list[str]:
 
 
 def sanitize_column(name: str) -> str:
-    """Turn a CAS dataset id (or class label) into a safe CSV column name.
+    """Turn a CAS dataset id (or class label) into a safe attribute/CSV name.
 
     ``"isric_soilgrids:clay_0-5cm"`` becomes ``"isric_soilgrids_clay_0_5cm"``.
     """
@@ -132,6 +150,93 @@ def build_batch_requests(
     ]
 
 
+def _check_alignment(hru_ids: Sequence[Any], responses: Sequence[AttributeResponse]) -> None:
+    if len(hru_ids) != len(responses):
+        raise ValueError(
+            f"Got {len(responses)} CAS responses for {len(hru_ids)} HRUs; "
+            "responses must align 1:1 with the requested geometries"
+        )
+
+
+def responses_to_attributes(
+    hru_ids: Sequence[Any],
+    responses: Sequence[AttributeResponse],
+    lumped: bool = False,
+    include_metadata: bool = True,
+    logger: Any = None,
+) -> dict[str, Any]:
+    """Shape per-geometry CAS responses into SYMFLUENCE attribute keys.
+
+    This produces exactly the flat dict SYMFLUENCE's
+    ``attributeProcessor._process_plugin_attributes`` merges (via
+    ``results.update``) into the in-tree processors' results:
+
+    * lumped domains: plain ``cas.{dataset}`` keys (single attribute row);
+    * distributed domains: ``HRU_{id}_cas.{dataset}`` keys, where ``{id}``
+      must be an integer — SYMFLUENCE parses it with
+      ``int(key.split("_")[1])`` when rebuilding the per-HRU table. Ids that
+      cannot be coerced to ``int`` fall back to the geometry's positional
+      index (with a warning).
+
+    Categorical ``distribution`` results expand to one
+    ``cas.{dataset}_{class}`` fraction key per class. When *include_metadata*
+    is true, ``cas.{dataset}_quality`` (string) and
+    ``cas.{dataset}_coverage_fraction`` (float) keys ride along — string
+    values are tolerated by the consumer (climaclass ships string class codes
+    the same way) and non-numeric values are dropped automatically wherever
+    SYMFLUENCE writes numeric-only CSVs.
+
+    Args:
+        hru_ids: HRU ids aligned 1:1 with *responses* (geometry order).
+        responses: Flattened per-geometry ``AttributeResponse`` list.
+        lumped: Whether the SYMFLUENCE domain is lumped
+            (``DOMAIN_DEFINITION_METHOD == 'lumped'``). With more than one
+            geometry, lumped keying would silently overwrite values, so HRU
+            prefixes are used anyway (with a warning).
+        include_metadata: Carry quality/coverage metadata keys.
+        logger: Optional logger for fallback warnings.
+
+    Returns:
+        Flat ``{attribute_key: value}`` dict ready for ``.process()``.
+    """
+    _check_alignment(hru_ids, responses)
+
+    use_prefix = not lumped or len(hru_ids) > 1
+    if lumped and len(hru_ids) > 1 and logger is not None:
+        logger.warning(
+            f"Domain is lumped but {len(hru_ids)} HRU geometries were provided; "
+            "using HRU-prefixed attribute keys to avoid overwriting values"
+        )
+
+    attributes: dict[str, Any] = {}
+    for position, (hru_id, response) in enumerate(zip(hru_ids, responses)):
+        if use_prefix:
+            try:
+                prefix = f"HRU_{int(hru_id)}_"
+            except (TypeError, ValueError):
+                if logger is not None:
+                    logger.warning(
+                        f"HRU id {hru_id!r} is not an integer; keying attributes by "
+                        f"geometry position {position} instead"
+                    )
+                prefix = f"HRU_{position}_"
+        else:
+            prefix = ""
+
+        for result in response.results:
+            base = f"{prefix}{ATTRIBUTE_NAMESPACE}{sanitize_column(result.dataset_id)}"
+            if isinstance(result.value, dict):
+                for class_label, fraction in result.value.items():
+                    attributes[f"{base}_{sanitize_column(str(class_label))}"] = fraction
+            elif result.value is not None:
+                attributes[base] = result.value
+            if include_metadata:
+                attributes[f"{base}_quality"] = str(result.quality)
+                attributes[f"{base}_coverage_fraction"] = result.coverage_fraction
+
+    return attributes
+
+
 def responses_to_rows(
     hru_ids: Sequence[Any],
     responses: Sequence[AttributeResponse],
@@ -154,11 +259,7 @@ def responses_to_rows(
         first. Scalar results give one column per dataset; class-fraction
         (``distribution``) results give one column per class.
     """
-    if len(hru_ids) != len(responses):
-        raise ValueError(
-            f"Got {len(responses)} CAS responses for {len(hru_ids)} HRUs; "
-            "responses must align 1:1 with the requested geometries"
-        )
+    _check_alignment(hru_ids, responses)
 
     fieldnames: list[str] = ["hru_id"]
     seen = set(fieldnames)
@@ -195,27 +296,164 @@ def quality_summary(responses: Sequence[AttributeResponse]) -> dict[str, int]:
 
 
 # ---------------------------------------------------------------------------
-# SYMFLUENCE acquisition handler
+# Shared geometry helpers (need geopandas, but no SYMFLUENCE)
 # ---------------------------------------------------------------------------
 
 
-class CASAttributeAcquirer(_Base):  # type: ignore[misc, valid-type]
-    """SYMFLUENCE acquisition handler extracting per-HRU attributes via CAS.
+def load_catchment_wgs84(catchment_path: Path, logger: Any):
+    """Read the HRU/catchment shapefile and normalize it to EPSG:4326."""
+    import geopandas as gpd  # lazy import, per SYMFLUENCE convention
 
-    Invoked by SYMFLUENCE's ``acquire_attributes`` step (profile dispatch)
-    with ``output_dir = {project_dir}/data/attributes/cas/``. Reads flat
-    config keys:
+    catchment_path = Path(catchment_path)
+    if not catchment_path.exists():
+        raise FileNotFoundError(
+            f"No catchment/HRU shapefile found at {catchment_path}; "
+            "run the domain definition/discretization steps first"
+        )
+
+    gdf = gpd.read_file(catchment_path)
+    if gdf.crs is None:
+        logger.warning(f"{catchment_path} has no CRS; assuming EPSG:4326 (CAS requires lon/lat)")
+    elif gdf.crs.to_epsg() != 4326:
+        gdf = gdf.to_crs(4326)
+    return gdf
+
+
+def hru_ids_from_gdf(gdf: Any, hru_id_field: str, logger: Any, source: str = "catchment") -> list[Any]:
+    """Extract HRU ids from a catchment GeoDataFrame with sensible fallbacks."""
+    if hru_id_field in gdf.columns:
+        return list(gdf[hru_id_field])
+    if "GRU_ID" in gdf.columns:
+        logger.warning(f"No '{hru_id_field}' column in {source}; using GRU_ID")
+        return list(gdf["GRU_ID"])
+    logger.warning(f"No '{hru_id_field}' or 'GRU_ID' column in {source}; using row order")
+    return list(range(len(gdf)))
+
+
+def to_cas_geometries(gdf: Any) -> list[Geometry]:
+    """Convert GeoDataFrame geometries to CAS ``Geometry`` models."""
+    geometries: list[Geometry] = []
+    for geom in gdf.geometry:
+        mapping = geom.__geo_interface__
+        if mapping["type"] not in ("Point", "Polygon", "MultiPolygon"):
+            raise ValueError(
+                f"Unsupported geometry type {mapping['type']!r}; "
+                "CAS accepts Point, Polygon, and MultiPolygon"
+            )
+        geometries.append(Geometry(type=mapping["type"], coordinates=list(mapping["coordinates"])))
+    return geometries
+
+
+def _extract_responses(
+    geometries: Sequence[Geometry],
+    dataset_ids: Sequence[str],
+    aggregation: str,
+    api_config: Any,
+) -> list[AttributeResponse]:
+    """Run the chunked ``cas.batch_extract_sync`` calls for *geometries*."""
+    import cas
+
+    if api_config:
+        cas.configure(**dict(api_config))
+
+    responses: list[AttributeResponse] = []
+    for request in build_batch_requests(geometries, dataset_ids, aggregation=aggregation):
+        batch = cas.batch_extract_sync(request)
+        responses.extend(batch.responses)
+    return responses
+
+
+# ---------------------------------------------------------------------------
+# Primary seam: SYMFLUENCE attribute processor
+# ---------------------------------------------------------------------------
+
+
+class CASAttributeProcessor(_ProcessorBase):  # type: ignore[misc, valid-type]
+    """SYMFLUENCE attribute processor sourcing per-HRU attributes from CAS.
+
+    Discovered through the ``symfluence.attribute_processors`` entry point and
+    run by SYMFLUENCE's attribute machinery alongside the in-tree processors:
+    constructed with ``(config, logger)``, its ``.process()`` dict is merged
+    into the same results dict, so CAS values land in the per-HRU attribute
+    table exactly like native ``elevation.*`` / ``soil.*`` attributes.
+
+    Reads flat config keys:
 
     ``CAS_DATASETS``
-        Required. Comma-separated CAS dataset ids, e.g.
+        Required opt-in. Comma-separated CAS dataset ids, e.g.
         ``"copernicus_dem:elevation,isric_soilgrids:clay_0-5cm"``. When unset
-        or empty the handler logs an info message and returns *output_dir*
-        unchanged (no-op), which is what makes auto-profile-registration safe.
+        or empty the processor logs an info message and returns ``{}``.
     ``CAS_AGGREGATION``
         Optional zonal aggregation method (default ``'mean'``).
     ``CAS_API_CONFIG``
-        Optional mapping of CAS settings passed to ``cas.configure()``
-        (e.g. ``{provider_timeout_s: 60}``).
+        Optional mapping of CAS settings passed to ``cas.configure()``.
+
+    HRU polygons come from the catchment shapefile the inherited
+    ``BaseAttributeProcessor`` resolves (``self.catchment_path``, via
+    ``CATCHMENT_PATH`` / ``CATCHMENT_SHP_NAME`` / the
+    ``{DOMAIN_NAME}_HRUs_{discretization}.shp`` convention) — the same
+    geometry every in-tree processor reduces over.
+    """
+
+    #: SYMFLUENCE plugin-discovery name (entry-point key).
+    name = "cas"
+
+    def process(self) -> dict[str, Any]:
+        """Extract CAS attributes for every HRU and return them keyed for SYMFLUENCE."""
+        if not HAVE_SYMFLUENCE:  # pragma: no cover - guard for standalone use
+            raise RuntimeError(
+                "CASAttributeProcessor requires SYMFLUENCE. "
+                "Install SYMFLUENCE in the same environment as CAS."
+            )
+
+        dataset_ids = parse_dataset_ids(
+            self._get_config_value(lambda: None, default=None, dict_key="CAS_DATASETS")
+        )
+        if not dataset_ids:
+            self.logger.info(f"CAS attribute processor installed but {_NO_DATASETS_MESSAGE}")
+            return {}
+
+        aggregation = str(self._get_config_value(lambda: None, default="mean", dict_key="CAS_AGGREGATION"))
+        api_config = self._get_config_value(lambda: None, default=None, dict_key="CAS_API_CONFIG")
+
+        gdf = load_catchment_wgs84(self.catchment_path, self.logger)
+        hru_id_field = self._get_config_value(
+            lambda: self.config.paths.catchment_hruid, default="HRU_ID", dict_key="CATCHMENT_SHP_HRUID"
+        )
+        hru_ids = hru_ids_from_gdf(gdf, hru_id_field, self.logger, source=Path(self.catchment_path).name)
+        geometries = to_cas_geometries(gdf)
+
+        self.logger.info(
+            f"CAS attribute extraction: {len(dataset_ids)} dataset(s) x {len(geometries)} HRU(s) "
+            f"(aggregation={aggregation})"
+        )
+        responses = _extract_responses(geometries, dataset_ids, aggregation, api_config)
+
+        summary = quality_summary(responses)
+        log = self.logger.info if set(summary) <= {"good"} else self.logger.warning
+        log(f"CAS extraction quality summary: {summary or 'no results returned'}")
+
+        attributes = responses_to_attributes(
+            hru_ids, responses, lumped=self._is_lumped(), logger=self.logger
+        )
+        self.logger.info(f"CAS contributed {len(attributes)} attribute keys")
+        return attributes
+
+
+# ---------------------------------------------------------------------------
+# Secondary seam: SYMFLUENCE acquisition handler (analysis CSV export)
+# ---------------------------------------------------------------------------
+
+
+class CASAttributeAcquirer(_AcquirerBase):  # type: ignore[misc, valid-type]
+    """SYMFLUENCE acquisition handler exporting per-HRU CAS attributes to CSV.
+
+    Registered under ``'CAS'`` in SYMFLUENCE's acquisition registry for
+    *explicit* use — reference it from a custom attribute profile or invoke it
+    directly; it no longer auto-joins the built-in profiles (the
+    :class:`CASAttributeProcessor` seam is the primary integration). Reads the
+    same ``CAS_DATASETS`` / ``CAS_AGGREGATION`` / ``CAS_API_CONFIG`` config
+    keys and is likewise a no-op until ``CAS_DATASETS`` is set.
     """
 
     def download(self, output_dir: Path) -> Path:
@@ -230,12 +468,10 @@ class CASAttributeAcquirer(_Base):  # type: ignore[misc, valid-type]
             self._get_config_value(lambda: None, default=None, dict_key="CAS_DATASETS")
         )
         if not dataset_ids:
-            self.logger.info(
-                "CAS adapter installed but CAS_DATASETS not configured; skipping"
-            )
+            self.logger.info(f"CAS adapter installed but {_NO_DATASETS_MESSAGE}")
             return output_dir
 
-        aggregation = self._get_config_value(lambda: None, default="mean", dict_key="CAS_AGGREGATION")
+        aggregation = str(self._get_config_value(lambda: None, default="mean", dict_key="CAS_AGGREGATION"))
         api_config = self._get_config_value(lambda: None, default=None, dict_key="CAS_API_CONFIG")
 
         domain_name = self._get_config_value(
@@ -246,23 +482,19 @@ class CASAttributeAcquirer(_Base):  # type: ignore[misc, valid-type]
         if self._skip_if_exists(out_path):
             return out_path
 
-        import cas
-
-        if api_config:
-            cas.configure(**dict(api_config))
-
-        gdf, hru_ids = self._load_hru_geometries()
-        geometries = self._to_cas_geometries(gdf)
+        catchment_path = self._find_catchment_path()
+        gdf = load_catchment_wgs84(catchment_path, self.logger)
+        hru_id_field = self._get_config_value(
+            lambda: self.config.paths.catchment_hruid, default="HRU_ID", dict_key="CATCHMENT_SHP_HRUID"
+        )
+        hru_ids = hru_ids_from_gdf(gdf, hru_id_field, self.logger, source=catchment_path.name)
+        geometries = to_cas_geometries(gdf)
 
         self.logger.info(
             f"CAS extraction: {len(dataset_ids)} dataset(s) x {len(geometries)} HRU(s) "
             f"(aggregation={aggregation})"
         )
-
-        responses: list[AttributeResponse] = []
-        for request in build_batch_requests(geometries, dataset_ids, aggregation=str(aggregation)):
-            batch = cas.batch_extract_sync(request)
-            responses.extend(batch.responses)
+        responses = _extract_responses(geometries, dataset_ids, aggregation, api_config)
 
         summary = quality_summary(responses)
         log = self.logger.info if set(summary) <= {"good"} else self.logger.warning
@@ -274,44 +506,6 @@ class CASAttributeAcquirer(_Base):  # type: ignore[misc, valid-type]
         return out_path
 
     # -- internals ----------------------------------------------------------
-
-    def _load_hru_geometries(self):
-        """Load the domain's HRU polygons in EPSG:4326 plus their ids.
-
-        Follows the same config keys and path conventions as SYMFLUENCE's
-        ``BaseAttributeProcessor._get_catchment_path``.
-        """
-        import geopandas as gpd  # lazy import, per SYMFLUENCE convention
-
-        catchment_path = self._find_catchment_path()
-        if not catchment_path.exists():
-            raise FileNotFoundError(
-                f"No catchment/HRU shapefile found at {catchment_path}; "
-                "run the domain definition/discretization steps first"
-            )
-
-        gdf = gpd.read_file(catchment_path)
-        if gdf.crs is None:
-            self.logger.warning(
-                f"{catchment_path} has no CRS; assuming EPSG:4326 (CAS requires lon/lat)"
-            )
-        elif gdf.crs.to_epsg() != 4326:
-            gdf = gdf.to_crs(4326)
-
-        hru_id_field = self._get_config_value(
-            lambda: self.config.paths.catchment_hruid, default="HRU_ID", dict_key="CATCHMENT_SHP_HRUID"
-        )
-        if hru_id_field in gdf.columns:
-            hru_ids = gdf[hru_id_field].tolist()
-        elif "GRU_ID" in gdf.columns:
-            self.logger.warning(f"No '{hru_id_field}' column in {catchment_path.name}; using GRU_ID")
-            hru_ids = gdf["GRU_ID"].tolist()
-        else:
-            self.logger.warning(
-                f"No '{hru_id_field}' or 'GRU_ID' column in {catchment_path.name}; using row order"
-            )
-            hru_ids = list(range(len(gdf)))
-        return gdf, hru_ids
 
     def _find_catchment_path(self) -> Path:
         """Locate the catchment shapefile (mirrors BaseAttributeProcessor)."""
@@ -353,19 +547,6 @@ class CASAttributeAcquirer(_Base):  # type: ignore[misc, valid-type]
 
         return direct
 
-    def _to_cas_geometries(self, gdf) -> list[Geometry]:
-        """Convert GeoDataFrame geometries to CAS ``Geometry`` models."""
-        geometries: list[Geometry] = []
-        for geom in gdf.geometry:
-            mapping = geom.__geo_interface__
-            if mapping["type"] not in ("Point", "Polygon", "MultiPolygon"):
-                raise ValueError(
-                    f"Unsupported geometry type {mapping['type']!r}; "
-                    "CAS accepts Point, Polygon, and MultiPolygon"
-                )
-            geometries.append(Geometry(type=mapping["type"], coordinates=list(mapping["coordinates"])))
-        return geometries
-
     @staticmethod
     def _write_csv(out_path: Path, fieldnames: list[str], rows: list[dict[str, Any]]) -> None:
         import csv
@@ -377,41 +558,30 @@ class CASAttributeAcquirer(_Base):  # type: ignore[misc, valid-type]
 
 
 # ---------------------------------------------------------------------------
-# Plugin entry point
+# Plugin entry point (acquisition-handler registration)
 # ---------------------------------------------------------------------------
 
 
 def register() -> None:
-    """Register the CAS adapter with SYMFLUENCE (``symfluence.plugins`` hook).
+    """Register the CAS acquisition handler (``symfluence.plugins`` hook).
 
     Zero-arg callable invoked by SYMFLUENCE's plugin discovery at
-    ``import symfluence``. Idempotent: safe to call repeatedly.
+    ``import symfluence``. Idempotent: safe to call repeatedly. Adds
+    :class:`CASAttributeAcquirer` to ``R.acquisition_handlers`` under
+    ``'CAS'`` (skipped when already present) for explicit use.
 
-    * Adds :class:`CASAttributeAcquirer` to ``R.acquisition_handlers`` under
-      ``'CAS'`` (skipped when already present).
-    * Appends one ``ProfileDataset`` entry to every list in
-      ``attribute_profiles.PROFILES`` (guarded against double-append).
-      ``PROFILES`` is read at call time by the acquisition service, so
-      register-time appends take effect.
+    The primary integration — :class:`CASAttributeProcessor` — needs no
+    registration call: SYMFLUENCE discovers it directly through the
+    ``symfluence.attribute_processors`` entry point. Accordingly, ``register``
+    no longer appends the handler to the built-in attribute profiles.
     """
     if not HAVE_SYMFLUENCE:  # pragma: no cover - discovery never calls us then
         return
 
     from symfluence.core.registries import R
-    from symfluence.data.acquisition import attribute_profiles
 
     if HANDLER_NAME not in R.acquisition_handlers:
         R.acquisition_handlers.add(HANDLER_NAME, CASAttributeAcquirer)
-
-    entry = attribute_profiles.ProfileDataset(
-        handler_name=HANDLER_NAME,
-        description=PROFILE_DESCRIPTION,
-        output_subdir=PROFILE_OUTPUT_SUBDIR,
-        config_override_key=PROFILE_OVERRIDE_KEY,
-    )
-    for datasets in attribute_profiles.PROFILES.values():
-        if not any(ds.handler_name == HANDLER_NAME for ds in datasets):
-            datasets.append(entry)
 
 
 # Self-register at import time. This matters for the *reverse* import order:

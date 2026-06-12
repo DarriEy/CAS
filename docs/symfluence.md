@@ -1,9 +1,15 @@
 # SYMFLUENCE Plugin
 
 CAS ships a [SYMFLUENCE](https://github.com/DarriEy/SYMFLUENCE) integration
-(`cas.integrations.symfluence`) that lets SYMFLUENCE's `acquire_attributes`
-workflow step extract **per-HRU zonal attributes** from any CAS dataset —
-228+ providers behind one config key.
+(`cas.integrations.symfluence`) that lets SYMFLUENCE source **per-HRU zonal
+attributes** from any CAS dataset — 228+ providers behind one config key.
+
+It plugs into SYMFLUENCE at two seams:
+
+| Seam | Entry point | What it produces |
+|---|---|---|
+| **Primary: attribute processor** | `symfluence.attribute_processors` → `CASAttributeProcessor` | Attributes merged into SYMFLUENCE's per-HRU attribute table, alongside the native `elevation.*` / `soil.*` / `climate.*` attributes |
+| Secondary: acquisition handler | `symfluence.plugins` → `register()` (`CASAttributeAcquirer` under key `CAS`) | Standalone analysis CSV in `data/attributes/cas/` |
 
 ## Install & auto-discovery
 
@@ -13,57 +19,48 @@ Install CAS into the same environment as SYMFLUENCE:
 pip install community-attribute-service
 ```
 
-That is all the wiring there is. CAS declares an entry point in the
-`symfluence.plugins` group:
+That is all the wiring there is. CAS declares both entry points in its
+`pyproject.toml`:
 
 ```toml
+[project.entry-points."symfluence.attribute_processors"]
+cas = "cas.integrations.symfluence:CASAttributeProcessor"
+
 [project.entry-points."symfluence.plugins"]
 cas = "cas.integrations.symfluence:register"
 ```
 
-SYMFLUENCE discovers this group at `import symfluence` (its bootstrap loads
-each entry point and calls it). `register()` then
-
-1. adds `CASAttributeAcquirer` to SYMFLUENCE's acquisition registry under the
-   key **`CAS`**, and
-2. appends a CAS entry to **every** attribute profile (`core`, `camels_spat`,
-   `full`), so the handler runs regardless of which `ATTRIBUTE_PROFILE` you
-   select.
-
+SYMFLUENCE's `discover_attribute_plugins()` loads the first group and
+validates that each entry subclasses its `BaseAttributeProcessor`; the second
+group is loaded at `import symfluence` and registers the acquisition handler.
 Verify discovery:
 
 ```bash
-python -c "import symfluence
-from symfluence.data.acquisition.registry import AcquisitionRegistry
-print('CAS' in [n.upper() for n in AcquisitionRegistry.list_datasets()])"
+python -c "
+from symfluence.data.preprocessing.attribute_processors.plugins import discover_attribute_plugins
+print([name for name, _ in discover_attribute_plugins()])"
 ```
 
-`register()` is idempotent, and the module imports defensively: without
-SYMFLUENCE installed, `import cas` (and even
-`import cas.integrations.symfluence`) still works — the handler's base class
-degrades to `object` and `register()` is a no-op. CAS gains **no** SYMFLUENCE
-dependency.
+The module imports defensively: without SYMFLUENCE installed, `import cas`
+(and even `import cas.integrations.symfluence`) still works — the classes'
+base classes degrade to `object` and `register()` is a no-op. CAS gains
+**no** SYMFLUENCE dependency.
 
-## No-op unless configured
+## Primary: the attribute-processor seam
 
-Being in every profile is safe because the handler does nothing until you
-opt in: when `CAS_DATASETS` is unset or empty, `download()` logs
+### No-op unless configured
 
-```text
-CAS adapter installed but CAS_DATASETS not configured; skipping
-```
+Both seams do nothing until you opt in: when `CAS_DATASETS` is unset or
+empty, `CASAttributeProcessor.process()` logs an info message and returns
+`{}`. On the SYMFLUENCE side you can also switch all external attribute
+plugins off with `ATTRIBUTE_PLUGINS_ENABLED: false` or skip just CAS with
+`ATTRIBUTE_PLUGINS_EXCLUDE: [cas]`.
 
-and returns without writing anything. You can also disable the profile entry
-outright with `DOWNLOAD_CAS: false`.
-
-## Configuration
+### Configuration
 
 Add flat keys to your SYMFLUENCE YAML config:
 
 ```yaml
-# Which attribute profile to run (CAS is registered in all of them)
-ATTRIBUTE_PROFILE: core
-
 # Comma-separated CAS dataset ids ({provider}:{dataset}) — required opt-in
 CAS_DATASETS: "copernicus_dem:elevation,isric_soilgrids:clay_0-5cm"
 
@@ -74,37 +71,111 @@ CAS_AGGREGATION: mean
 # Optional: CAS runtime settings, passed to cas.configure()
 CAS_API_CONFIG:
   provider_timeout_s: 60
-
-# Optional: kill switch for the profile entry (default: true)
-DOWNLOAD_CAS: false
 ```
 
 Browse dataset ids with `cas datasets <provider>` or the
 [provider catalog](catalog.md).
 
-## What it does
+### What it does
 
-During `acquire_attributes`, SYMFLUENCE invokes the handler with
-`output_dir = {project_dir}/data/attributes/cas/`. The handler:
+SYMFLUENCE's attribute machinery
+(`attributeProcessor._process_plugin_attributes`) discovers the processor,
+constructs it with `(config, logger)`, and calls `.process()`. The processor:
 
-1. locates the domain's HRU/catchment polygons using the same config keys as
-   SYMFLUENCE's attribute processors (`CATCHMENT_PATH`, `CATCHMENT_SHP_NAME`,
-   `CATCHMENT_SHP_HRUID`, defaulting to
-   `shapefiles/catchment/{DOMAIN_NAME}_HRUs_{discretization}.shp`),
+1. locates the domain's HRU/catchment polygons through the inherited
+   `BaseAttributeProcessor` path resolution (`CATCHMENT_PATH`,
+   `CATCHMENT_SHP_NAME`, `CATCHMENT_SHP_HRUID`, defaulting to
+   `shapefiles/catchment/{DOMAIN_NAME}_HRUs_{discretization}.shp`) — the same
+   geometry every in-tree processor reduces over,
 2. reprojects to EPSG:4326 if needed and builds one CAS geometry per HRU,
 3. batches the geometries into `BatchAttributeRequest`s (max 1000 geometries
    each, all datasets per request) and calls `cas.batch_extract_sync()`,
 4. logs a quality-flag summary, and
-5. writes one CSV (skipped on re-runs unless `FORCE_DOWNLOAD: true`).
+5. returns a flat attribute dict.
 
-## Output format and where it lands
+### How results flow onward (the consumed contract)
 
-The handler writes
-`{project_dir}/data/attributes/cas/{DOMAIN_NAME}_cas_attributes.csv`:
+What we verified in SYMFLUENCE's `_process_plugin_attributes` (and the
+surrounding `process_attributes()`):
 
-- **one row per HRU**, sorted by HRU id (the same row convention as
-  SYMFLUENCE's attribute-processor CSVs);
-- an explicit `hru_id` column (first column);
+- A plugin that returns a non-empty dict has it merged **as-is** into the
+  same results dict the in-tree elevation/soil/climate processors feed
+  (`results.update(plugin_results)`). A plugin that raises is logged and
+  skipped — it never aborts attribute processing.
+- For **lumped** domains (`DOMAIN_DEFINITION_METHOD: lumped`) all keys
+  become columns of a single attribute row. CAS emits plain
+  `cas.{dataset}` keys (e.g. `cas.copernicus_dem_elevation`).
+- For **distributed** domains SYMFLUENCE rebuilds one row per HRU from keys
+  shaped `HRU_{id}_{attribute}`, parsing the id with
+  `int(key.split("_")[1])`. CAS emits `HRU_{id}_cas.{dataset}` keys with
+  integer-coerced HRU ids (non-integer ids fall back to the geometry's
+  positional index, with a warning).
+- Categorical `distribution` results expand to one `cas.{dataset}_{class}`
+  fraction key per class. Per-dataset `cas.{dataset}_quality` (string) and
+  `cas.{dataset}_coverage_fraction` (float) keys ride along; SYMFLUENCE's
+  numeric-only CSV writers drop the string keys automatically, exactly as
+  they do for climaclass's string class codes.
+
+Because the keying is byte-for-byte the shape native processors emit, CAS
+attributes ride whatever path native attribute results ride: the per-HRU
+DataFrame `process_attributes()` rebuilds from the merged dict, and the
+per-HRU numeric CSV reshaping (`BaseAttributeProcessor._write_results_csv`,
+the format SYMFLUENCE's `AttributesNetCDFBuilder` and transfer-function
+regionalization consume) both parse exactly these `HRU_{id}_{attribute}`
+keys. No special-cased `attributes/cas/` directory is involved — which was
+the gap in the CSV-export mode below.
+
+### The replacement recipe
+
+To source the zonal-statistics attribute layer from CAS instead of native
+downloads:
+
+```yaml
+ATTRIBUTE_PROFILE: core          # skip the extended native processors
+DOWNLOAD_WORLDCLIM: false        # and any other DOWNLOAD_* you replace
+CAS_DATASETS: "copernicus_dem:elevation,\
+isric_soilgrids:clay_0-5cm,isric_soilgrids:sand_0-5cm,\
+esa_worldcover:land_cover,terraclimate:pet,terraclimate:aridity"
+CAS_AGGREGATION: mean
+```
+
+#### Hard limits
+
+Anything in SYMFLUENCE that consumes **rasters** cannot come from CAS: the
+DEM used for delineation/discretization/elevation bands, and the
+land-cover/soil grids used for HRU generation, stay native acquisitions. CAS
+replaces the *zonal-statistics attribute layer* only (per-HRU scalar/fraction
+attributes).
+
+#### Starter mapping: native attributes → CAS dataset ids
+
+All ids below are verified against CAS's provider registry (`cas datasets
+<provider>`).
+
+| Native attribute family | CAS dataset id(s) | Notes |
+|---|---|---|
+| `elevation.*` zonal stats | `copernicus_dem:elevation`, `cop_dem_90:elevation` | use `CAS_AGGREGATION: mean`/`min`/`max`/`std`; `merit_hydro:elevation_adjusted` for hydrologically conditioned elevation |
+| `soil.*` texture / properties | `isric_soilgrids:clay_0-5cm`, `isric_soilgrids:sand_0-5cm`, `isric_soilgrids:silt_0-5cm` (layers to `100-200cm`), `isric_soilgrids:soc_0-5cm`, `isric_soilgrids:phh2o_0-5cm` | one id per depth layer |
+| `soil.*` derived stocks/classes | `soilgrids_derived:ocs`, `soilgrids_derived:wrb_class` | `wrb_class` with `CAS_AGGREGATION: majority` or `distribution` |
+| `landcover.*` class fractions | `esa_worldcover:land_cover`, `esa_cci_lc:land_cover` | use `CAS_AGGREGATION: distribution` for per-class fractions |
+| `vegetation.*` structure | `canopy_height:canopy_height` | canopy height, not LAI |
+| `climate.pet_annual_mean`, `climate.aridity_index`, `climate.prec_annual_mean` | `terraclimate:pet`, `terraclimate:aridity`, `terraclimate:precipitation` (also `aet`, `deficit`, `soil_moisture`, `runoff`, `tmax`, `tmin`, `vpd`, `pdsi`) | TerraClimate climatologies |
+| permafrost extent | `permafrost:permafrost_index` | |
+
+## Secondary: the acquisition-handler CSV export
+
+`register()` adds `CASAttributeAcquirer` to SYMFLUENCE's acquisition registry
+under the key **`CAS`** for *explicit* use — reference it from a custom
+attribute profile or invoke it directly. It is **not** part of the built-in
+profiles (`core`/`camels_spat`/`full`); the processor seam above superseded
+that.
+
+Given an output directory (by convention
+`{project_dir}/data/attributes/cas/`), `download()` runs the same extraction
+pipeline and writes `{DOMAIN_NAME}_cas_attributes.csv`:
+
+- **one row per HRU**, sorted by HRU id, with an explicit `hru_id` first
+  column;
 - **one numeric column per dataset**, named from the sanitized dataset id
   (`isric_soilgrids:clay_0-5cm` → `isric_soilgrids_clay_0_5cm`); categorical
   `distribution` results expand to one `{dataset}_{class}` fraction column
@@ -112,12 +183,7 @@ The handler writes
 - per-dataset metadata extras: `{column}_units`, `{column}_quality`,
   `{column}_coverage_fraction`.
 
-!!! note "Reaching the model-ready attribute store"
-    SYMFLUENCE's `AttributesNetCDFBuilder` (which assembles
-    `data/model_ready/attributes/{domain}_attributes.nc`) currently ingests
-    CSVs only from the `climate/`, `geology/`, `soilclass/`, `vegetation/`,
-    and `landclass/` attribute subdirectories — not from `cas/`. CAS output
-    therefore lands as an analysis-ready per-HRU CSV but is not yet folded
-    into the grouped NetCDF automatically; consume it directly (it joins on
-    `hru_id`), or copy/symlink it into one of the scanned subdirectories
-    (its row order and numeric-column shape match what the builder expects).
+Re-runs skip the extraction when the CSV already exists (unless
+`FORCE_DOWNLOAD: true`). This CSV is an analysis-oriented sidecar: it joins
+on `hru_id` but is not folded into SYMFLUENCE's model-ready attribute store —
+use the processor seam for that.

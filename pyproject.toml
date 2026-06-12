@@ -75,8 +75,15 @@ Changelog = "https://github.com/DarriEy/CAS/blob/main/CHANGELOG.md"
 [project.scripts]
 cas = "cas.cli.main:cli"
 
-# SYMFLUENCE auto-discovers this at `import symfluence` (importlib.metadata
-# entry points); register() is a no-op when SYMFLUENCE is not installed.
+# Primary integration: SYMFLUENCE's attribute machinery discovers this
+# BaseAttributeProcessor subclass via importlib.metadata entry points and
+# runs it alongside the in-tree processors (no-op until CAS_DATASETS is set).
+[project.entry-points."symfluence.attribute_processors"]
+cas = "cas.integrations.symfluence:CASAttributeProcessor"
+
+# Secondary integration: SYMFLUENCE calls register() at `import symfluence`
+# to add the CASAttributeAcquirer acquisition handler for explicit use;
+# register() is a no-op when SYMFLUENCE is not installed.
 [project.entry-points."symfluence.plugins"]
 cas = "cas.integrations.symfluence:register"
 

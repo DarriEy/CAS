@@ -9,19 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **SYMFLUENCE integration plugin** (`cas.integrations.symfluence`): a
-  `CASAttributeAcquirer` acquisition handler that extracts per-HRU zonal
-  attributes for any CAS datasets and writes a per-HRU CSV
-  (`{DOMAIN_NAME}_cas_attributes.csv`) into the domain's
-  `data/attributes/cas/` directory. Auto-discovered via the
-  `symfluence.plugins` entry point — a plain `import symfluence` registers
-  the handler under `'CAS'` and appends it to every attribute profile
-  (`core`/`camels_spat`/`full`). The handler is a strict no-op until
-  `CAS_DATASETS` is set in the SYMFLUENCE config, and can be disabled with
-  `DOWNLOAD_CAS: false`. The module imports defensively, so `import cas`
-  works without SYMFLUENCE installed and adds no new dependency.
+- **SYMFLUENCE integration** (`cas.integrations.symfluence`), wired at two
+  seams:
+  - *Primary*: a `CASAttributeProcessor` attribute processor registered
+    under the `symfluence.attribute_processors` entry point. SYMFLUENCE's
+    attribute machinery discovers it, constructs it `(config, logger)`, and
+    merges its `.process() -> dict` output into the same per-HRU results the
+    in-tree elevation/soil/climate processors feed — `cas.{dataset}` keys
+    for lumped domains, `HRU_{id}_cas.{dataset}` for distributed ones, with
+    `*_quality` / `*_coverage_fraction` metadata riding along. Reads
+    `CAS_DATASETS` (required opt-in), `CAS_AGGREGATION` (default `mean`) and
+    `CAS_API_CONFIG`; extracts via chunked `cas.batch_extract_sync` calls
+    (≤1000 geometries per request) over the domain's HRU polygons.
+  - *Secondary*: a `CASAttributeAcquirer` acquisition handler registered
+    under `'CAS'` via the `symfluence.plugins` entry point for explicit use,
+    writing an analysis-oriented per-HRU CSV
+    (`{DOMAIN_NAME}_cas_attributes.csv`, by convention into
+    `data/attributes/cas/`). It is not auto-appended to SYMFLUENCE's
+    built-in attribute profiles — the processor seam supersedes that.
+
+  Both seams are strict no-ops until `CAS_DATASETS` is set, and the module
+  imports defensively, so `import cas` works without SYMFLUENCE installed
+  and adds no new dependency.
 - New "SYMFLUENCE Plugin" documentation page (`docs/symfluence.md`) covering
-  auto-discovery, configuration, and the output CSV contract.
+  both seams, the `.process()` keying contract SYMFLUENCE consumes, a
+  native-attribute → CAS-dataset replacement recipe with a verified starter
+  mapping table, hard limits (raster consumers stay native), and the CSV
+  export contract.
 
 ## [0.2.0] — 2026-06-11
 
