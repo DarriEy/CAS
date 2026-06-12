@@ -48,6 +48,11 @@ class USGS3DEPConnector(STACMixin, BaseConnector):
     base_url = STAC_URL
     protocol = "stac_cog"
 
+    # In-process raster mode: all-intersecting-tile mosaic via STACMixin.
+    supports_raster = True
+    stac_raster_collections = (COLLECTION,)
+    stac_sign_assets = True
+
     async def list_datasets(self) -> list[Dataset]:
         return [
             Dataset(
