@@ -24,6 +24,18 @@ seams, both declared as entry points in CAS's ``pyproject.toml``:
     CSV to ``data/attributes/cas/``; it is **not** auto-appended to the
     built-in attribute profiles — the processor seam supersedes that.
 
+**Tertiary — attribute backend** (``symfluence.plugins`` → ``R.attribute_backends``)
+    :func:`register` also adds :class:`CommunityAttributeBackend` (SYMFLUENCE
+    backend-protocol contract 0.3.0) under ``'community'``. This is the proper
+    Phase-C path, mirroring the CFS forcing backend and the CSFS observation
+    backend: under ``DATA_ACCESS: community`` SYMFLUENCE's attribute pipeline
+    selects it FIRST (parity-gated), and ``acquire()`` delivers a per-HRU
+    ``HRU_STATS_V1`` CSV (to ``data/attributes/cas/``) plus the sidecar
+    acquisition manifest, ingested by the model-ready ``AttributesNetCDFBuilder``
+    as a ``cas`` group. Layering: all three seams wrap the SAME extraction
+    helpers; when the backend serves ``CAS``, SYMFLUENCE excludes the ``cas``
+    processor plugin from its plugin loop so CAS is extracted exactly once.
+
 Both seams are strict no-ops until ``CAS_DATASETS`` is set in the SYMFLUENCE
 configuration.
 
@@ -78,8 +90,16 @@ except Exception:  # noqa: BLE001 - any import failure means "not available"
 #: Hard limit on geometries per request (``BatchAttributeRequest`` constraint).
 MAX_GEOMETRIES_PER_REQUEST = 1000
 
+#: Contract version the AttributeBackend targets (SYMFLUENCE backend protocol
+#: 0.3.0 added the attribute flavour). Frameworks predating 0.3.0 simply have
+#: no ``R.attribute_backends`` registry and skip the backend tier.
+TARGET_INTERFACE_VERSION = "0.3.0"
+
 #: Acquisition-registry key for the secondary (handler) seam.
 HANDLER_NAME = "CAS"
+
+#: Provider id the AttributeBackend claims under ``R.attribute_backends``.
+BACKEND_PROVIDER_ID = "CAS"
 
 #: Namespace prefix for attribute keys returned by the processor seam,
 #: mirroring the in-tree ``elevation.`` / ``soil.`` / ``climate.`` categories.
@@ -558,22 +578,225 @@ class CASAttributeAcquirer(_AcquirerBase):  # type: ignore[misc, valid-type]
 
 
 # ---------------------------------------------------------------------------
+# Tertiary seam: SYMFLUENCE AttributeBackend protocol (contract 0.3.0)
+# ---------------------------------------------------------------------------
+
+
+def _backend_contract() -> Any:  # pragma: no cover - symfluence-only import
+    from symfluence.data.backends import contract
+
+    return contract
+
+
+def _backend_errors() -> Any:  # pragma: no cover - symfluence-only import
+    from symfluence.data.backends import errors
+
+    return errors
+
+
+def _integration_logger() -> Any:
+    import logging
+
+    return logging.getLogger("cas.integrations.symfluence")
+
+
+class CommunityAttributeBackend:
+    """CAS exposed through SYMFLUENCE's AttributeBackend protocol (0.3.0).
+
+    The proper Phase-C tier: a thin wrapper over the same CAS extraction the
+    :class:`CASAttributeProcessor` / :class:`CASAttributeAcquirer` use
+    (``batch_extract`` over per-HRU geometries → per-HRU stats), reusing the
+    pure ``load_catchment_wgs84`` / ``to_cas_geometries`` /
+    ``_extract_responses`` / ``responses_to_rows`` helpers. ``acquire()``
+    delivers an :attr:`SchemaId.HRU_STATS_V1` per-HRU CSV plus the shared
+    sidecar manifest.
+
+    Capabilities come from the configured ``CAS_DATASETS`` (the framework opt-in)
+    so the backend only claims to serve what the run actually requests; the
+    parity grade is the tolerance-based ``"value-within:resampling-tolerance"``
+    (attribute zonal stats are not bitwise-reproducible — they depend on
+    resampling/masking/source-grid alignment, unlike forcing/observations).
+
+    Instantiated by SYMFLUENCE's selection layer with ``(config, logger)``.
+    Coexists with the entry-point processor seam; SYMFLUENCE excludes the
+    backend-served provider from the plugin loop so CAS is extracted once.
+    """
+
+    name = "community"
+    interface_version = TARGET_INTERFACE_VERSION
+
+    def __init__(self, config: Any = None, logger: Any = None) -> None:
+        self.config = config
+        self.logger = logger or _integration_logger()
+
+    # -- helpers ------------------------------------------------------------
+
+    def _cfg(self, key: str, default: Any = None) -> Any:
+        cfg = self.config
+        if cfg is None:
+            return default
+        getter = getattr(cfg, "get", None)
+        if callable(getter):
+            value = getter(key, default)
+            return default if value is None else value
+        return default
+
+    def _dataset_ids(self) -> list[str]:
+        return parse_dataset_ids(self._cfg("CAS_DATASETS"))
+
+    # -- protocol surface ---------------------------------------------------
+
+    def capabilities(self) -> tuple[Any, ...]:  # pragma: no cover - symfluence-only
+        """Attribute providers servable, as contract AttributeCapability.
+
+        Inert until ``CAS_DATASETS`` is set: with no datasets configured the
+        backend claims nothing, so selection declines and the in-tree/plugin
+        path runs unchanged.
+        """
+        contract = _backend_contract()
+        dataset_ids = self._dataset_ids()
+        if not dataset_ids:
+            return ()
+        return (
+            contract.AttributeCapability(
+                provider_id=BACKEND_PROVIDER_ID,
+                attribute_ids=frozenset(dataset_ids),
+                output_kind="per_hru_stats",
+                schema=contract.SchemaId.HRU_STATS_V1,
+                auth=frozenset(),
+                parity_grade="value-within:resampling-tolerance",
+                notes="Per-HRU zonal statistics from the CAS dataset registry. "
+                      "Zonal stats are not bitwise-reproducible (resampling/masking "
+                      "dependent); parity is tolerance-based, not bit-identical.",
+            ),
+        )
+
+    def acquire(self, request: Any) -> Any:  # pragma: no cover - exercised by integration tests
+        """Serve an ``AttributeRequest`` via the existing CAS extraction internals."""
+        contract = _backend_contract()
+        errors = _backend_errors()
+
+        if str(request.provider_id).lower() != BACKEND_PROVIDER_ID.lower():
+            raise errors.DatasetUnsupported(
+                f"The community attribute backend serves provider "
+                f"'{BACKEND_PROVIDER_ID}', not {request.provider_id!r}",
+                dataset_id=request.provider_id,
+                backend=self.name,
+            )
+
+        dataset_ids = list(request.attribute_ids) or self._dataset_ids()
+        if not dataset_ids:
+            raise errors.DatasetUnsupported(
+                "CAS attribute backend invoked but CAS_DATASETS is not configured",
+                dataset_id=request.provider_id,
+                backend=self.name,
+            )
+
+        aggregation = str(self._cfg("CAS_AGGREGATION", "mean"))
+        api_config = self._cfg("CAS_API_CONFIG")
+
+        # Geometry: prefer inline request geometries, else the catchment path.
+        if request.geometries:
+            from cas.core.models import Geometry
+
+            geometries = [Geometry(**dict(g)) for g in request.geometries]
+            hru_ids = list(request.hru_ids)
+        else:
+            if not request.catchment_path:
+                raise errors.AcquisitionError(
+                    "CAS attribute backend requires either inline geometries or a "
+                    "catchment_path; got neither (run domain discretization first)"
+                )
+            try:
+                gdf = load_catchment_wgs84(Path(request.catchment_path), self.logger)
+            except FileNotFoundError as exc:
+                raise errors.AcquisitionError(
+                    f"CAS attribute backend could not read catchment geometry: {exc}"
+                ) from exc
+            hru_id_field = self._cfg("CATCHMENT_SHP_HRUID", "HRU_ID")
+            hru_ids = hru_ids_from_gdf(
+                gdf, hru_id_field, self.logger, source=Path(request.catchment_path).name
+            )
+            geometries = to_cas_geometries(gdf)
+
+        self.logger.info(
+            f"CAS attribute backend: {len(dataset_ids)} dataset(s) x {len(geometries)} HRU(s) "
+            f"(aggregation={aggregation})"
+        )
+
+        from cas.core.exceptions import CASError
+
+        try:
+            responses = _extract_responses(geometries, dataset_ids, aggregation, api_config)
+        except CASError as exc:
+            raise errors.UpstreamOutage(
+                f"CAS extraction failed for provider '{request.provider_id}': {exc}",
+                upstream="cas",
+            ) from exc
+        except (ValueError, KeyError, TypeError, RuntimeError, OSError) as exc:
+            raise errors.AcquisitionError(
+                f"CAS extraction failed for provider '{request.provider_id}': {exc}"
+            ) from exc
+
+        summary = quality_summary(responses)
+        log = self.logger.info if set(summary) <= {"good"} else self.logger.warning
+        log(f"CAS extraction quality summary: {summary or 'no results returned'}")
+
+        target_dir = Path(request.target_dir)
+        target_dir.mkdir(parents=True, exist_ok=True)
+        domain_name = self._cfg("DOMAIN_NAME", "domain")
+        out_path = target_dir / f"{domain_name}_cas_attributes.csv"
+        fieldnames, rows = responses_to_rows(hru_ids, responses)
+        CASAttributeAcquirer._write_csv(out_path, fieldnames, rows)
+        self.logger.info(
+            f"✓ Wrote {len(fieldnames) - 1} column(s) x {len(rows)} HRU(s) to {out_path}"
+        )
+
+        import cas
+
+        result = contract.AcquisitionResult(
+            paths=(out_path,),
+            schema=contract.SchemaId.HRU_STATS_V1,
+            dataset_id=request.provider_id,
+            backend=self.name,
+            provenance={
+                "integration": f"{__name__}.CommunityAttributeBackend",
+                "cas_version": getattr(cas, "__version__", "unknown"),
+                "provider_id": str(request.provider_id),
+                "datasets": ",".join(dataset_ids),
+                "aggregation": aggregation,
+                "quality_summary": str(summary),
+            },
+            variables_delivered=frozenset(sanitize_column(d) for d in dataset_ids),
+        )
+        contract.write_manifest(result, target_dir)
+        return result
+
+
+# ---------------------------------------------------------------------------
 # Plugin entry point (acquisition-handler registration)
 # ---------------------------------------------------------------------------
 
 
 def register() -> None:
-    """Register the CAS acquisition handler (``symfluence.plugins`` hook).
+    """Register the CAS SYMFLUENCE integrations (``symfluence.plugins`` hook).
 
     Zero-arg callable invoked by SYMFLUENCE's plugin discovery at
-    ``import symfluence``. Idempotent: safe to call repeatedly. Adds
-    :class:`CASAttributeAcquirer` to ``R.acquisition_handlers`` under
-    ``'CAS'`` (skipped when already present) for explicit use.
+    ``import symfluence``. Idempotent: safe to call repeatedly. Wires three
+    coexisting seams (see the module docstring for the layering):
+
+    * :class:`CASAttributeAcquirer` → ``R.acquisition_handlers['CAS']``
+      (secondary handler seam, explicit use only).
+    * :class:`CommunityAttributeBackend` → ``R.attribute_backends['community']``
+      (tertiary, contract-0.3.0 protocol tier; the proper Phase-C path,
+      consulted FIRST under ``DATA_ACCESS: community``). Skipped on frameworks
+      predating 0.3.0 (no ``attribute_backends`` registry) — the processor
+      plugin seam then still serves community mode.
 
     The primary integration — :class:`CASAttributeProcessor` — needs no
     registration call: SYMFLUENCE discovers it directly through the
-    ``symfluence.attribute_processors`` entry point. Accordingly, ``register``
-    no longer appends the handler to the built-in attribute profiles.
+    ``symfluence.attribute_processors`` entry point. When the backend serves a
+    provider, SYMFLUENCE excludes the matching plugin to avoid double extraction.
     """
     if not HAVE_SYMFLUENCE:  # pragma: no cover - discovery never calls us then
         return
@@ -582,6 +805,13 @@ def register() -> None:
 
     if HANDLER_NAME not in R.acquisition_handlers:
         R.acquisition_handlers.add(HANDLER_NAME, CASAttributeAcquirer)
+
+    # Protocol tier (contract 0.3.0). Registered as a CLASS: SYMFLUENCE's
+    # selection layer instantiates it with (config, logger). Older frameworks
+    # without the registry simply skip this tier.
+    backends = getattr(R, "attribute_backends", None)
+    if backends is not None and "community" not in backends:
+        backends.add("community", CommunityAttributeBackend)
 
 
 # Self-register at import time. This matters for the *reverse* import order:

@@ -575,3 +575,105 @@ def test_download_writes_per_hru_csv(tmp_path, monkeypatch):
     captured.clear()
     assert handler.download(output_dir) == out_path
     assert captured == []
+
+
+# -- tertiary seam: attribute backend (contract 0.3.0) ----------------------
+
+
+def test_attribute_backend_registered_under_community():
+    """register() adds CommunityAttributeBackend to R.attribute_backends['community']."""
+    _symfluence()
+    from symfluence.core.registries import R
+
+    module = importlib.import_module(INTEGRATION_MODULE)
+    module.register()
+    assert "community" in R.attribute_backends
+    entry = R.attribute_backends.get("community")
+    assert entry is module.CommunityAttributeBackend
+
+
+def test_attribute_backend_capabilities_reflect_cas_datasets():
+    """Capabilities are inert without CAS_DATASETS, and claim the opted-in ids."""
+    _symfluence()
+    module = importlib.import_module(INTEGRATION_MODULE)
+    from symfluence.data.backends.contract import SchemaId
+
+    # No CAS_DATASETS → claims nothing (inert seam).
+    empty = module.CommunityAttributeBackend({}, logging.getLogger("test_cap_empty"))
+    assert empty.capabilities() == ()
+
+    cfg = {"CAS_DATASETS": f"{DATASET_DEM},{DATASET_CLAY}"}
+    backend = module.CommunityAttributeBackend(cfg, logging.getLogger("test_cap"))
+    caps = backend.capabilities()
+    assert len(caps) == 1
+    cap = caps[0]
+    assert cap.provider_id == "CAS"
+    assert cap.output_kind == "per_hru_stats"
+    assert cap.schema is SchemaId.HRU_STATS_V1
+    assert {DATASET_DEM, DATASET_CLAY} <= set(cap.attribute_ids)
+    # Attribute parity is tolerance-based, never bit-identical.
+    assert cap.parity_grade.startswith("value-within:")
+
+
+def test_attribute_backend_acquire_writes_hru_stats_and_manifest(tmp_path, monkeypatch):
+    """acquire() reads the catchment shapefile, delivers HRU_STATS_V1 + manifest."""
+    _symfluence()
+    module = importlib.import_module(INTEGRATION_MODULE)
+    import cas
+
+    from symfluence.data.backends.contract import (
+        MANIFEST_FILENAME,
+        AttributeRequest,
+        SchemaId,
+        read_manifest,
+    )
+
+    config, _ = _make_domain(tmp_path)
+    config["CAS_DATASETS"] = f"{DATASET_DEM},{DATASET_CLAY}"
+
+    captured: list[BatchAttributeRequest] = []
+    monkeypatch.setattr(cas, "batch_extract_sync", fake_batch_extractor(captured))
+
+    target_dir = tmp_path / "data" / "attributes" / "cas"
+    catchment_path = Path(config["CATCHMENT_PATH"]) / config["CATCHMENT_SHP_NAME"]
+    backend = module.CommunityAttributeBackend(config, logging.getLogger("test_attr_backend"))
+    request = AttributeRequest(
+        provider_id="CAS",
+        attribute_ids=(),
+        hru_ids=(),
+        geometries=(),
+        catchment_path=catchment_path,
+        target_dir=target_dir,
+        lumped=False,
+    )
+    result = backend.acquire(request)
+
+    assert result.schema is SchemaId.HRU_STATS_V1
+    assert result.backend == "community"
+    assert result.dataset_id == "CAS"
+    assert len(result.paths) == 1 and result.paths[0].suffix == ".csv"
+
+    manifest = read_manifest(target_dir / MANIFEST_FILENAME)
+    assert manifest["schema"] == "hru-stats-v1"
+    assert manifest["paths"] == [str(p) for p in result.paths]
+
+    with result.paths[0].open() as fh:
+        rows = list(csv.DictReader(fh))
+    assert [row["hru_id"] for row in rows] == ["1", "2"]
+    assert len(captured) == 1
+
+
+def test_attribute_backend_declines_unknown_provider(tmp_path):
+    _symfluence()
+    module = importlib.import_module(INTEGRATION_MODULE)
+    from symfluence.data.backends.contract import AttributeRequest
+    from symfluence.data.backends.errors import DatasetUnsupported
+
+    backend = module.CommunityAttributeBackend(
+        {"CAS_DATASETS": DATASET_DEM}, logging.getLogger("test_attr_decline"))
+    request = AttributeRequest(
+        provider_id="NOT_CAS", attribute_ids=(), hru_ids=(), geometries=(),
+        catchment_path=None, target_dir=tmp_path, lumped=False,
+    )
+    with pytest.raises(DatasetUnsupported):
+        backend.acquire(request)

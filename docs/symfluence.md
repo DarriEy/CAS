@@ -4,12 +4,26 @@ CAS ships a [SYMFLUENCE](https://github.com/DarriEy/SYMFLUENCE) integration
 (`cas.integrations.symfluence`) that lets SYMFLUENCE source **per-HRU zonal
 attributes** from any CAS dataset — 228+ providers behind one config key.
 
-It plugs into SYMFLUENCE at two seams:
+It plugs into SYMFLUENCE at three coexisting seams:
 
 | Seam | Entry point | What it produces |
 |---|---|---|
 | **Primary: attribute processor** | `symfluence.attribute_processors` → `CASAttributeProcessor` | Attributes merged into SYMFLUENCE's per-HRU attribute table, alongside the native `elevation.*` / `soil.*` / `climate.*` attributes |
 | Secondary: acquisition handler | `symfluence.plugins` → `register()` (`CASAttributeAcquirer` under key `CAS`) | Standalone analysis CSV in `data/attributes/cas/` |
+| **Tertiary: attribute backend** | `symfluence.plugins` → `register()` (`CommunityAttributeBackend` under `R.attribute_backends['community']`) | Per-HRU `HRU_STATS_V1` CSV + acquisition manifest in `data/attributes/cas/`, ingested by the model-ready `AttributesNetCDFBuilder` as a `cas` group |
+
+The **attribute backend** is the contract-0.3.0 protocol tier — the same
+backend pattern as the CFS forcing backend and the CSFS observation backend.
+Under `DATA_ACCESS: community`, SYMFLUENCE's attribute pipeline selects it
+*first* (parity-gated; attribute parity is **tolerance-based**, not
+bit-identical, since zonal stats depend on resampling/masking/grid alignment),
+and it delivers a declared-schema per-HRU table plus a sidecar manifest that
+flows straight into the model-ready attributes store. All three seams wrap the
+**same** extraction helpers (`batch_extract` over HRU geometries → per-HRU
+stats); when the backend serves `CAS`, SYMFLUENCE excludes the `cas` *processor*
+plugin from its plugin loop so CAS is extracted exactly once. Frameworks
+predating contract 0.3.0 simply lack the `attribute_backends` registry and fall
+back to the processor-plugin seam.
 
 ## Install & auto-discovery
 
