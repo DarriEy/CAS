@@ -58,6 +58,42 @@ class TanDEMXConnector(WCSMixin, BaseConnector):
 
     COVERAGE_ID = "TDM_DEM__DEM"
 
+    # In-process raster mode: native-resolution GetCoverage passthrough.
+    supports_raster = True
+
+    def _raster_coverage_id(self, dataset_id: str) -> str | None:
+        return self.COVERAGE_ID if dataset_id == f"{self.slug}:elevation" else None
+
+    async def _wcs_raster_bytes(
+        self, coverage_id: str, bbox: tuple[float, float, float, float],
+    ) -> bytes:
+        """GetCoverage with DLR basic-auth credentials (registration required)."""
+        user, password = self._get_credentials()
+        import httpx
+
+        params = {
+            "service": "WCS",
+            "version": "2.0.1",
+            "request": "GetCoverage",
+            "CoverageId": coverage_id,
+            "format": "image/tiff",
+            "subset": [
+                f"Long({bbox[0]},{bbox[2]})",
+                f"Lat({bbox[1]},{bbox[3]})",
+            ],
+        }
+        async with httpx.AsyncClient(timeout=120.0, auth=(user, password)) as client:
+            resp = await client.get(self.base_url, params=params)
+            if resp.status_code == 401:
+                raise RegistrationRequiredError(
+                    self.slug,
+                    REGISTRATION_URL,
+                    "Invalid credentials. Check CAS_TANDEMX_USER and CAS_TANDEMX_PASSWORD.",
+                )
+            if resp.status_code != 200:
+                raise DataFormatError(self.slug, f"WCS returned {resp.status_code}")
+            return resp.content
+
     def _get_credentials(self) -> tuple[str, str]:
         user = self.config.get("user") or os.environ.get("CAS_TANDEMX_USER", "")
         password = self.config.get("password") or os.environ.get("CAS_TANDEMX_PASSWORD", "")

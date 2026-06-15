@@ -57,6 +57,23 @@ async def check_provider(provider_slug: str) -> HealthCheckResult:
 
     try:
         connector_cls = get_connector(provider_slug)
+
+        # Mirror-backed connectors (design §5) are not live endpoints: health is
+        # manifest integrity, not a network probe (and never a download). The
+        # scheduled Provider Health Check thus can't flag a not-yet-synced
+        # mirror as an outage, removing a class of false reds.
+        if getattr(connector_cls, "kind", None) == "mirror":
+            conn = connector_cls()
+            status, error, n_datasets = conn.mirror_health()  # type: ignore[attr-defined]
+            return HealthCheckResult(
+                provider=provider_slug,
+                status=status,
+                response_time_ms=int((time.monotonic() - start) * 1000),
+                last_checked=datetime.now(UTC),
+                datasets_available=n_datasets,
+                error=error,
+            )
+
         async with connector_cls() as conn:
             datasets = await conn.list_datasets()
             if not datasets:

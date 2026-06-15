@@ -14,6 +14,7 @@ string (``a,b``) for ergonomic shell/Docker use.
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Annotated, Any
 
 from pydantic import field_validator
@@ -49,7 +50,27 @@ class Settings(BaseSettings):
     rate_limit_enabled: bool = False
     rate_limit_per_minute: int = 60
 
-    @field_validator("cors_origins", "api_keys", mode="before")
+    # ── Curated mirror tier (CAS_MIRROR_*) ──────────────────────────
+    mirror_dir: Path = Path("~/.cas/mirror")
+    """Mirror root (``CAS_MIRROR_DIR``). Per-user by default; point it at a
+    read-only group share to consume an admin-synced mirror."""
+    mirror_offline: bool = False
+    """``CAS_MIRROR_OFFLINE`` — materialization becomes a hard error instead
+    of a download (compute-node safety). Reads of materialized data proceed."""
+    mirror_auto_materialize: bool = True
+    """Set False to forbid lazy download-on-first-use; only an explicit
+    ``cas mirror sync`` materializes datasets."""
+    mirror_accept_licenses: Annotated[list[str], NoDecode] = []
+    """``CAS_MIRROR_ACCEPT_LICENSES`` — slugs of acknowledgment-requiring
+    datasets whose license terms the user pre-accepts (comma-separated),
+    for non-interactive sync."""
+
+    @field_validator("mirror_dir", mode="after")
+    @classmethod
+    def _expand_mirror_dir(cls, v: Path) -> Path:
+        return v.expanduser()
+
+    @field_validator("cors_origins", "api_keys", "mirror_accept_licenses", mode="before")
     @classmethod
     def _split_csv(cls, v: object) -> object:
         """Accept comma-separated strings or JSON arrays from the environment."""

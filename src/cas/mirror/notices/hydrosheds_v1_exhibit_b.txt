@@ -1,0 +1,24 @@
+HydroSHEDS version 1 License Agreement -- Exhibit B (Required Attributions)
+Source: HydroSHEDS Technical Documentation v1.4, Appendix (Exhibit B),
+https://data.hydrosheds.org/file/technical-documentation/HydroSHEDS_TechDoc_v1_4.pdf
+Extracted verbatim from the PDF (text layer) on 2026-06-12. This notice must
+accompany the mirrored HydroBASINS data and any data, products or services
+derived from it, per the HydroSHEDS version 1 License Agreement.
+============================================================================
+
+EXHIBIT B
+REQUIRED ATTRIBUTIONS
+The following copyright statement must be displayed with, attached to or embodied in (in a reasonably prominent
+manner) the documentation or metadata of any Licensee Product or Program provided to an End User when utilizing the
+Licensed Materials:
+This product [insert Licensee Derivative Product name] incorporates data from the HydroSHEDS version 1 database
+which is © World Wildlife Fund, Inc. (2006-2022) and has been used herein under license. WWF has not evaluated the
+data as altered and incorporated within [insert Licensee Derivative Product name], and therefore gives no warranty
+regarding its accuracy, completeness, currency or suitability for any particular purpose. Portions of the HydroSHEDS v1
+database incorporate data which are the intellectual property rights of © USGS (2006-2008), NASA (2000-2005), ESRI
+(1992-1998), CIAT (2004-2006), UNEP-WCMC (1993), WWF (2004), Commonwealth of Australia (2007), and Her
+Royal Majesty and the British Crown and are used under license. The HydroSHEDS v1 database and more information
+are available at https://www.hydrosheds.org.
+The scientific citation for the HydroSHEDS version 1 database is:
+Lehner, B., Verdin, K., Jarvis, A. (2008): New global hydrography derived from spaceborne elevation data. Eos,
+Transactions, AGU, 89(10): 93-94.

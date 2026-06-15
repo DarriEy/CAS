@@ -146,6 +146,16 @@ Async callers can `await cas.extract(...)` / `await cas.batch_extract(...)`
 directly. See the [Python API docs](https://darriey.github.io/CAS/python-api/)
 for the full blessed surface (`cas.__all__`).
 
+### SYMFLUENCE plugin
+
+CAS also ships as a [SYMFLUENCE](https://github.com/DarriEy/SYMFLUENCE)
+acquisition-handler plugin: install CAS alongside SYMFLUENCE and set
+`CAS_DATASETS: "copernicus_dem:elevation,isric_soilgrids:clay_0-5cm"` in your
+workflow config to get per-HRU zonal attributes from any CAS dataset — no
+other wiring (auto-discovered via the `symfluence.plugins` entry point, no-op
+until configured). See the
+[SYMFLUENCE plugin docs](https://darriey.github.io/CAS/symfluence/).
+
 ## Python SDK (HTTP client)
 
 `cas.client` is a typed wrapper over the HTTP API of a deployed service (ships

@@ -5,6 +5,8 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from pathlib import Path
+from typing import ClassVar
 
 import httpx
 import structlog
@@ -15,8 +17,15 @@ from tenacity import (
     wait_exponential,
 )
 
-from cas.core.exceptions import ConnectorError, RateLimitError
-from cas.core.models import AttributeResult, Dataset, Geometry, TimeRange
+from cas.core.exceptions import ConnectorError, RasterUnsupportedError, RateLimitError
+from cas.core.models import (
+    AttributeResult,
+    Dataset,
+    Geometry,
+    RasterResampling,
+    RasterResult,
+    TimeRange,
+)
 
 logger = structlog.get_logger()
 
@@ -32,6 +41,12 @@ class BaseConnector(ABC):
     display_name: str
     base_url: str
     protocol: str
+
+    #: Whether this connector can serve raster-mode (``output="raster"``)
+    #: requests. Default False: raster mode is opt-in, v1 covers STAC/COG and
+    #: WCS connectors only, and every other protocol fails with a clear
+    #: capability error (see :meth:`extract_raster`).
+    supports_raster: ClassVar[bool] = False
 
     def __init__(self, config: dict | None = None) -> None:
         self.config = config or {}
@@ -73,6 +88,28 @@ class BaseConnector(ABC):
         """Extract attribute value(s) for a geometry from a single dataset."""
 
     # ── Optional overrides ──────────────────────────────────────────
+
+    async def extract_raster(
+        self,
+        dataset_id: str,
+        bbox: tuple[float, float, float, float],
+        output_path: Path,
+        *,
+        target_resolution: float | None = None,
+        resampling: RasterResampling = RasterResampling.NEAREST,
+        time_range: TimeRange | None = None,
+    ) -> RasterResult:
+        """Extract a bbox-clipped raster to ``output_path`` as a GeoTIFF.
+
+        Default: unsupported. The STAC/COG and WCS protocol mixins override
+        this in v1; all other protocols are stats-only.
+        """
+        raise RasterUnsupportedError(
+            self.slug,
+            f"Provider '{self.slug}' (protocol '{self.protocol}') does not support "
+            "raster output. v1 raster mode covers STAC/COG and WCS connectors only; "
+            "use output='stats' for this provider.",
+        )
 
     async def check_health(self) -> bool:
         try:

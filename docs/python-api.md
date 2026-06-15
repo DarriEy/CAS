@@ -100,14 +100,34 @@ print(len(cas.list_providers()), "providers")
 connector_cls = cas.get_connector("copernicus_dem")
 ```
 
+## Raster mode (in-process only)
+
+Beyond scalar statistics, the embedded API can extract the gridded data
+itself as a GeoTIFF written to a caller-supplied directory:
+
+```python
+result = cas.extract_raster_sync(
+    "copernicus_dem:elevation",
+    bbox=(-112.05, 41.95, -111.95, 42.05),
+    output_dir="/path/to/rasters",
+)
+print(result.path, result.crs, result.shape, result.nodata)
+```
+
+This capability is **not** served over the HTTP API (the service is
+stats-only by identity and licensing posture) — see
+[Raster Mode (in-process)](rasters.md) for the contract, the mosaic
+semantics, and the v1 scope (STAC/COG + WCS, native CRS).
+
 ## Stable surface
 
-The facade exports: `extract`, `batch_extract`, `extract_sync`,
-`batch_extract_sync`, `configure`, `discover`, `list_providers`,
-`get_connector`, and the core models `AttributeRequest`,
-`BatchAttributeRequest`, `AttributeResponse`, `BatchAttributeResponse`,
-`AttributeResult`, `Geometry`, `TimeRange`, `AggregationMethod`,
-`QualityFlag`, plus `__version__`.
+The facade exports: `extract`, `batch_extract`, `extract_raster`,
+`extract_sync`, `batch_extract_sync`, `extract_raster_sync`, `configure`,
+`discover`, `list_providers`, `get_connector`, and the core models
+`AttributeRequest`, `BatchAttributeRequest`, `AttributeResponse`,
+`BatchAttributeResponse`, `AttributeResult`, `RasterResult`, `Geometry`,
+`BoundingBox`, `TimeRange`, `AggregationMethod`, `OutputMode`,
+`RasterResampling`, `QualityFlag`, plus `__version__`.
 
 Deeper modules (`cas.extract.zonal`, `cas.connectors.*`, …) are importable but
 not covered by the same stability promise. See the

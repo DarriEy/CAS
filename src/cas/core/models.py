@@ -6,8 +6,9 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
+from pathlib import Path
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class TemporalType(StrEnum):
@@ -44,6 +45,29 @@ class QualityFlag(StrEnum):
     MISSING = "missing"
     DEGRADED = "degraded"
     ESTIMATED = "estimated"
+
+
+class OutputMode(StrEnum):
+    """What an extraction request produces.
+
+    ``STATS`` (the default) is the classic CAS product: scalar zonal
+    statistics per geometry. ``RASTER`` returns the underlying gridded data
+    itself as a GeoTIFF on disk — available through the in-process Python
+    facade only (``cas.extract_raster`` / ``cas.extract_raster_sync``),
+    never over the HTTP API.
+    """
+
+    STATS = "stats"
+    RASTER = "raster"
+
+
+class RasterResampling(StrEnum):
+    """Resampling kernels accepted by raster-mode requests."""
+
+    NEAREST = "nearest"
+    BILINEAR = "bilinear"
+    CUBIC = "cubic"
+    AVERAGE = "average"
 
 
 class Protocol(StrEnum):
@@ -121,11 +145,70 @@ class TimeRange(BaseModel):
 
 
 class AttributeRequest(BaseModel):
-    geometry: Geometry
+    """Extraction request.
+
+    Two mutually exclusive shapes, selected by ``output``:
+
+    - ``output="stats"`` (default, unchanged): per-geometry zonal statistics.
+      Requires ``geometry``; ``bbox``/``target_resolution`` are rejected.
+    - ``output="raster"``: bbox-mode — a rectangular domain (not per-HRU
+      geometry) extracted as one GeoTIFF. Requires ``bbox`` and exactly one
+      dataset id; ``geometry`` is rejected. In-process only (see
+      ``cas.extract_raster_sync``); the HTTP API rejects it.
+
+    v1 raster limitation: ``target_crs`` must stay at its ``"EPSG:4326"``
+    default — raster output is a native-CRS passthrough (EPSG:4326 for the
+    STAC/COG and WCS sources supported in v1); reprojection is not
+    implemented.
+    """
+
+    geometry: Geometry | None = None
+    bbox: BoundingBox | None = None
     dataset_ids: list[str] = Field(min_length=1)
     time_range: TimeRange | None = None
     aggregation: AggregationMethod = AggregationMethod.MEAN
     target_crs: str = "EPSG:4326"
+    output: OutputMode = OutputMode.STATS
+    target_resolution: float | None = Field(
+        default=None,
+        gt=0,
+        description="Raster-only: output pixel size in units of the source CRS "
+        "(degrees for EPSG:4326). Default: native resolution.",
+    )
+    resampling: RasterResampling = RasterResampling.NEAREST
+
+    @model_validator(mode="after")
+    def _validate_output_mode(self) -> AttributeRequest:
+        if self.output is OutputMode.STATS:
+            if self.geometry is None:
+                raise ValueError("output='stats' requires 'geometry'")
+            if self.bbox is not None:
+                raise ValueError(
+                    "bbox-mode requests are raster-only; pass 'geometry' for "
+                    "output='stats', or set output='raster' (in-process only)"
+                )
+            if self.target_resolution is not None:
+                raise ValueError("'target_resolution' applies to output='raster' only")
+        else:
+            if self.bbox is None:
+                raise ValueError(
+                    "output='raster' requires 'bbox' (a rectangular domain); "
+                    "per-HRU geometries are stats-only"
+                )
+            if self.geometry is not None:
+                raise ValueError(
+                    "output='raster' is bbox-mode only; pass 'bbox' instead of 'geometry'"
+                )
+            if len(self.dataset_ids) != 1:
+                raise ValueError("output='raster' takes exactly one dataset_id per request")
+            if self.bbox.min_lon >= self.bbox.max_lon or self.bbox.min_lat >= self.bbox.max_lat:
+                raise ValueError("'bbox' must have min_lon < max_lon and min_lat < max_lat")
+            if self.target_crs != "EPSG:4326":
+                raise ValueError(
+                    "v1 raster output is native-CRS passthrough (EPSG:4326 for the "
+                    "supported STAC/WCS sources); 'target_crs' reprojection is not implemented"
+                )
+        return self
 
     model_config = {
         "json_schema_extra": {
@@ -168,6 +251,33 @@ class AttributeResponse(BaseModel):
     results: list[AttributeResult]
     warnings: list[str] = Field(default_factory=list)
     elapsed_ms: int
+
+
+class RasterResult(BaseModel):
+    """Result of an in-process raster extraction (``output="raster"``).
+
+    The raster itself is written to a caller-supplied directory as a GeoTIFF;
+    this model carries the **path**, never the bytes — CAS stores nothing.
+
+    Acceptance contract (what SYMFLUENCE discretization consumes): the file
+    at ``path`` is a *domain-bbox, tile-mosaicked, native-resolution,
+    EPSG:4326 GeoTIFF with correct nodata*. ``transform`` is the first six
+    affine coefficients (a, b, c, d, e, f) and ``shape`` is (rows, cols) of
+    the written band.
+    """
+
+    dataset_id: str
+    provider: str
+    variable: str = ""
+    units: str = ""
+    path: Path
+    crs: str
+    transform: tuple[float, float, float, float, float, float]
+    shape: tuple[int, int]
+    nodata: float | None = None
+    license: str = ""
+    provenance: str = ""
+    elapsed_ms: int = 0
 
 
 # ── Batch Request / Response ──────────────────────────────────────

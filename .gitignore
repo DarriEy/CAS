@@ -23,3 +23,4 @@ venv/
 
 # probe scratch
 .probe_results.txt
+site/

@@ -44,6 +44,21 @@ def _clear_result_cache():
 
 
 @pytest.fixture
+def mirror_root(tmp_path):
+    """A fresh mirror root configured for the duration of one test."""
+    import cas
+    from cas.core.config import _overrides, get_settings
+
+    saved = dict(_overrides)
+    root = tmp_path / "mirror"
+    cas.configure(mirror_dir=root)
+    yield root
+    _overrides.clear()
+    _overrides.update(saved)
+    get_settings.cache_clear()
+
+
+@pytest.fixture
 def sample_point_geometry() -> Geometry:
     """Point in central Kansas."""
     return Geometry(type="Point", coordinates=[-96.55, 39.05])

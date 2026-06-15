@@ -8,20 +8,31 @@ import asyncio
 import hashlib
 import json
 import time
+from pathlib import Path
 from uuid import uuid4
 
 import structlog
 
 from cas.cache.results import ResultCache
 from cas.core.config import get_settings
-from cas.core.exceptions import ConnectorError, ExtractionError, RequestLimitError
+from cas.core.exceptions import (
+    ConnectorError,
+    ExtractionError,
+    RasterUnsupportedError,
+    RequestLimitError,
+)
 from cas.core.models import (
     AttributeRequest,
     AttributeResponse,
     AttributeResult,
     BatchAttributeRequest,
     BatchAttributeResponse,
+    BoundingBox,
     Geometry,
+    OutputMode,
+    RasterResampling,
+    RasterResult,
+    TimeRange,
 )
 from cas.core.qc import check_cross_provider_consistency, validate_result
 from cas.core.registry import discover, get_connector
@@ -76,6 +87,8 @@ def _validate_limits(request: AttributeRequest) -> None:
             f"Too many datasets: {n_datasets} > "
             f"limit {settings.max_datasets_per_request}"
         )
+    if request.geometry is None:
+        return
     n_vertices = _count_vertices(request.geometry)
     if n_vertices > settings.max_polygon_vertices:
         raise RequestLimitError(
@@ -88,8 +101,16 @@ async def extract(request: AttributeRequest) -> AttributeResponse:
     """Execute a multi-dataset attribute extraction for a single geometry.
 
     Groups dataset_ids by provider, fans out async tasks, collects results,
-    and applies QC validation.
+    and applies QC validation. Stats-only: raster-mode requests are served by
+    :func:`extract_raster` instead.
     """
+    if request.output is not OutputMode.STATS:
+        raise ExtractionError(
+            "extract() serves output='stats' only; raster mode is in-process "
+            "only — use cas.extract_raster() / cas.extract_raster_sync()."
+        )
+    if request.geometry is None:  # pragma: no cover — model validation enforces this
+        raise ExtractionError("output='stats' requires 'geometry'")
     discover()
     _validate_limits(request)
     settings = get_settings()
@@ -242,6 +263,8 @@ async def _extract_single(
     request: AttributeRequest,
 ) -> AttributeResult:
     start = time.monotonic()
+    if request.geometry is None:  # pragma: no cover — extract() guarantees stats shape
+        raise ExtractionError(f"Extraction failed for {dataset_id}: request has no geometry")
     try:
         connector_cls = get_connector(provider_slug)
         async with connector_cls() as conn:
@@ -271,6 +294,130 @@ async def _extract_single(
         raise
     except Exception as e:
         raise ExtractionError(f"Extraction failed for {dataset_id}: {e}") from e
+
+
+# ── Raster mode (in-process only) ───────────────────────────────────
+
+
+def _as_bounding_box(
+    bbox: BoundingBox | tuple[float, float, float, float] | list[float] | dict,
+) -> BoundingBox:
+    """Coerce a (min_lon, min_lat, max_lon, max_lat) tuple/dict to BoundingBox."""
+    if isinstance(bbox, BoundingBox):
+        return bbox
+    if isinstance(bbox, dict):
+        return BoundingBox(**bbox)
+    min_lon, min_lat, max_lon, max_lat = bbox
+    return BoundingBox(
+        min_lon=min_lon, min_lat=min_lat, max_lon=max_lon, max_lat=max_lat,
+    )
+
+
+async def extract_raster(
+    dataset_id: str,
+    bbox: BoundingBox | tuple[float, float, float, float] | list[float] | dict,
+    output_dir: str | Path,
+    *,
+    target_resolution: float | None = None,
+    resampling: RasterResampling | str = RasterResampling.NEAREST,
+    time_range: TimeRange | None = None,
+    filename: str | None = None,
+) -> RasterResult:
+    """Extract a bbox-mode raster to ``output_dir`` and return its metadata.
+
+    Acceptance contract (what SYMFLUENCE discretization consumes): the
+    written file is a *domain-bbox, tile-mosaicked, native-resolution,
+    EPSG:4326 GeoTIFF with correct nodata at a path* — the returned
+    :class:`~cas.core.models.RasterResult` carries that path, never bytes.
+
+    This path deliberately differs from the stats engine:
+
+    - **No result cache.** Arrays don't belong in the JSON TTL cache; every
+      call re-reads the source (the caller owns persistence via
+      ``output_dir``).
+    - **No scalar QC layer.** Quality flags and cross-provider consistency
+      checks are stats concepts; raster failures raise instead of degrading
+      into warnings.
+    - **In-process only.** The HTTP API rejects ``output="raster"`` — CAS
+      the *service* stores and re-serves nothing; raster mode is library use
+      (end-user access under each provider's license terms).
+
+    v1 scope: STAC/COG and WCS connectors only (``supports_raster``);
+    native-CRS passthrough (EPSG:4326 for the supported sources).
+    """
+    discover()
+    box = _as_bounding_box(bbox)
+    # Reuse the request model for validation (bbox sanity, v1 limitations).
+    request = AttributeRequest(
+        output=OutputMode.RASTER,
+        bbox=box,
+        dataset_ids=[dataset_id],
+        time_range=time_range,
+        target_resolution=target_resolution,
+        resampling=RasterResampling(resampling),
+    )
+    settings = get_settings()
+    start_time = time.monotonic()
+
+    provider_slug, _, dataset_name = dataset_id.partition(":")
+    try:
+        connector_cls = get_connector(provider_slug)
+    except KeyError as e:
+        raise ExtractionError(f"Unknown provider '{provider_slug}' in '{dataset_id}'") from e
+    if not getattr(connector_cls, "supports_raster", False):
+        raise RasterUnsupportedError(
+            provider_slug,
+            f"Provider '{provider_slug}' is stats-only: raster output is not "
+            "supported (v1 covers STAC/COG and WCS connectors). Use "
+            "output='stats' or a raster-capable provider.",
+        )
+
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    output_path = out_dir / (filename or f"{provider_slug}_{dataset_name or 'raster'}.tif")
+    bbox_tuple = (box.min_lon, box.min_lat, box.max_lon, box.max_lat)
+
+    async with connector_cls() as conn:
+        try:
+            result = await asyncio.wait_for(
+                conn.extract_raster(
+                    dataset_id=dataset_id,
+                    bbox=bbox_tuple,
+                    output_path=output_path,
+                    target_resolution=request.target_resolution,
+                    resampling=request.resampling,
+                    time_range=time_range,
+                ),
+                timeout=settings.provider_timeout_s,
+            )
+        except TimeoutError as e:
+            raise ExtractionError(
+                f"Raster extraction failed for {dataset_id}: "
+                f"timeout after {settings.provider_timeout_s:.0f}s"
+            ) from e
+
+        # Enrich with catalog metadata (license/variable/units) when missing.
+        if not result.license or not result.variable:
+            try:
+                for ds in await conn.list_datasets():
+                    if ds.id == dataset_id:
+                        result.license = result.license or ds.license
+                        if not result.variable and ds.variables:
+                            result.variable = ds.variables[0].name
+                            result.units = result.units or ds.variables[0].units
+                        break
+            except Exception:
+                pass  # Catalog fetch failure shouldn't kill the extraction
+
+    result.elapsed_ms = int((time.monotonic() - start_time) * 1000)
+    logger.info(
+        "raster_extracted",
+        dataset=dataset_id,
+        path=str(result.path),
+        shape=result.shape,
+        elapsed_ms=result.elapsed_ms,
+    )
+    return result
 
 
 _MAX_CONCURRENT_GEOMETRIES = 10

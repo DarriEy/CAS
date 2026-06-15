@@ -67,6 +67,10 @@ def _probe_url(base_url: str, protocol: str) -> tuple[str, str]:
     """Return (probe_url, http_method) for a given base_url and protocol."""
     u = base_url.lower()
 
+    # Mirror-backed connectors have no network endpoint (local GeoParquet).
+    if protocol == "mirror" or not base_url.lower().startswith("http"):
+        return base_url, "SKIP"
+
     if any(h in u for h in SKIP_HOSTS) or base_url in SKIP_URLS:
         return base_url, "SKIP"
 
