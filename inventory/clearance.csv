@@ -1,0 +1,229 @@
+slug,name,tier,commercial_use,redistribution,attribution_required,share_alike,license_spdx,confidence,source
+aster_gdem,ASTER GDEM v3 30m,A,yes,yes,False,False,public-domain,high,auto-classified
+etopo_2022,ETOPO 2022 Global Topo+Bathy,A,yes,yes,False,False,public-domain,high,auto-classified
+gebco,GEBCO Bathymetry 500m,A,yes,yes,true,false,public-domain,high,gebco.net/terms-of-use
+germany_bb_dem,Germany Brandenburg DGM 1m,A,yes,yes,false,false,DL-DE-Zero-2.0,high,govdata.de/dl-de/zero-2-0
+germany_hessen_dem,Germany Hessen DGM,A,yes,yes,false,false,DL-DE-Zero-2.0,high,govdata.de/dl-de/zero-2-0
+germany_mv_dem,Germany Mecklenburg-Vorpommern DGM 1m,A,yes,yes,false,false,DL-DE-Zero-2.0,high,govdata.de/dl-de/zero-2-0
+germany_nrw_dgm1,Germany NRW DGM 1m,A,yes,yes,false,false,DL-DE-Zero-2.0,high,govdata.de/dl-de/zero-2-0
+hgb_biomass,HGB Global Biomass,A,yes,yes,False,False,public-domain,high,auto-classified
+luxembourg_dem,Luxembourg DTM 1m,A,yes,yes,false,false,CC0-1.0,high,data.public.lu
+modis_lc,MODIS MCD12Q1 500m,A,yes,yes,False,False,public-domain,high,auto-classified
+modis_snow,MODIS Snow Cover 500m,A,yes,yes,False,False,public-domain,high,auto-classified
+mtbs,MTBS Burn Severity (US),A,yes,yes,False,False,public-domain,high,auto-classified
+nasadem,NASADEM 30m (SRTM),A,yes,yes,False,False,public-domain,high,auto-classified
+nlcd,NLCD (US),A,yes,yes,False,False,public-domain,high,auto-classified
+nlcd_impervious,NLCD Imperviousness (US),A,yes,yes,False,False,public-domain,high,auto-classified
+nlcd_change_index,NLCD Land Cover Change Index (US),A,yes,yes,False,False,public-domain,high,auto-classified
+noaa_ccap,NOAA C-CAP Coastal Land Cover 30m,A,yes,yes,False,False,public-domain,high,auto-classified
+netherlands_ahn,Netherlands AHN4 0.5m,A,yes,yes,false,false,CC0-1.0,high,data.overheid.nl
+netherlands_dsm,Netherlands AHN4 DSM 0.5m,A,yes,yes,false,false,CC0-1.0,high,data.overheid.nl
+netherlands_crops,Netherlands Crop Parcels (PDOK),A,yes,yes,false,false,CC0-1.0,high,service.pdok.nl
+netherlands_natura2000,Netherlands Natura 2000 (PDOK),A,yes,yes,false,false,PDM-1.0,high,api.pdok.nl
+ssurgo_hsg,SSURGO Hydrologic Soil Group (US),A,yes,yes,False,False,public-domain,high,auto-classified
+ssurgo,SSURGO/gNATSGO (US),A,yes,yes,False,False,public-domain,high,auto-classified
+sweden_lc,Sweden NMD 10m Land Cover,A,yes,yes,false,false,CC0-1.0,high,naturvardsverket.se
+sweden_soil,Sweden Soil Map (SGU),A,yes,yes,false,false,CC0-1.0,high,sgu.se/licensvillkor
+terraclimate,TerraClimate Climate & Water Balance,A,yes,yes,False,False,public-domain,high,auto-classified
+us_ned_slope,US Slope 10m (3DEP),A,yes,yes,False,False,public-domain,high,auto-classified
+usda_cdl,USDA CDL (Cropland),A,yes,yes,False,False,public-domain,high,auto-classified
+usgs_3dep,USGS 3DEP 10m,A,yes,yes,False,False,public-domain,high,auto-classified
+usgs_gap,USGS Gap Ecosystems (US),A,yes,yes,False,False,public-domain,high,auto-classified
+usgs_karst,USGS Karst Map (US),A,yes,yes,False,False,public-domain,high,auto-classified
+usgs_lcmap,USGS LCMAP 30m (US),A,yes,yes,False,False,public-domain,high,auto-classified
+usgs_nhd,USGS National Hydrography (NHD),A,yes,yes,False,False,public-domain,high,auto-classified
+usgs_geology,USGS State Geologic Map (SGMC),A,yes,yes,False,False,public-domain,high,auto-classified
+usgs_wbd,USGS Watershed Boundaries (WBD),A,yes,yes,False,False,public-domain,high,auto-classified
+gnatsgo,gNATSGO Rasters (US),A,yes,yes,False,False,public-domain,high,auto-classified
+arctic_dem,ArcticDEM 10m,B,yes,conditional,true,false,CC-BY-4.0,high,registry.opendata.aws/pgc-arcticdem
+australia_awc,Australia Available Water Capacity (SLGA),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+australia_clay,Australia Clay Content (SLGA),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+australia_dea_lc,Australia DEA Land Cover 25m,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+australia_frac_cover,Australia Fractional Cover (DEA),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+australia_soc,Australia Organic Carbon (SLGA),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+australia_dem,Australia SRTM 1s DEM 30m,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+australia_sand,Australia Sand Content (SLGA),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+australia_soil_depth,Australia Soil Depth (SLGA),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+australia_ph,Australia Soil pH (SLGA),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+australia_water_obs,Australia Water Observations (DEA),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+austria_tirol_dem,Austria Tirol DEM 1m,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+belgium_aquifer,Belgium Flanders Aquifer Layers (DOV),B,yes,conditional,true,false,Flanders-Open,high,data.gov.be/en/license/open-data-license-flanders
+belgium_flanders_dem,Belgium Flanders DHMV 1m,B,yes,conditional,true,false,Flanders-Open,high,data.gov.be
+belgium_groundwater,Belgium Flanders Groundwater (DOV),B,yes,conditional,true,false,Flanders-Open,high,data.gov.be
+belgium_hydrostrat,Belgium Flanders Hydrostratigraphy (DOV),B,yes,conditional,true,false,Flanders-Open,high,data.gov.be
+belgium_lithology,Belgium Flanders Lithology (DOV),B,yes,conditional,true,false,Flanders-Open,high,data.gov.be
+belgium_soil,Belgium Flanders Soil (DOV),B,yes,conditional,true,false,Flanders-Open,high,data.gov.be
+belgium_wallonia_dem,Belgium Wallonia MNT 1m,B,yes,conditional,true,false,CC-BY-4.0,high,geoportail.wallonie.be
+biodiversity,Biodiversity Intactness (Global),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+brazil_soil,Brazil Soil Map (EMBRAPA),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+corine_lc,CORINE Land Cover (Europe),B,yes,conditional,True,False,Copernicus,high,auto-classified
+canada_aafc_crops,Canada Annual Crop Inventory,B,yes,conditional,True,False,OGL-like,medium,auto-classified
+canada_geology,Canada Bedrock Geology (GSC),B,yes,conditional,True,False,OGL-like,medium,auto-classified
+canada_hrdem,Canada HRDEM 1-2m,B,yes,conditional,True,False,OGL-like,medium,auto-classified
+canada_fgp_lc,Canada Land Cover 2015 (NRCan FGP),B,yes,conditional,True,False,OGL-like,medium,auto-classified
+chloris_biomass,Chloris Biomass (Global),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+colombia_lc,Colombia Land Cover (IDEAM),B,yes,conditional,true,false,datos.gov.co,high,herramientas.datos.gov.co/terminos
+copernicus_dem,Copernicus DEM GLO-30,B,yes,conditional,True,False,Copernicus,high,auto-classified
+cop_dem_90,Copernicus DEM GLO-90,B,yes,conditional,True,False,Copernicus,high,auto-classified
+croatia_lc,Croatia CORINE Land Cover,B,yes,conditional,true,false,Copernicus,high,land.copernicus.eu
+croatia_dem,Croatia DEM 25m,B,yes,conditional,true,false,Croatia-Open,medium,dgu.hr
+czech_dem,Czech Republic DMR5G 5m,B,yes,yes,true,false,CC-BY-4.0,high,ags.cuzk.gov.cz/opendata
+czech_dem_rest,Czech Republic DMR5G 5m (REST),B,yes,yes,true,false,CC-BY-4.0,high,ags.cuzk.gov.cz/opendata
+dea_africa_cropland,DEA Africa Cropland Extent,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+dea_africa_fc,DEA Africa Fractional Cover,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+dea_africa_lc,DEA Africa Land Cover,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+dea_africa_mangroves,DEA Africa Mangroves,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+dea_africa_ndvi,DEA Africa NDVI Climatology,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+dea_africa_dem,DEA Africa SRTM Derivatives,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+dea_africa_water,DEA Africa Water Observations,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+denmark_dem,Denmark DHM 0.4m,B,yes,yes,true,false,CC-BY-4.0,high,datafordeler.dk
+denmark_terrain,Denmark DHM Terrain (SDFI),B,yes,yes,true,false,CC-BY-4.0,high,datafordeler.dk
+dynamic_world,Dynamic World 10m (Google),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+esa_worldcover,ESA WorldCover 10m,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+canopy_height,ETH Canopy Height 10m,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+esri_lulc,Esri 10m LULC,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+estonia_geology,Estonia Geology (Maa-amet),B,yes,yes,true,false,Estonia-Open,high,geoportaal.maaruum.ee
+estonia_lc,Estonia Land Cover (Maa-amet),B,yes,yes,true,false,Estonia-Open,medium,geoportaal.maaruum.ee
+ethiopia_lc,Ethiopia Land Cover (ESA CCI),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+eea_leaf_type,Europe Dominant Leaf Type 10m (HRL),B,yes,conditional,True,False,Copernicus,high,auto-classified
+eea_forest_type,Europe Forest Type 10m (HRL),B,yes,conditional,True,False,Copernicus,high,auto-classified
+eea_grassland,Europe Grassland 10m (HRL),B,yes,conditional,True,False,Copernicus,high,auto-classified
+eea_imperviousness,Europe Imperviousness 10m (HRL),B,yes,conditional,True,False,Copernicus,high,auto-classified
+eea_imperv_density,Europe Imperviousness Density 10m (HRL),B,yes,conditional,True,False,Copernicus,high,auto-classified
+eea_leaf_type_change,Europe Leaf Type Change 2015-2018 (HRL),B,yes,conditional,True,False,Copernicus,high,auto-classified
+eea_small_woody,Europe Small Woody Features 100m (HRL),B,yes,conditional,True,False,Copernicus,high,auto-classified
+eea_tree_cover_change,Europe Tree Cover Change 2015-2018 (HRL),B,yes,conditional,True,False,Copernicus,high,auto-classified
+eea_tree_cover,Europe Tree Cover Density 10m (HRL),B,yes,conditional,True,False,Copernicus,high,auto-classified
+eea_water_wetness,Europe Water & Wetness 10m (HRL),B,yes,conditional,True,False,Copernicus,high,auto-classified
+finland_lc,Finland CORINE Land Cover (SYKE),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+finland_dem,Finland DEM 2m,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+finland_catchments,Finland Drainage Basins (SYKE),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+finland_forest_height,Finland Forest Height (LUKE),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+finland_site_type,Finland Forest Site Type (LUKE),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+finland_soil,Finland Soil Map (GTK),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+france_lithology,France Lithology (BRGM),B,yes,conditional,true,false,etalab-2.0,high,infoterre.brgm.fr
+france_lc,France OCS GE Land Cover,B,yes,conditional,True,False,OGL-like,medium,auto-classified
+france_dem,France RGE ALTI 1m (IGN),B,yes,conditional,True,False,OGL-like,medium,auto-classified
+france_soil,France Soil Map (INRAE),B,yes,conditional,true,false,etalab-2.0,medium,gissol.hub.inrae.fr
+ghsl,GHSL Global Human Settlement 100m,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+germany_air_capacity,Germany Air Capacity in Root Zone (BGR),B,yes,conditional,true,false,GeoNutzV,high,gesetze-im-internet.de/geonutzv
+germany_cropland_oc,Germany Cropland Organic Carbon (BGR),B,yes,conditional,true,false,GeoNutzV,high,gesetze-im-internet.de/geonutzv
+germany_dgm200,Germany DGM200 200m,B,yes,conditional,true,false,GeoNutzV,high,gesetze-im-internet.de/geonutzv
+germany_field_capacity,Germany Field Capacity (BGR),B,yes,conditional,true,false,GeoNutzV,high,gesetze-im-internet.de/geonutzv
+germany_gw_recharge,Germany GW Recharge (BGR),B,yes,conditional,true,false,GeoNutzV,high,gesetze-im-internet.de/geonutzv
+germany_hamburg_dem,Germany Hamburg DGM 1m,B,yes,conditional,true,false,DL-DE-BY-2.0,high,govdata.de/dl-de/by-2-0
+germany_humus,Germany Humus Content (BGR),B,yes,conditional,true,false,GeoNutzV,high,gesetze-im-internet.de/geonutzv
+germany_lc,Germany LB-DE Land Cover,B,yes,conditional,true,false,GeoNutzV,high,gesetze-im-internet.de/geonutzv
+germany_soil,Germany Soil Map (BGR),B,yes,conditional,true,false,GeoNutzV,high,gesetze-im-internet.de/geonutzv
+germany_soil_texture,Germany Soil Physical Groups (BGR),B,yes,conditional,true,false,GeoNutzV,high,gesetze-im-internet.de/geonutzv
+germany_soil_quality,Germany Soil Quality Rating (BGR),B,yes,conditional,true,false,GeoNutzV,high,gesetze-im-internet.de/geonutzv
+germany_soil_water,Germany Soil Water Balance (BGR),B,yes,conditional,true,false,GeoNutzV,high,gesetze-im-internet.de/geonutzv
+germany_soil_retention,Germany Soil Water Retention (BGR),B,yes,conditional,true,false,GeoNutzV,high,gesetze-im-internet.de/geonutzv
+germany_thuringia_dem,Germany Thüringen DGM 2m,B,yes,conditional,true,false,DL-DE-BY-2.0,high,govdata.de/dl-de/by-2-0
+germany_erosion_water,Germany Water Erosion Risk (BGR),B,yes,conditional,true,false,GeoNutzV,high,gesetze-im-internet.de/geonutzv
+germany_wind_erosion,Germany Wind Erosion Risk (BGR),B,yes,conditional,true,false,GeoNutzV,high,gesetze-im-internet.de/geonutzv
+hrea,HREA Electricity Access,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+hansen_forest,Hansen Global Forest Change 30m,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+isric_soilgrids,ISRIC SoilGrids 2.0,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+soilgrids_derived,ISRIC SoilGrids 2.0 (derived),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+io_lulc,Impact Observatory 10m LULC,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+io_lulc_9class,Impact Observatory 10m LULC (9-class),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+ireland_aquifer,Ireland Aquifer Map (GSI/EPA),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+ireland_bedrock,Ireland Bedrock Geology (GSI/EPA),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+ireland_corine,Ireland CORINE Land Cover (EPA),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+ireland_catchments,Ireland Catchments (EPA),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+ireland_flood,Ireland Flood Extents (EPA),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+ireland_gw_vulnerability,Ireland GW Vulnerability (GSI/EPA),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+ireland_groundwater,Ireland Groundwater Bodies (EPA),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+ireland_peatland,Ireland Peatland/Bog Boundaries (BNM),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+ireland_gravel_aquifer,Ireland Sand & Gravel Aquifer (GSI/EPA),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+ireland_soil,Ireland Soil Map (Teagasc),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+ireland_soil_wetdry,Ireland Soil Wet/Dry (EPA),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+ireland_subsoil,Ireland Subsoil Map (GSI/EPA),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+ireland_lakes,Ireland WFD Lakes (EPA),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+jrc_gsw,JRC Global Surface Water,B,yes,conditional,true,false,CC-BY-4.0,high,data.jrc.ec.europa.eu
+japan_gsi,Japan GSI DEM 5-10m,B,yes,conditional,true,false,GSI-PDL-1.0,high,gsi.go.jp
+lithuania_soil,Lithuania Soil Map,B,yes,yes,true,false,CC-BY-4.0,high,inspire-geoportal.lt
+mexico_lc,Mexico Land Cover (INEGI),B,yes,yes,true,false,INEGI-Libre-Uso,high,inegi.org.mx
+mexico_soil,Mexico Soil Map (INEGI),B,yes,yes,true,false,INEGI-Libre-Uso,high,inegi.org.mx
+mobi,MoBI Biodiversity Importance (US),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+nrcan_lc,NRCan Land Cover (Canada),B,yes,conditional,True,False,OGL-like,medium,auto-classified
+netherlands_soil,Netherlands Soil Map (BRO),B,yes,conditional,true,false,CC-BY-4.0,high,nationaalgeoregister.nl
+nigeria_lc,Nigeria Land Cover (NASRDA),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+norway_ar5,Norway AR5 Land Cover,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+norway_dem,Norway DTM 1m,B,yes,conditional,true,false,CC-BY-4.0,high,kartverket.no/terms-of-use
+norway_forest,Norway Forest Resources SR16 (NIBIO),B,yes,conditional,true,false,NLOD-2.0,high,data.norge.no
+norway_landslide,Norway Landslide Hazard (NVE),B,yes,conditional,true,false,NLOD-1.0,high,data.norge.no
+norway_geology,Norway Surficial Geology (NGU),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+norway_tree_volume,Norway Timber Volume SR16 (NIBIO),B,yes,conditional,true,false,NLOD-2.0,high,data.norge.no
+norway_tree_species,Norway Tree Species SR16 (NIBIO),B,yes,conditional,true,false,NLOD-2.0,high,data.norge.no
+norway_vegetation,Norway Vegetation Map (NIBIO),B,yes,conditional,true,false,NLOD-1.0,medium,geonorge.no
+opentopography,OpenTopography,B,yes,yes,true,false,varies-per-dataset,medium,opentopography.org/usageterms
+portugal_lc,Portugal COS Land Cover,B,yes,conditional,true,false,CC-BY-4.0,high,dados.gov.pt
+portugal_geology,Portugal Geological Map (LNEG),B,yes,conditional,true,false,CC-BY-4.0,high,metadata.europe-geology.eu
+rema,REMA Antarctica 8m,B,yes,conditional,true,false,CC-BY-4.0,high,registry.opendata.aws/pgc-rema
+ramsar_wetlands,Ramsar Wetland Sites (Global),B,unknown,conditional,true,false,Ramsar-cite,medium,rsis.ramsar.org
+slga,SLGA (Australia),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+scotland_lc,Scotland Land Cover (NatureScot),B,yes,conditional,True,False,OGL-like,medium,auto-classified
+slovenia_dem,Slovenia DEM 1m,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+spain_clay_minerals,Spain Clay Minerals 1:1M (IGME),B,yes,conditional,true,false,CC-BY-4.0,medium,igme.es/en/terms-of-use
+spain_hydrogeology,Spain Hydrogeology (IGME),B,yes,conditional,true,false,CC-BY-4.0,medium,igme.es/en/terms-of-use
+spain_hydro,Spain Hydrography (IDEE),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+spain_land_use,Spain Land Use INSPIRE (IDEE),B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+spain_lithology,Spain Lithology 1:1M (IGME),B,yes,conditional,true,false,CC-BY-4.0,medium,igme.es/en/terms-of-use
+spain_mdt,Spain MDT 5m,B,yes,conditional,True,False,CC-BY-4.0,high,auto-classified
+spain_quaternary,Spain Quaternary Geology (IGME),B,yes,conditional,true,false,CC-BY-4.0,medium,igme.es/en/terms-of-use
+swiss_erosion_flow,Switzerland Erosion Flow Paths,B,yes,conditional,true,false,swisstopo-OGD,medium,geo.admin.ch/terms
+swiss_glacier,Switzerland Glacier Extent (swisstopo),B,yes,conditional,true,false,swisstopo-OGD,high,swisstopo.admin.ch/terms-of-use
+swiss_groundwater,Switzerland Groundwater Bodies,B,yes,conditional,true,false,swisstopo-OGD,medium,geo.admin.ch/terms
+swiss_lakes,Switzerland Lakes (BAFU),B,yes,conditional,true,false,swisstopo-OGD,medium,bafu.admin.ch
+swiss_permafrost,Switzerland Permafrost (BAFU),B,yes,conditional,true,false,swisstopo-OGD,medium,bafu.admin.ch
+swiss_rivers,Switzerland River Network (swisstopo),B,yes,conditional,true,false,swisstopo-OGD,high,swisstopo.admin.ch/terms-of-use
+swiss_slope_30,Switzerland Slope >30° (swisstopo),B,yes,conditional,true,false,swisstopo-OGD,high,swisstopo.admin.ch/terms-of-use
+swiss_soil_depth,Switzerland Soil Depth,B,yes,conditional,true,false,swisstopo-OGD,medium,geo.admin.ch/terms
+swiss_stream_order,Switzerland Stream Order (BAFU),B,yes,conditional,true,false,swisstopo-OGD,medium,bafu.admin.ch
+swiss_surface_runoff,Switzerland Surface Runoff Hazard,B,yes,conditional,true,false,swisstopo-OGD,medium,geo.admin.ch/terms
+swiss_water_connect,Switzerland Water Body Connectivity (BLW),B,yes,conditional,true,false,swisstopo-OGD,medium,geo.admin.ch/terms
+swiss_dem,Switzerland swissALTI3D 0.5m,B,yes,conditional,true,false,swisstopo-OGD,high,swisstopo.admin.ch/terms-of-use
+uk_agri_land_class,UK Agricultural Land Classification (EA),B,yes,conditional,True,False,OGL-like,medium,auto-classified
+uk_bgs_geology,UK Bedrock Geology (BGS),B,yes,conditional,True,False,OGL-like,medium,auto-classified
+uk_drinking_water,UK Drinking Water Protected Areas (EA),B,yes,conditional,True,False,OGL-like,medium,auto-classified
+uk_flood_defences,UK Flood Defences (EA),B,yes,conditional,True,False,OGL-like,medium,auto-classified
+uk_historic_flood,UK Historic Flood Map (EA),B,yes,conditional,True,False,OGL-like,medium,auto-classified
+uk_lidar,UK LiDAR DTM 1m,B,yes,conditional,True,False,OGL-like,medium,auto-classified
+uk_source_protection,UK Source Protection Zones (EA),B,yes,conditional,True,False,OGL-like,medium,auto-classified
+uk_groundwater_bodies,UK WFD Groundwater Bodies (EA),B,yes,conditional,True,False,OGL-like,medium,auto-classified
+ms_buildings,MS Building Footprints (Global),B-SA,yes,conditional,True,True,CC-BY-SA/ODbL,high,auto-classified
+mapbiomas_amazonia,MapBiomas Amazonia LULC 30m,B-SA,yes,conditional,True,True,CC-BY-SA/ODbL,high,auto-classified
+mapbiomas_bolivia,MapBiomas Bolivia LULC 30m,B-SA,yes,conditional,True,True,CC-BY-SA/ODbL,high,auto-classified
+mapbiomas_brazil,MapBiomas Brazil LULC 30m,B-SA,yes,conditional,True,True,CC-BY-SA/ODbL,high,auto-classified
+mapbiomas_chaco,MapBiomas Chaco LULC 30m,B-SA,yes,conditional,True,True,CC-BY-SA/ODbL,high,auto-classified
+mapbiomas_colombia,MapBiomas Colombia LULC 30m,B-SA,yes,conditional,True,True,CC-BY-SA/ODbL,high,auto-classified
+mapbiomas_indonesia,MapBiomas Indonesia LULC 30m,B-SA,yes,conditional,True,True,CC-BY-SA/ODbL,high,auto-classified
+mapbiomas_pampa,MapBiomas Pampa LULC 30m,B-SA,yes,conditional,True,True,CC-BY-SA/ODbL,high,auto-classified
+mapbiomas_paraguay,MapBiomas Paraguay LULC 30m,B-SA,yes,conditional,True,True,CC-BY-SA/ODbL,high,auto-classified
+mapbiomas_peru,MapBiomas Peru LULC 30m,B-SA,yes,conditional,True,True,CC-BY-SA/ODbL,high,auto-classified
+mapbiomas_uruguay,MapBiomas Uruguay LULC 30m,B-SA,yes,conditional,True,True,CC-BY-SA/ODbL,high,auto-classified
+mapbiomas_venezuela,MapBiomas Venezuela LULC 30m,B-SA,yes,conditional,True,True,CC-BY-SA/ODbL,high,auto-classified
+openlandmap,OpenLandMap,B-SA,yes,conditional,True,True,CC-BY-SA/ODbL,high,auto-classified
+alos_fnf,ALOS Forest/Non-Forest 25m,C,no,conditional,True,False,non-commercial/research,medium,auto-classified
+alos_dem,ALOS World 3D 30m,C,no,conditional,True,False,non-commercial/research,medium,auto-classified
+argentina_soil,Argentina Soil Map (INTA),C,no,conditional,true,true,CC-BY-NC-SA-2.5,high,repositorio.inta.gob.ar
+brazil_biomes,Brazil Biomes (IBGE),C,no,conditional,true,false,IBGE-restricted,high,geoftp.ibge.gov.br
+hydrobasins,HydroBASINS upstream drainage area (Americas),C,no,conditional,True,False,non-commercial/research,medium,auto-classified
+hydrolakes,HydroLAKES mean depth (Central Asia),C,no,conditional,True,False,non-commercial/research,medium,auto-classified
+hydrorivers,HydroRIVERS average discharge (South America),C,no,conditional,True,False,non-commercial/research,medium,auto-classified
+merit_dem,MERIT DEM 90m,C,no,conditional,True,False,CC-BY-NC,high,auto-classified
+merit_hydro,MERIT Hydro 90m,C,no,conditional,True,False,CC-BY-NC,high,auto-classified
+polaris,POLARIS 30m (US),C,no,conditional,True,False,CC-BY-NC,high,auto-classified
+tandem_x,TanDEM-X 90m (DLR),C,no,conditional,True,False,non-commercial/research,medium,auto-classified
+uk_soilscapes,UK Soilscapes (Cranfield),C,no,no,true,false,proprietary-LandIS,high,data.gov.uk/dataset/soilscapes
+india_lulc,India LULC (NRSC),D,no,no,true,false,Bhuvan-restricted,high,bhuvan.nrsc.gov.in
+lithuania_dem,Lithuania DEM (INSPIRE),D,no,no,true,false,geoportal.lt-restricted,high,geoportal.lt/general-conditions
+esa_cci_lc,ESA CCI Land Cover 300m,E,conditional,unknown,true,false,ESA-CCI-LC,high,maps.elie.ucl.ac.be/CCI
+permafrost,Global Permafrost (Zurich),E,unknown,unknown,true,false,no-formal-licence,medium,microsite.geo.uzh.ch/cryodata
+greece_geology,Greece Geological Map (IGME),E,unknown,unknown,true,unknown,IGME-restricted,medium,metadata.europe-geology.eu
+india_soil,India Soil Map (NBSS&LUP),E,unknown,unknown,unknown,unknown,unknown,low,bhoomigeoportal-nbsslup.in
+peru_lc,Peru Land Cover (MINAM),E,unknown,unknown,unknown,unknown,not-specified,medium,datosabiertos.gob.pe
+slovenia_lc,Slovenia Land Use (MKGP),E,unknown,unknown,false,false,not-defined,high,podatki.gov.si
+slovenia_soil,Slovenia Soil Map (MKGP),E,unknown,unknown,false,false,not-defined,medium,inspire-geoportal.ec.europa.eu
