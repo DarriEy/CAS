@@ -142,6 +142,13 @@ def integration():
     return importlib.import_module(INTEGRATION_MODULE)
 
 
+@pytest.fixture
+def integration_with_symfluence():
+    """The integration module, skipping cleanly when SYMFLUENCE is absent."""
+    pytest.importorskip("symfluence")
+    return importlib.import_module(INTEGRATION_MODULE)
+
+
 class TestParseDatasetIds:
     def test_comma_separated_string(self, integration):
         raw = f" {DATASET_DEM}, {DATASET_CLAY} ,"
@@ -619,14 +626,14 @@ def test_attribute_backend_acquire_writes_hru_stats_and_manifest(tmp_path, monke
     """acquire() reads the catchment shapefile, delivers HRU_STATS_V1 + manifest."""
     _symfluence()
     module = importlib.import_module(INTEGRATION_MODULE)
-    import cas
-
     from symfluence.data.backends.contract import (
         MANIFEST_FILENAME,
         AttributeRequest,
         SchemaId,
         read_manifest,
     )
+
+    import cas
 
     config, _ = _make_domain(tmp_path)
     config["CAS_DATASETS"] = f"{DATASET_DEM},{DATASET_CLAY}"
@@ -677,3 +684,218 @@ def test_attribute_backend_declines_unknown_provider(tmp_path):
     )
     with pytest.raises(DatasetUnsupported):
         backend.acquire(request)
+
+
+# ---------------------------------------------------------------------------
+# 4. Quaternary seam: mirror-acquisition delegation (no SYMFLUENCE needed for
+#    the mapping/registration logic; the download path uses geopandas).
+# ---------------------------------------------------------------------------
+
+
+class _FakeRegistry:
+    """Minimal stand-in for ``R.acquisition_handlers`` (add + ``in``)."""
+
+    def __init__(self) -> None:
+        self.entries: dict[str, object] = {}
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.entries
+
+    def add(self, key: str, value: object) -> None:
+        self.entries[key] = value
+
+
+def fake_mirror_subset_writer(records, *, columns, n=2, crs="EPSG:4326",
+                              license="ODbL-1.0", attribution="Test attribution"):
+    """A ``cas.mirror_subset_sync`` stand-in that writes a real GeoPackage."""
+    from types import SimpleNamespace
+
+    def _fake(spec, bbox, output_dir, **kwargs):
+        gpd = pytest.importorskip("geopandas")
+        from shapely.geometry import Polygon
+
+        out = Path(output_dir)
+        out.mkdir(parents=True, exist_ok=True)
+        path = out / f"{spec}_subset.gpkg"
+        geoms = [
+            Polygon([(8.0 + i * 0.1, 46.0), (8.0 + i * 0.1, 46.1), (8.1 + i * 0.1, 46.1)])
+            for i in range(n)
+        ]
+        data = {c: [float(j) for j in range(n)] for c in columns}
+        gdf = gpd.GeoDataFrame({**data, "geometry": geoms}, crs=crs)
+        gdf.to_file(path, driver="GPKG")
+        records.append(SimpleNamespace(spec=spec, bbox=bbox))
+        return SimpleNamespace(
+            path=path, feature_count=n, license=license, attribution=attribution
+        )
+
+    return _fake
+
+
+def _mirror_config(tmp_path: Path) -> dict:
+    return {
+        "DOMAIN_NAME": "test_domain",
+        "SYMFLUENCE_DATA_DIR": str(tmp_path),
+        "BOUNDING_BOX_COORDS": "47.0/8.0/46.0/9.0",  # north/west/south/east
+        "EXPERIMENT_TIME_START": "2020-01-01",
+        "EXPERIMENT_TIME_END": "2020-01-31",
+    }
+
+
+# -- pure mapping / registration logic (no SYMFLUENCE) ----------------------
+
+
+def test_mirror_acquisitions_wellformed(integration):
+    specs = {e.spec for e in integration.MIRROR_ACQUISITIONS}
+    assert specs == {"wokam", "hydrolakes", "glhymps"}
+    explicit = [e.explicit_key for e in integration.MIRROR_ACQUISITIONS]
+    assert len(explicit) == len(set(explicit))  # unique
+    for entry in integration.MIRROR_ACQUISITIONS:
+        assert "{domain}" in entry.filename
+        assert entry.native_keys  # supersedes at least one native key
+        assert entry.spec in integration.MIRROR_ACQUIRERS
+        # Bound subclass carries its mapping and subclasses the acquirer base.
+        cls = integration.MIRROR_ACQUIRERS[entry.spec]
+        assert cls._mirror is entry
+        assert issubclass(cls, integration.CASMirrorAcquirer)
+
+
+def test_symfluence_bbox_to_cas_dict_and_passthrough(integration):
+    bbox = {"lat_min": 46.0, "lat_max": 47.0, "lon_min": 8.0, "lon_max": 9.0}
+    assert integration._symfluence_bbox_to_cas(bbox) == (8.0, 46.0, 9.0, 47.0)
+    # Non-SYMFLUENCE bbox shapes pass through untouched (CAS normalizes them).
+    assert integration._symfluence_bbox_to_cas((8.0, 46.0, 9.0, 47.0)) == (8.0, 46.0, 9.0, 47.0)
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    [("1", True), ("true", True), ("YES", True), ("on", True),
+     ("0", False), ("false", False), ("", False), (None, False)],
+)
+def test_mirror_override_env_gating(integration, monkeypatch, value, expected):
+    if value is None:
+        monkeypatch.delenv(integration.MIRROR_ACQUISITION_ENV, raising=False)
+    else:
+        monkeypatch.setenv(integration.MIRROR_ACQUISITION_ENV, value)
+    assert integration._mirror_override_enabled() is expected
+
+
+def test_register_mirror_additive_by_default(integration, monkeypatch):
+    monkeypatch.delenv(integration.MIRROR_ACQUISITION_ENV, raising=False)
+    reg = _FakeRegistry()
+    overrode = integration._register_mirror_acquisition(reg)
+    assert overrode is False
+    # Additive CAS_* keys present; native keys untouched.
+    assert {"CAS_WOKAM", "CAS_HYDROLAKES", "CAS_GLHYMPS"} <= set(reg.entries)
+    assert "WOKAM" not in reg.entries
+    assert "HYDROLAKES" not in reg.entries
+    assert reg.entries["CAS_WOKAM"] is integration.MIRROR_ACQUIRERS["wokam"]
+
+
+def test_register_mirror_overrides_native_keys_with_env(integration, monkeypatch):
+    monkeypatch.setenv(integration.MIRROR_ACQUISITION_ENV, "1")
+    reg = _FakeRegistry()
+    overrode = integration._register_mirror_acquisition(reg)
+    assert overrode is True
+    # Every native key now maps to the mirror-backed acquirer.
+    for entry in integration.MIRROR_ACQUISITIONS:
+        for key in entry.native_keys:
+            assert reg.entries[key] is integration.MIRROR_ACQUIRERS[entry.spec]
+
+
+# -- SYMFLUENCE-backed registration + download ------------------------------
+
+
+def test_mirror_explicit_keys_registered(integration_with_symfluence):
+    module = integration_with_symfluence
+    from symfluence.core.registries import R
+
+    module.register()
+    for spec, key in [("wokam", "CAS_WOKAM"), ("hydrolakes", "CAS_HYDROLAKES"),
+                      ("glhymps", "CAS_GLHYMPS")]:
+        assert R.acquisition_handlers[key] is module.MIRROR_ACQUIRERS[spec]
+
+
+def test_mirror_does_not_override_native_by_default(integration_with_symfluence, monkeypatch):
+    """Without the env flag, the native WOKAM handler stays in place."""
+    module = integration_with_symfluence
+    monkeypatch.delenv(module.MIRROR_ACQUISITION_ENV, raising=False)
+    from symfluence.core.registries import R
+
+    module.register()
+    wokam = R.acquisition_handlers["WOKAM"]
+    assert wokam.__module__.startswith("symfluence.")  # native, not cas
+    assert wokam is not module.MIRROR_ACQUIRERS["wokam"]
+
+
+def test_mirror_acquirer_download_writes_gpkg(integration_with_symfluence, tmp_path, monkeypatch):
+    module = integration_with_symfluence
+    gpd = pytest.importorskip("geopandas")
+    import cas
+
+    records: list = []
+    # The mirror ships these columns; only HydroLAKES KEEP columns survive.
+    monkeypatch.setattr(
+        cas, "mirror_subset_sync",
+        fake_mirror_subset_writer(records, columns=["Hylak_id", "Lake_area", "EXTRA_COL"]),
+    )
+
+    cls = module.MIRROR_ACQUIRERS["hydrolakes"]
+    handler = cls(_mirror_config(tmp_path), logging.getLogger("test_mirror_dl"))
+    target_dir = handler.download(tmp_path / "ignored")
+
+    out_gpkg = target_dir / "domain_test_domain_hydrolakes.gpkg"
+    assert out_gpkg.exists()
+    assert len(records) == 1 and records[0].spec == "hydrolakes"
+    # CAS received the SYMFLUENCE bbox as a CAS tuple (min_lon,min_lat,max_lon,max_lat).
+    assert records[0].bbox == (8.0, 46.0, 9.0, 47.0)
+
+    written = gpd.read_file(out_gpkg)
+    cols = set(written.columns)
+    assert "Hylak_id" in cols and "Lake_area" in cols
+    assert "EXTRA_COL" not in cols  # projected out by keep_columns
+    assert written.crs is not None and written.crs.to_epsg() == 4326
+
+    # Idempotent: a second call skips the mirror call entirely.
+    records.clear()
+    assert handler.download(tmp_path / "ignored") == target_dir
+    assert records == []
+
+
+def test_mirror_acquirer_reprojects_to_4326(integration_with_symfluence, tmp_path, monkeypatch):
+    """A source-CRS mirror subset (e.g. GLHYMPS equal-area) is reprojected."""
+    module = integration_with_symfluence
+    gpd = pytest.importorskip("geopandas")
+    import cas
+
+    records: list = []
+    monkeypatch.setattr(
+        cas, "mirror_subset_sync",
+        # World Cylindrical Equal Area — GLHYMPS's native CRS family.
+        fake_mirror_subset_writer(records, columns=["Porosity", "logK_Ice"], crs="EPSG:6933"),
+    )
+
+    cls = module.MIRROR_ACQUIRERS["glhymps"]
+    handler = cls(_mirror_config(tmp_path), logging.getLogger("test_mirror_crs"))
+    target_dir = handler.download(tmp_path / "ignored")
+    out_gpkg = target_dir / "domain_test_domain_glhymps.gpkg"
+
+    written = gpd.read_file(out_gpkg)
+    assert written.crs.to_epsg() == 4326
+    assert {"Porosity", "logK_Ice"} <= set(written.columns)
+
+
+def test_mirror_rgi_outlines_helper(integration_with_symfluence, tmp_path, monkeypatch):
+    """The glacier acquisition-only helper returns a clipped outline path."""
+    module = integration_with_symfluence
+    import cas
+
+    records: list = []
+    monkeypatch.setattr(
+        cas, "mirror_subset_sync",
+        fake_mirror_subset_writer(records, columns=["rgi_id"]),
+    )
+    bbox = {"lat_min": 46.0, "lat_max": 47.0, "lon_min": 8.0, "lon_max": 9.0}
+    path = module.mirror_rgi_outlines(bbox, tmp_path / "glaciers")
+    assert path.exists() and path.suffix == ".gpkg"
+    assert records[0].spec == "rgi7"

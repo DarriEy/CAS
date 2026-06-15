@@ -4,13 +4,16 @@ CAS ships a [SYMFLUENCE](https://github.com/DarriEy/SYMFLUENCE) integration
 (`cas.integrations.symfluence`) that lets SYMFLUENCE source **per-HRU zonal
 attributes** from any CAS dataset — 228+ providers behind one config key.
 
-It plugs into SYMFLUENCE at three coexisting seams:
+It plugs into SYMFLUENCE at four coexisting seams — the first three deliver
+per-HRU **statistics**, the fourth delivers **vector geometry** via the curated
+mirror:
 
 | Seam | Entry point | What it produces |
 |---|---|---|
 | **Primary: attribute processor** | `symfluence.attribute_processors` → `CASAttributeProcessor` | Attributes merged into SYMFLUENCE's per-HRU attribute table, alongside the native `elevation.*` / `soil.*` / `climate.*` attributes |
 | Secondary: acquisition handler | `symfluence.plugins` → `register()` (`CASAttributeAcquirer` under key `CAS`) | Standalone analysis CSV in `data/attributes/cas/` |
 | **Tertiary: attribute backend** | `symfluence.plugins` → `register()` (`CommunityAttributeBackend` under `R.attribute_backends['community']`) | Per-HRU `HRU_STATS_V1` CSV + acquisition manifest in `data/attributes/cas/`, ingested by the model-ready `AttributesNetCDFBuilder` as a `cas` group |
+| Quaternary: mirror acquisition | `symfluence.plugins` → `register()` (`CASMirrorAcquirer` under `CAS_WOKAM`/`CAS_HYDROLAKES`/`CAS_GLHYMPS`) | Domain-clipped vector GeoPackages — the [curated-mirror](mirror.md) replacement for SYMFLUENCE's native WOKAM/HydroLAKES/GLHYMPS bulk downloads |
 
 The **attribute backend** is the contract-0.3.0 protocol tier — the same
 backend pattern as the CFS forcing backend and the CSFS observation backend.
@@ -201,3 +204,45 @@ Re-runs skip the extraction when the CSV already exists (unless
 `FORCE_DOWNLOAD: true`). This CSV is an analysis-oriented sidecar: it joins
 on `hru_id` but is not folded into SYMFLUENCE's model-ready attribute store —
 use the processor seam for that.
+
+## Quaternary: mirror-acquisition delegation
+
+Unlike the three statistics seams, this one delivers **vector geometry**.
+SYMFLUENCE's native `wokam.py` / `hydrolakes.py` / `glhymps.py` handlers each
+download a global distribution and clip it to the domain — exactly what the
+[curated-mirror tier](mirror.md) now does from a version-pinned, checksummed
+local copy. Once the mirror-vs-native [parity gate](mirror.md) certified the two
+paths feature- and geometry-equivalent, `register()` began wiring
+`CASMirrorAcquirer`: drop-in acquirers that call `cas.mirror_subset_sync` and
+write the **same** GeoPackage (path, projected columns, EPSG:4326) the native
+handler produced, so downstream SYMFLUENCE steps are unchanged.
+
+| CAS mirror dataset | Native handler it supersedes | Output GeoPackage |
+|---|---|---|
+| `wokam` | `WOKAM` / `KARST` / `KARST_AQUIFER` | `attributes/geology/karst/domain_{name}_wokam_karst.gpkg` |
+| `hydrolakes` | `HYDROLAKES` / `HYDROLAKES_V10` | `attributes/lakes/domain_{name}_hydrolakes.gpkg` |
+| `glhymps` | `GLHYMPS` / `GLHYMPS_V2` | `attributes/geology/glhymps/domain_{name}_glhymps.gpkg` |
+
+The acquirers always register under additive explicit keys
+(`CAS_WOKAM` / `CAS_HYDROLAKES` / `CAS_GLHYMPS`) for scripted use. Because
+SYMFLUENCE's attribute profiles reference the **native** keys, routing an
+unmodified config through the mirror requires *overriding* those keys — opt in
+with:
+
+```bash
+export CAS_SYMFLUENCE_MIRROR_ACQUISITION=1   # 1/true/yes/on
+```
+
+With the flag set, `register()` rebinds `WOKAM`/`HYDROLAKES`/`GLHYMPS` (and their
+aliases) to the mirror-backed acquirers — last-writer-wins over the native
+decorators, which already ran when CAS imported
+`symfluence.data.acquisition.base`. No SYMFLUENCE source is edited. The flag is
+off by default, so simply installing CAS never silently changes a run's
+acquisition path.
+
+**RGI 7.0 / glacier is only half-delegated.** SYMFLUENCE's glacier handler also
+builds rasters and catchment-intersection shapefiles, which live in SYMFLUENCE —
+so its key is **never** overridden. Instead CAS exposes
+`cas.integrations.symfluence.mirror_rgi_outlines(bbox, output_dir)`, the
+acquisition-only helper that returns a domain-clipped `rgi7` outline GeoPackage
+for the glacier handler to consume in place of its NSIDC/GLIMS download.

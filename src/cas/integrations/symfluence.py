@@ -36,8 +36,23 @@ seams, both declared as entry points in CAS's ``pyproject.toml``:
     helpers; when the backend serves ``CAS``, SYMFLUENCE excludes the ``cas``
     processor plugin from its plugin loop so CAS is extracted exactly once.
 
-Both seams are strict no-ops until ``CAS_DATASETS`` is set in the SYMFLUENCE
-configuration.
+**Quaternary — mirror-acquisition delegation** (``symfluence.plugins`` → ``R.acquisition_handlers``)
+    :func:`register` also wires :class:`CASMirrorAcquirer`: vector-attribute
+    acquirers backed by the CAS curated-mirror tier (``cas.mirror_subset_sync``)
+    that reproduce the GeoPackage output of SYMFLUENCE's native bulk-download
+    handlers — WOKAM, HydroLAKES, GLHYMPS — now that the mirror-vs-native parity
+    gate (CAS ``docs/mirror.md``) certified them equivalent. They register under
+    additive ``CAS_*`` keys always, and *override* the native handler keys when
+    ``CAS_SYMFLUENCE_MIRROR_ACQUISITION`` is set, so an unmodified SYMFLUENCE
+    config routes those datasets through the audited mirror. RGI/glacier is only
+    half-delegated — its handler also builds rasters — via the
+    :func:`mirror_rgi_outlines` helper, which the glacier handler calls rather
+    than being overridden. Unlike the stats seams this is *not* gated on
+    ``CAS_DATASETS``; it is gated on the env flag (override) and is otherwise a
+    purely additive set of explicit handler keys.
+
+The first three (stats) seams are strict no-ops until ``CAS_DATASETS`` is set
+in the SYMFLUENCE configuration.
 
 The module is intentionally decoupled, following the climaclass precedent:
 
@@ -65,11 +80,12 @@ per-dataset ``*_units`` / ``*_quality`` / ``*_coverage_fraction`` extras.
 
 from __future__ import annotations
 
+import os
 import re
 from collections import Counter
 from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 from cas.core.models import AttributeResponse, BatchAttributeRequest, Geometry
 
@@ -774,6 +790,245 @@ class CommunityAttributeBackend:
 
 
 # ---------------------------------------------------------------------------
+# Quaternary seam: mirror-acquisition delegation (vector attribute datasets)
+# ---------------------------------------------------------------------------
+#
+# The native SYMFLUENCE handlers wokam.py / hydrolakes.py / glhymps.py download
+# a global vector distribution and clip it to the domain — exactly what the CAS
+# curated-mirror tier now does (version-pinned, checksummed, audited). The
+# mirror-vs-native parity gate (CAS ``docs/mirror.md``) found CAS's bbox subset
+# feature- and geometry-equivalent to each native download, which is the green
+# light to retire the duplicated download/extract/clip code. SYMFLUENCE's
+# attribute *profiles* reference these handlers by registry key (``WOKAM`` …),
+# so the only way to route them through the mirror *without editing SYMFLUENCE*
+# is to override those keys in :func:`register` — opt-in via the
+# :data:`MIRROR_ACQUISITION_ENV` flag. The explicit ``CAS_*`` keys are always
+# registered for scripted/explicit use regardless.
+
+
+#: Environment flag that makes :func:`register` *override* the native
+#: bulk-download acquisition handlers (WOKAM / HydroLAKES / GLHYMPS) with
+#: CAS curated-mirror-backed equivalents, so an existing SYMFLUENCE config
+#: routes its acquisition through CAS with no SYMFLUENCE edit. Off by default;
+#: the additive ``CAS_*`` handler keys are registered either way.
+MIRROR_ACQUISITION_ENV = "CAS_SYMFLUENCE_MIRROR_ACQUISITION"
+
+
+class MirrorAcquisition(NamedTuple):
+    """One deprecated native handler's delegation to the CAS curated mirror."""
+
+    spec: str                              # CAS mirror dataset spec
+    subdir: str                            # output dir under ``attributes/``
+    filename: str                          # output GeoPackage name ({domain} expanded)
+    keep_columns: tuple[str, ...] | None   # attribute projection (None keeps all)
+    native_keys: tuple[str, ...]           # SYMFLUENCE registry keys this supersedes
+    explicit_key: str                      # additive, always-registered key
+    label: str                             # human label for logs
+
+
+#: The three pure-vector datasets whose native handlers download a global
+#: distribution and clip it — fully replaceable by the mirror. (RGI/glacier is
+#: deliberately absent: its handler also builds rasters/intersection
+#: shapefiles, so only its *acquisition* half is delegated, via
+#: :func:`mirror_rgi_outlines`, and its key is never overridden here.)
+MIRROR_ACQUISITIONS: tuple[MirrorAcquisition, ...] = (
+    MirrorAcquisition(
+        spec="wokam",
+        subdir="geology/karst",
+        filename="domain_{domain}_wokam_karst.gpkg",
+        keep_columns=None,
+        native_keys=("WOKAM", "KARST", "KARST_AQUIFER"),
+        explicit_key="CAS_WOKAM",
+        label="WOKAM karst",
+    ),
+    MirrorAcquisition(
+        spec="hydrolakes",
+        subdir="lakes",
+        filename="domain_{domain}_hydrolakes.gpkg",
+        keep_columns=(
+            "Hylak_id", "Lake_name", "Lake_type", "Lake_area", "Shore_len",
+            "Shore_dev", "Vol_total", "Depth_avg", "Dis_avg", "Res_time",
+            "Elevation", "Wshd_area", "Pour_long", "Pour_lat",
+        ),
+        native_keys=("HYDROLAKES", "HYDROLAKES_V10"),
+        explicit_key="CAS_HYDROLAKES",
+        label="HydroLAKES",
+    ),
+    MirrorAcquisition(
+        spec="glhymps",
+        subdir="geology/glhymps",
+        filename="domain_{domain}_glhymps.gpkg",
+        keep_columns=("Porosity", "logK_Ice", "logK_Ferr", "Porosity_x", "logK_Ice_x"),
+        native_keys=("GLHYMPS", "GLHYMPS_V2"),
+        explicit_key="CAS_GLHYMPS",
+        label="GLHYMPS",
+    ),
+)
+
+
+def _symfluence_bbox_to_cas(bbox: Any) -> Any:
+    """Convert a SYMFLUENCE bbox dict (``{lat_min, lon_min, lat_max, lon_max}``)
+    to the CAS ``(min_lon, min_lat, max_lon, max_lat)`` tuple; pass tuples,
+    lists and ``BoundingBox`` through unchanged (CAS normalizes them)."""
+    if isinstance(bbox, dict) and "lon_min" in bbox:
+        return (
+            float(bbox["lon_min"]), float(bbox["lat_min"]),
+            float(bbox["lon_max"]), float(bbox["lat_max"]),
+        )
+    return bbox
+
+
+def mirror_subset_geodataframe(
+    spec: str,
+    bbox: Any,
+    workdir: Path,
+    logger: Any,
+    label: str,
+    target_crs: str | None = "EPSG:4326",
+):
+    """Acquire a bbox subset of a mirrored vector dataset via the CAS mirror.
+
+    Calls ``cas.mirror_subset_sync`` — which applies the dataset's own default
+    buffer (0.5° WOKAM, 0.1° GLHYMPS/HydroLAKES, 0.0° RGI) and writes a
+    source-CRS GeoPackage — then reads it back and reprojects to *target_crs*
+    (the native handlers' EPSG:4326 output contract). Returns
+    ``(geodataframe, MirrorSubsetResult)``; an empty subset is a valid result.
+    """
+    import geopandas as gpd
+
+    import cas
+
+    workdir = Path(workdir)
+    workdir.mkdir(parents=True, exist_ok=True)
+    logger.info(f"Acquiring {label} via the CAS curated mirror ({spec})")
+    result = cas.mirror_subset_sync(spec, _symfluence_bbox_to_cas(bbox), output_dir=workdir)
+    gdf = gpd.read_file(result.path)
+    logger.info(
+        f"{label}: {result.feature_count} feature(s) from the CAS mirror "
+        f"(license {result.license})"
+    )
+    if result.attribution:
+        logger.info(f"  attribution: {result.attribution}")
+    if target_crs is not None and len(gdf) > 0:
+        gdf = gdf.set_crs(target_crs) if gdf.crs is None else gdf.to_crs(target_crs)
+    return gdf, result
+
+
+def mirror_rgi_outlines(bbox: Any, output_dir: Path, logger: Any = None) -> Path:
+    """Deliver RGI 7.0 glacier outlines for *bbox* through the CAS mirror.
+
+    The acquisition-only delegation for SYMFLUENCE's glacier handler: CAS
+    replaces the NSIDC/GLIMS download with the curated ``rgi7`` mirror and
+    returns a clipped EPSG:4326 GeoPackage of outlines. Raster and intersection
+    creation stay in SYMFLUENCE — this seam is *called by* the glacier handler,
+    it does not override it (unlike the pure-vector datasets above).
+    """
+    logger = logger or _integration_logger()
+    _gdf, result = mirror_subset_geodataframe(
+        "rgi7", bbox, Path(output_dir), logger, "RGI 7.0 glaciers"
+    )
+    return Path(result.path)
+
+
+class CASMirrorAcquirer(_AcquirerBase):  # type: ignore[misc, valid-type]
+    """SYMFLUENCE acquisition handler sourcing a vector attribute dataset from
+    the CAS curated mirror instead of the native bulk download.
+
+    Bound to a :class:`MirrorAcquisition` through the ``_mirror`` class
+    attribute (:data:`MIRROR_ACQUIRERS` holds one subclass per dataset). Writes
+    the same canonical GeoPackage — path, projected columns, EPSG:4326 — the
+    native handler produced, which the parity gate proved equivalent, so
+    downstream SYMFLUENCE steps are unchanged. A no-op-safe ``_skip_if_exists``
+    guard and ``DOMAIN_NAME``/bbox plumbing mirror the native handlers.
+    """
+
+    #: Set on the per-dataset subclasses in :data:`MIRROR_ACQUIRERS`.
+    _mirror: MirrorAcquisition | None = None
+
+    def download(self, output_dir: Path) -> Path:
+        if not HAVE_SYMFLUENCE:  # pragma: no cover - guard for standalone use
+            raise RuntimeError(
+                "CASMirrorAcquirer requires SYMFLUENCE. "
+                "Install SYMFLUENCE in the same environment as CAS."
+            )
+        entry = self._mirror
+        if entry is None:  # pragma: no cover - base class is never registered
+            raise RuntimeError("CASMirrorAcquirer must be bound to a MirrorAcquisition")
+
+        domain_name = self._get_config_value(
+            lambda: self.config.domain.name, default="domain", dict_key="DOMAIN_NAME"
+        )
+        target_dir = Path(self._attribute_dir(entry.subdir))
+        out_gpkg = target_dir / entry.filename.format(domain=domain_name)
+        if self._skip_if_exists(out_gpkg):
+            return target_dir
+
+        self.logger.info(f"Starting {entry.label} acquisition (CAS curated mirror)")
+        gdf, _ = mirror_subset_geodataframe(
+            entry.spec, self.bbox, target_dir / "cache", self.logger, entry.label
+        )
+
+        if entry.keep_columns and len(gdf) > 0:
+            geometry_column = gdf.geometry.name
+            cols = [c for c in entry.keep_columns if c in gdf.columns]
+            if geometry_column not in cols:
+                cols.append(geometry_column)
+            gdf = gdf[cols].copy()
+
+        gdf.to_file(out_gpkg, driver="GPKG")
+        self.logger.info(
+            f"{entry.label} mirror subset: {len(gdf)} feature(s) -> {out_gpkg}"
+        )
+        return target_dir
+
+
+def _make_mirror_acquirer(entry: MirrorAcquisition) -> type:
+    """Build the per-dataset :class:`CASMirrorAcquirer` subclass for *entry*."""
+    return type(
+        f"CASMirrorAcquirer_{sanitize_column(entry.spec)}",
+        (CASMirrorAcquirer,),
+        {
+            "_mirror": entry,
+            "__module__": __name__,
+            "__doc__": f"CAS curated-mirror acquirer for {entry.label} "
+                       f"(mirror dataset {entry.spec!r}).",
+        },
+    )
+
+
+#: Stable per-dataset acquirer classes (built once so registry identity is
+#: stable across repeated :func:`register` calls). Created even without
+#: SYMFLUENCE — the base degrades to ``object`` — so the module always imports.
+MIRROR_ACQUIRERS: dict[str, type] = {
+    entry.spec: _make_mirror_acquirer(entry) for entry in MIRROR_ACQUISITIONS
+}
+
+
+def _mirror_override_enabled() -> bool:
+    """Whether :data:`MIRROR_ACQUISITION_ENV` opts into overriding native keys."""
+    raw = os.environ.get(MIRROR_ACQUISITION_ENV)
+    return raw is not None and raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _register_mirror_acquisition(registry: Any) -> bool:
+    """Register the mirror-backed acquirers on ``R.acquisition_handlers``.
+
+    Always adds the additive ``CAS_*`` keys; overrides the native handler keys
+    only when :func:`_mirror_override_enabled`. Returns whether the override was
+    applied (for the caller's log line).
+    """
+    override = _mirror_override_enabled()
+    for entry in MIRROR_ACQUISITIONS:
+        acquirer = MIRROR_ACQUIRERS[entry.spec]
+        if entry.explicit_key not in registry:
+            registry.add(entry.explicit_key, acquirer)
+        if override:
+            for key in entry.native_keys:
+                registry.add(key, acquirer)  # last-writer-wins over the native decorator
+    return override
+
+
+# ---------------------------------------------------------------------------
 # Plugin entry point (acquisition-handler registration)
 # ---------------------------------------------------------------------------
 
@@ -787,6 +1042,10 @@ def register() -> None:
 
     * :class:`CASAttributeAcquirer` → ``R.acquisition_handlers['CAS']``
       (secondary handler seam, explicit use only).
+    * :class:`CASMirrorAcquirer` → ``R.acquisition_handlers['CAS_WOKAM'|
+      'CAS_HYDROLAKES'|'CAS_GLHYMPS']`` (quaternary mirror-acquisition seam),
+      additionally *overriding* the native ``WOKAM``/``HYDROLAKES``/``GLHYMPS``
+      keys when ``CAS_SYMFLUENCE_MIRROR_ACQUISITION`` is set.
     * :class:`CommunityAttributeBackend` → ``R.attribute_backends['community']``
       (tertiary, contract-0.3.0 protocol tier; the proper Phase-C path,
       consulted FIRST under ``DATA_ACCESS: community``). Skipped on frameworks
@@ -805,6 +1064,18 @@ def register() -> None:
 
     if HANDLER_NAME not in R.acquisition_handlers:
         R.acquisition_handlers.add(HANDLER_NAME, CASAttributeAcquirer)
+
+    # Quaternary seam: mirror-acquisition delegation for the deprecated native
+    # bulk-download vector handlers. The additive CAS_* keys are always added;
+    # the native keys are overridden only under CAS_SYMFLUENCE_MIRROR_ACQUISITION.
+    # Last-writer-wins over the native decorators, which already ran when CAS
+    # imported ``symfluence.data.acquisition.base`` above (its package __init__
+    # imports the handler modules), so the override lands after them and sticks.
+    if _register_mirror_acquisition(R.acquisition_handlers):
+        _integration_logger().info(
+            "CAS curated mirror is overriding the native WOKAM/HydroLAKES/GLHYMPS "
+            "acquisition handlers (%s set)", MIRROR_ACQUISITION_ENV,
+        )
 
     # Protocol tier (contract 0.3.0). Registered as a CLASS: SYMFLUENCE's
     # selection layer instantiates it with (config, logger). Older frameworks

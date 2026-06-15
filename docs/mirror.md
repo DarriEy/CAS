@@ -351,9 +351,12 @@ coordinate-identical MultiPolygons (layer-type promotion, lossless).
 |---|---|---|---|
 | WOKAM v1 | live: real `cas mirror sync` (BGR) vs native `WOKAMAcquirer`, Alps box (9, 46, 13, 47.5), 0.5° buffer both | **PASS** | 8 = 8 features; attributes equal; geometry WKB-exact (tolerance 0) |
 | RGI 7.0 region 06 | live: Earthdata-credential sync vs native `glacier.py` NSIDC fetch, Iceland box (−25, 63, −13, 67), no buffer, exact intersects both | **PASS** | 568 = 568 outlines; `rgi_id` sets equal; attributes + geometry exact |
+| RGI 7.0 region 12 | live whole-unit (2026-06-15): one 4.3 MB NSIDC zip shared — native shapefile read vs CAS `mirror_import` materialization of the same bytes | **PASS** | 2275 = 2275 outlines; `rgi_id` sets equal; all 29 columns; geometry WKB-exact (max Hausdorff 0 at 1e-7° tol) |
+| RGI 7.0 region 18 | live whole-unit (2026-06-15): one 5.1 MB NSIDC zip shared, same method | **PASS** | 3018 = 3018 outlines; `rgi_id` sets equal; all 29 columns; geometry WKB-exact (max Hausdorff 0 at 1e-7° tol) |
 | HydroLAKES v1.0 | live: one 820 MB zip shared — native from cache, mirror via `cas mirror import`; Logan/Bear box (−112.5, 41, −111, 42.5), 0.1° buffer | **PASS** | 79 = 79 lakes; `Hylak_id` sets equal; attributes + geometry exact |
 | GLHYMPS 2.0 | live (2.6 GB Borealis zip shared); same Logan/Bear box | **PASS** | 2138 = 2138 polygons; shared (KEEP) columns equal; geometry within 1e-7° after the native 4326 reprojection |
 | HydroBASINS na_lev06 | live: native download vs `mirror_fetch` — whole-unit file equivalence | **PASS** | 2043 = 2043 basins; `HYBAS_ID` set + `NEXT_DOWN` topology mapping equal; all columns intact; geometry coordinate-exact modulo MultiPolygon promotion |
+| HydroBASINS au_lev06 | live whole-unit (2026-06-15): one 7.8 MB HydroSHEDS zip shared — native shapefile read vs CAS `mirror_import` materialization of the same bytes | **PASS** | 1425 = 1425 basins; `HYBAS_ID` set + `NEXT_DOWN` topology mapping equal; all 14 columns; geometry topologically equal (MultiPolygon-promotion tolerant) |
 | MERIT-Basins region 9 | structural + live one-sided: the native handler is **dead** (Princeton DNS NXDOMAIN) — mirror validated via live Drive sync AND `cas mirror import` of the same zip (sha256 registry-verified, 42 246 + 42 246 features, COMID/NextDownID/up1-3 intact, identical counts both routes) | **PASS-STRUCTURAL** (native cannot run) | no native baseline exists any more |
 | TDX-Hydro / GEOGLOWS v2 | structural only — sizes prohibitive (VPU 714 alone ~2.8 GB) | **STRUCTURAL-ONLY** | live HEADs 200 OK (index + catchments + streams); raw passthrough byte-identical by construction (hermetic tests) |
 | NWS NextGen v2.2 | structural only — 1.6 GB → ~7 GB | **STRUCTURAL-ONLY** | live HEAD content-length 1 741 084 439 matches the registry exactly; tar-member extraction covered hermetically |
@@ -361,9 +364,19 @@ coordinate-identical MultiPolygons (layer-type promotion, lossless).
 **What remains unvalidated**: TDX/NWS content-level comparison on real data
 (sizes prohibitive; the mirror keeps upstream bytes verbatim for TDX and a
 verbatim tar member for NWS, so the remaining risk is selection, which is
-hermetically tested); MERIT mirror-vs-native (impossible — upstream gone);
-RGI regions other than 06; HydroBASINS units other than na_lev06; GLHYMPS/
-HydroLAKES/WOKAM boxes other than those above. The attribute-vector grades
+hermetically tested); MERIT mirror-vs-native (impossible — upstream gone); RGI
+regions beyond 06/12/18 and HydroBASINS units beyond na_lev06/au_lev06 (the
+materialization path is unit-invariant, so these three RGI regions across the
+N/S hemispheres and two HydroBASINS continents exercise it broadly — remaining
+regions are lower-risk repeats of the same conversion); GLHYMPS/HydroLAKES/WOKAM
+boxes other than those above. The attribute-vector grades
 above are the deprecation gate evidence for the native `wokam.py`,
 `hydrolakes.py`, `glhymps.py` handlers and the acquisition half of
 `glacier.py` (design §6).
+
+With that gate green, the [SYMFLUENCE integration](symfluence.md#quaternary-mirror-acquisition-delegation)
+executes the deprecation: `CASMirrorAcquirer` re-binds the native
+`WOKAM`/`HYDROLAKES`/`GLHYMPS` acquisition keys to mirror-backed equivalents
+(opt in with `CAS_SYMFLUENCE_MIRROR_ACQUISITION=1`), and `mirror_rgi_outlines`
+delivers the acquisition-only half for the glacier handler — all from the CAS
+side, with no edit to SYMFLUENCE.
