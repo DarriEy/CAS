@@ -759,8 +759,13 @@ def dataset_license_and_citation(dataset_id: str) -> tuple[str, str]:
     """
     slug = dataset_id.split(":", 1)[0]
     try:
-        from cas.core.registry import get_connector
+        from cas.core.registry import discover, get_connector
 
+        # Ensure the connector registry is populated: capability probing can run
+        # before any other CAS call has triggered discovery, in which case
+        # get_connector() would KeyError and we'd lose the posture. discover()
+        # is idempotent.
+        discover()
         conn = get_connector(slug)()
         datasets = _run_coro_sync(conn.list_datasets())
     except Exception:  # noqa: BLE001 - probing must never break selection

@@ -417,21 +417,39 @@ class TestAggregatePostures:
 
 
 class TestCapabilitiesPosture:
-    """capabilities() attaches aggregated posture (needs SYMFLUENCE contract)."""
+    """capabilities() attaches aggregated posture (needs SYMFLUENCE contract).
+
+    The posture kwargs are only present when the installed AttributeCapability
+    declares them (the same field-presence guard capabilities() applies), so
+    these tests probe the installed contract rather than assuming a version.
+    """
 
     def _cfg(self, datasets):
         return {"CAS_DATASETS": datasets}
 
+    @staticmethod
+    def _has_field(name):
+        import dataclasses
+
+        from symfluence.data.backends.contract import AttributeCapability
+
+        return any(f.name == name for f in dataclasses.fields(AttributeCapability))
+
     def test_open_dataset_capability_is_open(self, integration_with_symfluence, monkeypatch):
+        if not self._has_field("redistribution"):
+            pytest.skip("installed AttributeCapability predates the 0.4.0 posture fields")
         m = integration_with_symfluence
         monkeypatch.setattr(m, "dataset_license_and_citation",
                             lambda d: ("Public Domain", "USGS NED"))
         backend = m.CommunityAttributeBackend(self._cfg("usgs_ned:elevation"))
         (cap,) = backend.capabilities()
         assert str(cap.redistribution) == "open"
-        assert cap.noncommercial is False
+        if self._has_field("noncommercial"):
+            assert cap.noncommercial is False
 
     def test_noncommercial_dataset_is_flagged(self, integration_with_symfluence, monkeypatch):
+        if not self._has_field("noncommercial"):
+            pytest.skip("installed AttributeCapability predates the 0.5.0 noncommercial field")
         m = integration_with_symfluence
         monkeypatch.setattr(m, "dataset_license_and_citation",
                             lambda d: ("CC-BY-NC 4.0", "MERIT DEM (Yamazaki et al. 2017)"))
@@ -444,6 +462,17 @@ class TestCapabilitiesPosture:
     def test_no_datasets_claims_nothing(self, integration_with_symfluence):
         backend = integration_with_symfluence.CommunityAttributeBackend(self._cfg(""))
         assert backend.capabilities() == ()
+
+    def test_license_lookup_works_without_explicit_discover(self, integration):
+        # Capability probing can run before any other CAS call triggers connector
+        # discovery; dataset_license_and_citation must populate the registry
+        # itself rather than silently returning ("", "") -> UNKNOWN posture.
+        import cas.core.registry as reg
+
+        reg._REGISTRY.clear()  # simulate a fresh process that never called discover()
+        lic, citation = integration.dataset_license_and_citation("copernicus_dem:elevation")
+        assert lic == "Open"
+        assert citation
 
 
 # ---------------------------------------------------------------------------
