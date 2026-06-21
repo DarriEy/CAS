@@ -8,28 +8,14 @@ from cas.connectors.national_wcs import NationalDatasetConfig, NationalWCSConnec
 from cas.core.models import BoundingBox, DataType, Variable
 from cas.core.registry import register
 
-ELEV_VAR = Variable(name="elevation", units="m", data_type=DataType.CONTINUOUS, valid_range=(-500, 9000))
-
-
 # ═══════════════════════════════════════════════════════════════════════
 #  AMERICAS
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("canada_hrdem")
-class CanadaHRDEMConnector(NationalWCSConnector):
-    slug = "canada_hrdem"
-    display_name = "Canada HRDEM 1-2m"
-    base_url = "https://datacube.services.geo.ca/ows/elevation"
-    protocol = "wcs"
-    _config = NationalDatasetConfig(
-        slug="canada_hrdem", display_name="Canada HRDEM 1-2m (NRCan)",
-        wcs_url="https://datacube.services.geo.ca/ows/elevation",
-        coverage_id="dsm", variable=ELEV_VAR, resolution_m=2,
-        bbox=BoundingBox(min_lon=-141, min_lat=41.7, max_lon=-52.6, max_lat=83.1),
-        license="Open Government Licence - Canada", citation="NRCan, High Resolution DEM",
-        # Server's WMS 1.1.1 handler crashes (ignores SRS=); only 1.3.0 (CRS=) works.
-        use_wms=True, wms_version="1.3.0",
-    )
+# canada_hrdem moved to canelevation_hrdem.py — the former WMS-mosaic endpoint
+# (datacube.services.geo.ca/ows/elevation) served rendered, unusable int32 data
+# (stats ~-1.2e9, flagged suspect). It now reads the real CanElevation STAC + public
+# COGs (1m lidar DTM), which also unlocks raster output via STACMixin.
 
 
 # ═══════════════════════════════════════════════════════════════════════
