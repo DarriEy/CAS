@@ -3,9 +3,13 @@
 """Tests for the health-sweep concurrency model.
 
 The sweep must not hammer a single upstream host with all of its providers
-at once: the CSIRO ``asris.csiro.au`` soil layers (australia_awc/clay/ph/
-sand/soc/soil_depth) all share one server and were dropping connections
-under concurrent load, producing false-positive regression alerts.
+at once: providers that share one server (several national WCS layers can sit
+behind one host) were dropping connections under concurrent load, producing
+false-positive regression alerts. The per-host concurrency cap prevents that.
+
+(The original CSIRO/ASRIS soil layers that motivated this test were
+deregistered on 2026-06-30 when CSIRO decommissioned the ASRIS WCS — see
+DarriEy/CAS#11 — so the mechanism is now exercised by the generic test below.)
 """
 
 from __future__ import annotations
@@ -13,17 +17,6 @@ from __future__ import annotations
 import asyncio
 
 import cas.monitor.health as health
-from cas.core.registry import discover
-
-
-def test_csiro_soil_providers_share_one_host():
-    discover()
-    csiro = [
-        "australia_awc", "australia_clay", "australia_ph",
-        "australia_sand", "australia_soc", "australia_soil_depth",
-    ]
-    hosts = {health._provider_host(s) for s in csiro}
-    assert hosts == {"www.asris.csiro.au"}, hosts
 
 
 def test_provider_host_falls_back_to_slug_when_unknown():
