@@ -1,12 +1,12 @@
 {
   "generated_at": "2026-06-01T01:25:02.226272+00:00",
   "summary": {
-    "healthy": 213,
+    "healthy": 206,
     "degraded": 1,
     "auth_gated": 12,
     "down": 0,
     "unknown": 0,
-    "total": 226
+    "total": 219
   },
   "providers": [
     {
@@ -50,22 +50,6 @@
       "error": "auth-gated: [aster_gdem] Registration required. Register at: https://urs.earthdata.nasa.gov/users/tokens\nFree NASA Earthdata login required (ASTER GDEM tiles are in the lp-"
     },
     {
-      "provider": "australia_awc",
-      "status": "healthy",
-      "response_time_ms": 37743,
-      "datasets_available": 1,
-      "test_value": 13.269504,
-      "error": null
-    },
-    {
-      "provider": "australia_clay",
-      "status": "healthy",
-      "response_time_ms": 18777,
-      "datasets_available": 1,
-      "test_value": 17.11368751525879,
-      "error": null
-    },
-    {
       "provider": "australia_dea_lc",
       "status": "healthy",
       "response_time_ms": 11798,
@@ -87,38 +71,6 @@
       "response_time_ms": 10362,
       "datasets_available": 1,
       "test_value": 42.87896253602305,
-      "error": null
-    },
-    {
-      "provider": "australia_ph",
-      "status": "healthy",
-      "response_time_ms": 25568,
-      "datasets_available": 1,
-      "test_value": 4.748449802398682,
-      "error": null
-    },
-    {
-      "provider": "australia_sand",
-      "status": "healthy",
-      "response_time_ms": 8961,
-      "datasets_available": 1,
-      "test_value": 71.22319793701172,
-      "error": null
-    },
-    {
-      "provider": "australia_soc",
-      "status": "healthy",
-      "response_time_ms": 1295,
-      "datasets_available": 1,
-      "test_value": 2.703627586364746,
-      "error": null
-    },
-    {
-      "provider": "australia_soil_depth",
-      "status": "healthy",
-      "response_time_ms": 7798,
-      "datasets_available": 1,
-      "test_value": 1.176975965499878,
       "error": null
     },
     {
@@ -799,7 +751,7 @@
       "response_time_ms": 2,
       "datasets_available": 3,
       "test_value": null,
-      "error": "mirror not synced (mirror-backed; no CAS_MIRROR_DIR provisioned in CI — degraded by design)"
+      "error": "mirror not synced (mirror-backed; no CAS_MIRROR_DIR provisioned in CI \u2014 degraded by design)"
     },
     {
       "provider": "gnatsgo",
@@ -1439,14 +1391,6 @@
       "response_time_ms": 22164,
       "datasets_available": 1,
       "test_value": 1.0,
-      "error": null
-    },
-    {
-      "provider": "slga",
-      "status": "healthy",
-      "response_time_ms": 5457,
-      "datasets_available": 10,
-      "test_value": 17.114171981811523,
       "error": null
     },
     {

@@ -28,7 +28,6 @@ from cas.core.models import (
     TimeRange,
     Variable,
 )
-from cas.core.registry import register
 from cas.extract.zonal import compute_zonal_stats, parse_geotiff, rasterize_geometry
 
 logger = structlog.get_logger()
@@ -88,7 +87,10 @@ SLGA_VARIABLES: dict[str, tuple[str, Variable]] = {
 }
 
 
-@register("slga")
+# @register("slga")  # deregistered 2026-06-30: CSIRO/TERN decommissioned the ASRIS
+# ArcGIS WCS (https://www.asris.csiro.au/arcgis 404s entirely). SLGA moved to TERN
+# and is now auth-gated (free TERN API key via the Raster Products API / COG store).
+# Re-platforming would make this an auth-gated provider — tracked in DarriEy/CAS#11.
 class SLGAConnector(WCSMixin, BaseConnector):
     slug = "slga"
     display_name = "SLGA (Australia)"

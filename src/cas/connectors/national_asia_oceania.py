@@ -202,7 +202,7 @@ class IndiaLULCConnector(NationalWCSConnector):
 #  OCEANIA — additional
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("australia_soil_depth")
+# @register("australia_soil_depth")  # deregistered 2026-06-30: ASRIS WCS gone; SLGA now auth-gated (CAS#11)
 class AustraliaSoilDepthConnector(NationalWCSConnector):
     slug = "australia_soil_depth"
     display_name = "Australia Soil Depth (SLGA)"
@@ -315,7 +315,7 @@ class IndonesiaLCConnector(NationalWCSConnector):
 #  AUSTRALIA — additional TERN/SLGA layers
 # ═══════════════════════════════════════════════════════════════════════
 
-@register("australia_clay")
+# @register("australia_clay")  # deregistered 2026-06-30: ASRIS WCS gone; SLGA now auth-gated (CAS#11)
 class AustraliaClayConnector(NationalWCSConnector):
     slug = "australia_clay"
     display_name = "Australia Clay Content (SLGA)"
@@ -335,7 +335,7 @@ class AustraliaClayConnector(NationalWCSConnector):
     )
 
 
-@register("australia_sand")
+# @register("australia_sand")  # deregistered 2026-06-30: ASRIS WCS gone; SLGA now auth-gated (CAS#11)
 class AustraliaSandConnector(NationalWCSConnector):
     slug = "australia_sand"
     display_name = "Australia Sand Content (SLGA)"
@@ -355,7 +355,7 @@ class AustraliaSandConnector(NationalWCSConnector):
     )
 
 
-@register("australia_ph")
+# @register("australia_ph")  # deregistered 2026-06-30: ASRIS WCS gone; SLGA now auth-gated (CAS#11)
 class AustraliaPHConnector(NationalWCSConnector):
     slug = "australia_ph"
     display_name = "Australia Soil pH (SLGA)"
@@ -375,7 +375,7 @@ class AustraliaPHConnector(NationalWCSConnector):
     )
 
 
-@register("australia_soc")
+# @register("australia_soc")  # deregistered 2026-06-30: ASRIS WCS gone; SLGA now auth-gated (CAS#11)
 class AustraliaSOCConnector(NationalWCSConnector):
     slug = "australia_soc"
     display_name = "Australia Organic Carbon (SLGA)"
@@ -395,7 +395,7 @@ class AustraliaSOCConnector(NationalWCSConnector):
     )
 
 
-@register("australia_awc")
+# @register("australia_awc")  # deregistered 2026-06-30: ASRIS WCS gone; SLGA now auth-gated (CAS#11)
 class AustraliaAWCConnector(NationalWCSConnector):
     slug = "australia_awc"
     display_name = "Australia Available Water Capacity (SLGA)"
