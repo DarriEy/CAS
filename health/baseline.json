@@ -2,11 +2,11 @@
   "generated_at": "2026-06-01T01:25:02.226272+00:00",
   "summary": {
     "healthy": 213,
-    "degraded": 0,
+    "degraded": 1,
     "auth_gated": 12,
     "down": 0,
     "unknown": 0,
-    "total": 225
+    "total": 226
   },
   "providers": [
     {
@@ -792,6 +792,14 @@
       "datasets_available": 2,
       "test_value": 2284.2083333333335,
       "error": null
+    },
+    {
+      "provider": "glhymps",
+      "status": "degraded",
+      "response_time_ms": 2,
+      "datasets_available": 3,
+      "test_value": null,
+      "error": "mirror not synced (mirror-backed; no CAS_MIRROR_DIR provisioned in CI — degraded by design)"
     },
     {
       "provider": "gnatsgo",
