@@ -106,10 +106,15 @@ except Exception:  # noqa: BLE001 - any import failure means "not available"
 #: Hard limit on geometries per request (``BatchAttributeRequest`` constraint).
 MAX_GEOMETRIES_PER_REQUEST = 1000
 
-#: Contract version the AttributeBackend targets (SYMFLUENCE backend protocol
-#: 0.3.0 added the attribute flavour). Frameworks predating 0.3.0 simply have
-#: no ``R.attribute_backends`` registry and skip the backend tier.
-TARGET_INTERFACE_VERSION = "0.3.0"
+#: Contract version the AttributeBackend targets. 0.3.0 added the attribute
+#: flavour; 0.4.0 added the source-licence posture fields
+#: (``redistribution``/``data_license``/``attribution``) and 0.5.0 the
+#: ``noncommercial`` use-restriction flag — both of which
+#: :class:`CommunityAttributeBackend` now populates from each CAS dataset's
+#: declared licence (see :func:`normalize_license`). Frameworks predating the
+#: posture fields are handled defensively: ``capabilities()`` only passes the
+#: posture kwargs the installed ``AttributeCapability`` actually declares.
+TARGET_INTERFACE_VERSION = "0.5.0"
 
 #: Acquisition-registry key for the secondary (handler) seam.
 HANDLER_NAME = "CAS"
@@ -594,7 +599,186 @@ class CASAttributeAcquirer(_AcquirerBase):  # type: ignore[misc, valid-type]
 
 
 # ---------------------------------------------------------------------------
-# Tertiary seam: SYMFLUENCE AttributeBackend protocol (contract 0.3.0)
+# Licence posture: CAS connector licence labels -> SYMFLUENCE backend posture
+# ---------------------------------------------------------------------------
+#
+# Every CAS connector declares a free-text ``license`` on each Dataset it lists.
+# The SYMFLUENCE attribute gate (contract 0.4.0/0.5.0) admits a community
+# backend only when the SOURCE licence posture is open/attribution, refuses
+# ``redistribution=restricted`` outright, and surfaces a NonCommercial clause to
+# the user. This table maps the connectors' ~67 distinct licence labels onto
+# that posture, verified against each source's published terms (see the package
+# CHANGELOG). The structural fallbacks in :func:`normalize_license` keep new
+# label variants safe: an unrecognized ``CC-BY-NC*`` is still flagged
+# NonCommercial, a bare/national ``Open …`` is attribution, and anything truly
+# unrecognized is UNKNOWN and therefore gated.
+
+
+class LicensePosture(NamedTuple):
+    """SYMFLUENCE backend posture distilled from a CAS licence label."""
+
+    redistribution: str          # "open" | "attribution" | "restricted" | "unknown"
+    data_license: str            # normalized SPDX-ish id/label
+    attribution_required: bool   # propagate the dataset citation to end users
+    noncommercial: bool          # source carries a NonCommercial clause
+
+
+_OPEN = "open"
+_ATTRIB = "attribution"
+_UNKNOWN_POSTURE = LicensePosture("unknown", "", False, False)
+
+
+#: Verified label -> posture. Grouped by posture class for review.
+_LICENSE_POSTURE: dict[str, LicensePosture] = {
+    # -- public domain / CC0 / US-gov: open, no attribution required --------
+    "Public Domain":            LicensePosture(_OPEN, "public-domain", False, False),
+    "Public Domain (NOAA)":     LicensePosture(_OPEN, "public-domain", False, False),
+    "Public Domain (USGS)":     LicensePosture(_OPEN, "public-domain", False, False),
+    "NASA (open)":              LicensePosture(_OPEN, "public-domain", False, False),
+    "Open (NASA)":              LicensePosture(_OPEN, "public-domain", False, False),
+    "Open (NASA Earthdata login required)": LicensePosture(_OPEN, "public-domain", False, False),
+    "CC0-1.0":                  LicensePosture(_OPEN, "CC0-1.0", False, False),
+    "CC-0":                     LicensePosture(_OPEN, "CC0-1.0", False, False),
+    "CC-0 (Netherlands)":       LicensePosture(_OPEN, "CC0-1.0", False, False),
+    "CC-0 (Norway Open Data)":  LicensePosture(_OPEN, "CC0-1.0", False, False),
+    "DL-DE/Zero":               LicensePosture(_OPEN, "DL-DE-Zero-2.0", False, False),
+    # -- CC-BY family: redistributable WITH attribution --------------------
+    "CC-BY-4.0":                LicensePosture(_ATTRIB, "CC-BY-4.0", True, False),
+    "CC-BY 4.0":                LicensePosture(_ATTRIB, "CC-BY-4.0", True, False),
+    "CC-BY 4.0 (NLOD)":         LicensePosture(_ATTRIB, "CC-BY-4.0", True, False),
+    "CC-BY-SA 4.0":             LicensePosture(_ATTRIB, "CC-BY-SA-4.0", True, False),
+    # -- national / institutional open-government: attribution -------------
+    "OGL v3":                   LicensePosture(_ATTRIB, "OGL-3.0", True, False),
+    "Open Government Licence v3": LicensePosture(_ATTRIB, "OGL-3.0", True, False),
+    "Open Government Licence - Canada": LicensePosture(_ATTRIB, "OGL-Canada-2.0", True, False),
+    "NLOD (Norway)":            LicensePosture(_ATTRIB, "NLOD-2.0", True, False),
+    "Open Licence (Etalab)":    LicensePosture(_ATTRIB, "etalab-2.0", True, False),
+    "DL-DE/BY-2.0":             LicensePosture(_ATTRIB, "DL-DE-BY-2.0", True, False),
+    "Copernicus (free)":        LicensePosture(_ATTRIB, "Copernicus", True, False),
+    "EC JRC (free)":            LicensePosture(_ATTRIB, "EC-JRC", True, False),
+    "ESA CCI (free)":           LicensePosture(_ATTRIB, "ESA-CCI", True, False),
+    "GeoNutzV":                 LicensePosture(_ATTRIB, "GeoNutzV", True, False),
+    "GeoNutzV (GeoBasis-DE / BKG)": LicensePosture(_ATTRIB, "GeoNutzV", True, False),
+    "BGR Terms of Use":         LicensePosture(_ATTRIB, "BGR-ToU", True, False),
+    "ODbL":                     LicensePosture(_ATTRIB, "ODbL-1.0", True, False),
+    "HydroSHEDS / WWF (free for scientific, educational, commercial use; attribution)":
+                                LicensePosture(_ATTRIB, "HydroSHEDS", True, False),
+    "Estonian Open Data":       LicensePosture(_ATTRIB, "Estonian-Open-Data", True, False),
+    "Gratis Open Data Vlaanderen": LicensePosture(_ATTRIB, "Open-Data-Vlaanderen", True, False),
+    # -- NonCommercial: served (research is the framework default) but flagged
+    "CC-BY-NC 4.0":             LicensePosture(_ATTRIB, "CC-BY-NC-4.0", True, True),
+    "JAXA (free for research)": LicensePosture(_ATTRIB, "JAXA-research", True, True),
+    "JAXA ALOS Research and Application": LicensePosture(_ATTRIB, "JAXA-research", True, True),
+    "DLR (free for scientific use)": LicensePosture(_ATTRIB, "DLR-scientific", True, True),
+    # -- dual-licensed: the ODbL path permits commercial, so NOT NC --------
+    "CC-BY-NC 4.0 / ODbL 1.0":  LicensePosture(_ATTRIB, "CC-BY-NC-4.0 OR ODbL-1.0", True, False),
+    # -- genuinely indeterminate: gate it ----------------------------------
+    "Varies by dataset":        _UNKNOWN_POSTURE,
+}
+
+
+def normalize_license(label: str | None) -> LicensePosture:
+    """Map a CAS connector licence label to SYMFLUENCE backend posture.
+
+    Exact table match first (the verified labels), then structural fallbacks so
+    minor label variants stay safe; anything unrecognized is UNKNOWN (gated).
+    NonCommercial is checked before the generic CC-BY rule so a ``CC-BY-NC``
+    variant is never mistaken for plain attribution.
+    """
+    label = (label or "").strip()
+    if not label:
+        return _UNKNOWN_POSTURE
+    if label in _LICENSE_POSTURE:
+        return _LICENSE_POSTURE[label]
+    low = label.lower()
+    if "by-nc" in low or "noncommercial" in low or "non-commercial" in low:
+        return LicensePosture(_ATTRIB, label, True, True)
+    if "cc0" in low or "cc-0" in low or "public domain" in low or "/zero" in low:
+        return LicensePosture(_OPEN, label, False, False)
+    if "cc-by" in low or "cc by" in low or "odbl" in low:
+        return LicensePosture(_ATTRIB, label, True, False)
+    if low.startswith("open") or low.endswith("(free)") or low.startswith("ogl") or low.startswith("nlod"):
+        return LicensePosture(_ATTRIB, label, True, False)
+    return _UNKNOWN_POSTURE
+
+
+#: Most-restrictive-wins ordering for aggregating per-dataset redistribution.
+_REDIST_RANK = {"open": 0, "attribution": 1, "unknown": 2, "restricted": 3}
+
+
+def aggregate_postures(postures: Sequence[LicensePosture]) -> LicensePosture:
+    """Combine per-dataset postures into one provider-level posture.
+
+    SYMFLUENCE attribute selection is per-provider (all CAS datasets share the
+    single ``"CAS"`` capability), so the provider posture is the MOST
+    RESTRICTIVE redistribution across the configured datasets (restricted >
+    unknown > attribution > open); ``noncommercial`` and ``attribution_required``
+    are the OR across datasets (the run serves some NC content, or needs some
+    attribution, if any single dataset does). The combined ``data_license`` lists
+    the distinct source licences for the provenance manifest.
+    """
+    if not postures:
+        return _UNKNOWN_POSTURE
+    redis = max((p.redistribution for p in postures), key=lambda r: _REDIST_RANK.get(r, 2))
+    licenses = sorted({p.data_license for p in postures if p.data_license})
+    return LicensePosture(
+        redistribution=redis,
+        data_license="; ".join(licenses),
+        attribution_required=any(p.attribution_required for p in postures),
+        noncommercial=any(p.noncommercial for p in postures),
+    )
+
+
+def _run_coro_sync(coro: Any) -> Any:
+    """Run *coro* to completion from a synchronous context.
+
+    ``capabilities()`` is called from SYMFLUENCE's (synchronous) selection layer,
+    so normally there is no running loop and ``asyncio.run`` applies; if a loop
+    is already running we fall back to a worker thread so probing never blocks
+    or raises on the event-loop state.
+    """
+    import asyncio
+
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coro)
+    import concurrent.futures
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+        return pool.submit(lambda: asyncio.run(coro)).result()
+
+
+def dataset_license_and_citation(dataset_id: str) -> tuple[str, str]:
+    """Best-effort sync lookup of a CAS dataset's ``(license, citation)``.
+
+    Resolves the connector for the dataset's ``slug`` (the part before ``:``)
+    and reads its declared Dataset metadata. Any failure — unknown slug,
+    connector I/O error, no matching id — returns ``("", "")`` so the caller
+    degrades to an UNKNOWN posture (gated), never breaking capability probing.
+    """
+    slug = dataset_id.split(":", 1)[0]
+    try:
+        from cas.core.registry import discover, get_connector
+
+        # Ensure the connector registry is populated: capability probing can run
+        # before any other CAS call has triggered discovery, in which case
+        # get_connector() would KeyError and we'd lose the posture. discover()
+        # is idempotent.
+        discover()
+        conn = get_connector(slug)()
+        datasets = _run_coro_sync(conn.list_datasets())
+    except Exception:  # noqa: BLE001 - probing must never break selection
+        return "", ""
+    exact = next((d for d in datasets if getattr(d, "id", None) == dataset_id), None)
+    chosen = exact or (datasets[0] if datasets else None)
+    if chosen is None:
+        return "", ""
+    return (getattr(chosen, "license", "") or "").strip(), (getattr(chosen, "citation", "") or "").strip()
+
+
+# ---------------------------------------------------------------------------
+# Tertiary seam: SYMFLUENCE AttributeBackend protocol (contract 0.5.0)
 # ---------------------------------------------------------------------------
 
 
@@ -602,6 +786,19 @@ def _backend_contract() -> Any:  # pragma: no cover - symfluence-only import
     from symfluence.data.backends import contract
 
     return contract
+
+
+def _to_redistribution(contract: Any, key: str) -> Any:
+    """Map a posture redistribution string to the contract's ``Redistribution``.
+
+    Falls back to ``UNKNOWN`` if the framework lacks the enum value (defensive
+    against contract drift); ``Redistribution`` is a ``StrEnum`` so the keys
+    ("open"/"attribution"/"restricted"/"unknown") match its values directly.
+    """
+    try:
+        return contract.Redistribution(key)
+    except (ValueError, AttributeError):
+        return contract.Redistribution.UNKNOWN
 
 
 def _backend_errors() -> Any:  # pragma: no cover - symfluence-only import
@@ -673,19 +870,48 @@ class CommunityAttributeBackend:
         dataset_ids = self._dataset_ids()
         if not dataset_ids:
             return ()
-        return (
-            contract.AttributeCapability(
-                provider_id=BACKEND_PROVIDER_ID,
-                attribute_ids=frozenset(dataset_ids),
-                output_kind="per_hru_stats",
-                schema=contract.SchemaId.HRU_STATS_V1,
-                auth=frozenset(),
-                parity_grade="value-within:resampling-tolerance",
-                notes="Per-HRU zonal statistics from the CAS dataset registry. "
-                      "Zonal stats are not bitwise-reproducible (resampling/masking "
-                      "dependent); parity is tolerance-based, not bit-identical.",
-            ),
+
+        # Source-licence posture, aggregated across the configured datasets
+        # (selection is per-provider). Each dataset's declared licence label is
+        # normalized to a SYMFLUENCE posture; a restricted source makes the whole
+        # provider refused, a NonCommercial source is flagged, and the citations
+        # become the attribution to propagate.
+        postures: list[LicensePosture] = []
+        citations: list[str] = []
+        for dataset_id in dataset_ids:
+            lic, citation = dataset_license_and_citation(dataset_id)
+            posture = normalize_license(lic)
+            postures.append(posture)
+            if citation and posture.attribution_required:
+                citations.append(citation)
+        agg = aggregate_postures(postures)
+
+        cap_kwargs: dict[str, Any] = dict(
+            provider_id=BACKEND_PROVIDER_ID,
+            attribute_ids=frozenset(dataset_ids),
+            output_kind="per_hru_stats",
+            schema=contract.SchemaId.HRU_STATS_V1,
+            auth=frozenset(),
+            parity_grade="value-within:resampling-tolerance",
+            notes="Per-HRU zonal statistics from the CAS dataset registry. "
+                  "Zonal stats are not bitwise-reproducible (resampling/masking "
+                  "dependent); parity is tolerance-based, not bit-identical.",
         )
+        # Posture kwargs are added only when the installed AttributeCapability
+        # declares them, so a 0.5.0-targeting backend still constructs a valid
+        # capability against an older (0.3.0/0.4.0) framework.
+        posture_kwargs = {
+            "data_license": agg.data_license,
+            "attribution": "; ".join(sorted(set(citations))),
+            "redistribution": _to_redistribution(contract, agg.redistribution),
+            "noncommercial": agg.noncommercial,
+        }
+        import dataclasses
+
+        declared = {f.name for f in dataclasses.fields(contract.AttributeCapability)}
+        cap_kwargs.update({k: v for k, v in posture_kwargs.items() if k in declared})
+
+        return (contract.AttributeCapability(**cap_kwargs),)
 
     def acquire(self, request: Any) -> Any:  # pragma: no cover - exercised by integration tests
         """Serve an ``AttributeRequest`` via the existing CAS extraction internals."""

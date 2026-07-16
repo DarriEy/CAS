@@ -346,6 +346,135 @@ class TestQualitySummary:
         assert integration.quality_summary(responses) == {"good": 2, "partial": 1}
 
 
+class TestNormalizeLicense:
+    """Licence-label -> posture mapping (pure; no SYMFLUENCE/network needed)."""
+
+    @pytest.mark.parametrize("label", ["Public Domain", "CC0-1.0", "CC-0", "DL-DE/Zero", "NASA (open)"])
+    def test_open_labels(self, integration, label):
+        p = integration.normalize_license(label)
+        assert p.redistribution == "open"
+        assert p.attribution_required is False
+        assert p.noncommercial is False
+
+    @pytest.mark.parametrize("label", ["CC-BY-4.0", "CC-BY 4.0", "CC-BY-SA 4.0", "OGL v3", "Copernicus (free)"])
+    def test_attribution_labels(self, integration, label):
+        p = integration.normalize_license(label)
+        assert p.redistribution == "attribution"
+        assert p.attribution_required is True
+        assert p.noncommercial is False
+
+    @pytest.mark.parametrize("label", ["CC-BY-NC 4.0", "JAXA (free for research)", "DLR (free for scientific use)"])
+    def test_noncommercial_labels_are_served_but_flagged(self, integration, label):
+        p = integration.normalize_license(label)
+        assert p.redistribution == "attribution"  # redistributable, just NC
+        assert p.noncommercial is True
+
+    def test_dual_license_is_not_noncommercial(self, integration):
+        # CC-BY-NC OR ODbL: the ODbL path permits commercial use.
+        p = integration.normalize_license("CC-BY-NC 4.0 / ODbL 1.0")
+        assert p.noncommercial is False
+        assert p.redistribution == "attribution"
+
+    @pytest.mark.parametrize("label", ["Varies by dataset", "", None, "Some Bespoke Terms"])
+    def test_unrecognized_is_gated_unknown(self, integration, label):
+        assert integration.normalize_license(label).redistribution == "unknown"
+
+    def test_unknown_nc_variant_still_flagged(self, integration):
+        # Structural fallback: a label not in the table but clearly NC.
+        p = integration.normalize_license("Custom CC-BY-NC-SA 3.0")
+        assert p.noncommercial is True
+        assert p.redistribution == "attribution"
+
+    def test_unknown_national_open_is_attribution(self, integration):
+        p = integration.normalize_license("Open (Some New Country)")
+        assert p.redistribution == "attribution"
+
+
+class TestAggregatePostures:
+    """Provider-level posture is the most-restrictive across configured datasets."""
+
+    def _p(self, integration, redis, nc=False, attrib=True, lic="L"):
+        return integration.LicensePosture(redis, lic, attrib, nc)
+
+    def test_empty_is_unknown(self, integration):
+        assert integration.aggregate_postures([]).redistribution == "unknown"
+
+    def test_most_restrictive_wins(self, integration):
+        ps = [self._p(integration, "open"), self._p(integration, "attribution"), self._p(integration, "unknown")]
+        assert integration.aggregate_postures(ps).redistribution == "unknown"
+
+    def test_restricted_dominates(self, integration):
+        ps = [self._p(integration, "open"), self._p(integration, "restricted")]
+        assert integration.aggregate_postures(ps).redistribution == "restricted"
+
+    def test_noncommercial_is_or(self, integration):
+        ps = [self._p(integration, "attribution", nc=False), self._p(integration, "attribution", nc=True)]
+        assert integration.aggregate_postures(ps).noncommercial is True
+
+    def test_licenses_are_merged_distinct(self, integration):
+        ps = [self._p(integration, "open", lic="CC0-1.0"), self._p(integration, "attribution", lic="CC-BY-4.0")]
+        assert integration.aggregate_postures(ps).data_license == "CC-BY-4.0; CC0-1.0"
+
+
+class TestCapabilitiesPosture:
+    """capabilities() attaches aggregated posture (needs SYMFLUENCE contract).
+
+    The posture kwargs are only present when the installed AttributeCapability
+    declares them (the same field-presence guard capabilities() applies), so
+    these tests probe the installed contract rather than assuming a version.
+    """
+
+    def _cfg(self, datasets):
+        return {"CAS_DATASETS": datasets}
+
+    @staticmethod
+    def _has_field(name):
+        import dataclasses
+
+        from symfluence.data.backends.contract import AttributeCapability
+
+        return any(f.name == name for f in dataclasses.fields(AttributeCapability))
+
+    def test_open_dataset_capability_is_open(self, integration_with_symfluence, monkeypatch):
+        if not self._has_field("redistribution"):
+            pytest.skip("installed AttributeCapability predates the 0.4.0 posture fields")
+        m = integration_with_symfluence
+        monkeypatch.setattr(m, "dataset_license_and_citation",
+                            lambda d: ("Public Domain", "USGS NED"))
+        backend = m.CommunityAttributeBackend(self._cfg("usgs_ned:elevation"))
+        (cap,) = backend.capabilities()
+        assert str(cap.redistribution) == "open"
+        if self._has_field("noncommercial"):
+            assert cap.noncommercial is False
+
+    def test_noncommercial_dataset_is_flagged(self, integration_with_symfluence, monkeypatch):
+        if not self._has_field("noncommercial"):
+            pytest.skip("installed AttributeCapability predates the 0.5.0 noncommercial field")
+        m = integration_with_symfluence
+        monkeypatch.setattr(m, "dataset_license_and_citation",
+                            lambda d: ("CC-BY-NC 4.0", "MERIT DEM (Yamazaki et al. 2017)"))
+        backend = m.CommunityAttributeBackend(self._cfg("merit_dem:elevation"))
+        (cap,) = backend.capabilities()
+        assert cap.noncommercial is True
+        assert str(cap.redistribution) == "attribution"
+        assert "MERIT DEM (Yamazaki et al. 2017)" in cap.attribution
+
+    def test_no_datasets_claims_nothing(self, integration_with_symfluence):
+        backend = integration_with_symfluence.CommunityAttributeBackend(self._cfg(""))
+        assert backend.capabilities() == ()
+
+    def test_license_lookup_works_without_explicit_discover(self, integration):
+        # Capability probing can run before any other CAS call triggers connector
+        # discovery; dataset_license_and_citation must populate the registry
+        # itself rather than silently returning ("", "") -> UNKNOWN posture.
+        import cas.core.registry as reg
+
+        reg._REGISTRY.clear()  # simulate a fresh process that never called discover()
+        lic, citation = integration.dataset_license_and_citation("copernicus_dem:elevation")
+        assert lic == "Open"
+        assert citation
+
+
 # ---------------------------------------------------------------------------
 # 3. SYMFLUENCE integration (skipped when symfluence is not installed)
 # ---------------------------------------------------------------------------

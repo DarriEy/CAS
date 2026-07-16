@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Source-licence posture on the SYMFLUENCE attribute backend.** The
+  `CommunityAttributeBackend` (now targeting SYMFLUENCE backend protocol
+  **0.5.0**, up from 0.3.0) populates each capability's licence posture —
+  `redistribution` / `data_license` / `attribution` (contract 0.4.0) and the
+  `noncommercial` use-restriction flag (0.5.0) — by normalizing each CAS
+  connector's declared `license` label. A new pure layer (`normalize_license`,
+  `aggregate_postures`, `LicensePosture`, `dataset_license_and_citation`) maps
+  the catalog's ~67 distinct licence labels to posture, verified against each
+  source's published terms: public-domain/CC0 → open, CC-BY/national-open-gov →
+  attribution, and **82 datasets carrying a NonCommercial clause** (all
+  `CC-BY-NC 4.0`, JAXA research-only, DLR scientific-use) → flagged
+  `noncommercial=True` (served — research is the framework default — but
+  surfaced to the user). Posture is aggregated most-restrictive-wins across the
+  configured `CAS_DATASETS`, since SYMFLUENCE attribute selection is
+  per-provider. Structural fallbacks keep new label variants safe
+  (`CC-BY-NC*` → flagged, bare/national `Open …` → attribution, anything
+  unrecognized → UNKNOWN and gated). Capability construction is defensive: the
+  posture kwargs are passed only when the installed `AttributeCapability`
+  declares them, so the 0.5.0 backend still builds against an older framework.
+
 - **`cas mirror import` — manual-staging escape hatch** for distributions CAS
   cannot download itself (Globus-only MERIT-Basins, registration-gated
   upstreams, Drive-quota moments). New facade `cas.mirror_import` /
