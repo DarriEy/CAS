@@ -7,8 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-07-16
+
 ### Added
 
+- **Evidence-backed provider support tiers.** `cas providers --support` and
+  `cas export-support` distinguish extraction-verified, credential-gated,
+  mirror-backed, degraded, and metadata-only connectors. The committed
+  `inventory/support.json` records the health-baseline timestamp and evidence
+  source for all 222 registered providers.
 - **Source-licence posture on the SYMFLUENCE attribute backend.** The
   `CommunityAttributeBackend` (now targeting SYMFLUENCE backend protocol
   **0.5.0**, up from 0.3.0) populates each capability's licence posture —
@@ -72,8 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     DOWN (integrity failure) without a network probe or a download, and the
     reachability sweep skips their non-existent endpoints. Removes a class of
     false reds from the scheduled Provider Health Check.
-  - `inventory/providers.yaml` regenerated (228 → 229 providers; glhymps now
-    `protocol: mirror`).
+  - `inventory/providers.yaml` regenerated with glhymps as `protocol: mirror`.
 - **Curated mirror tier (slice 2b): geofabrics as path delivery** — four
   topology-complete geofabrics (HydroBASINS v1c, MERIT-Basins, TDX-Hydro /
   GEOGLOWS v2, NWS NextGen v2.2) delivered through a new facade
@@ -333,5 +339,7 @@ Initial public release.
 - MkDocs documentation site, Dockerfile, and CI (lint, type-check, tests on
   Python 3.11–3.13).
 
+[0.4.0]: https://github.com/DarriEy/CAS/releases/tag/v0.4.0
+[0.3.0]: https://github.com/DarriEy/CAS/releases/tag/v0.3.0
 [0.2.0]: https://github.com/DarriEy/CAS/releases/tag/v0.2.0
 [0.1.0]: https://github.com/DarriEy/CAS/releases/tag/v0.1.0

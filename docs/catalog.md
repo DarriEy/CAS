@@ -1,8 +1,8 @@
 # Provider Catalog
 
-CAS registers **228 active providers** spanning DEM/elevation, soil, land cover,
+CAS registers **222 active providers** spanning DEM/elevation, soil, land cover,
 hydrology, vegetation/canopy, geology, and biodiversity — global flagships plus
-**169 national/regional providers across 38 countries**.
+deep national/regional coverage across 38 countries.
 
 The catalog is **discoverable at runtime** — you never need to trust a static
 list:
@@ -33,6 +33,10 @@ list:
 The complete machine-readable catalog (resolution, bbox, license, variables) is
 also committed at `inventory/providers.yaml` and regenerated with
 `cas export-inventory`.
+
+Registration does not imply that a live extraction was recently demonstrated.
+See [Provider support levels](support.md) or run `cas providers --support` for
+the health-evidence classification.
 
 ## By category (headline datasets)
 
@@ -87,7 +91,7 @@ lithology / quaternary geology; `biodiversity`, `mobi`, `brazil_biomes`.
 
 ## National coverage
 
-169 of the 228 providers are national/regional across 38 countries — with
+National/regional providers span 38 countries — with
 the deepest coverage in Germany (20), USA (18), Ireland (13), Switzerland (12),
 Australia (10), the UK (10), and Norway (9). Most European, North American, and
 Australian connectors are open (OGC WCS/WMS or STAC+COG); a handful require free

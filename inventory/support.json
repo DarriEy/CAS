@@ -1,0 +1,1575 @@
+{
+  "generated_from": "health/baseline.json",
+  "observed_at": "2026-06-01T01:25:02.226272+00:00",
+  "definitions": {
+    "verified": "A real extraction passed in the committed health baseline.",
+    "credentialed": "Extraction is implemented but requires provider credentials.",
+    "mirror-backed": "Extraction uses a local curated mirror; CI does not provision it.",
+    "degraded": "The latest committed extraction check did not return usable data.",
+    "metadata-only": "Registered and discoverable, but absent from the committed extraction baseline."
+  },
+  "summary": {
+    "verified": 206,
+    "credentialed": 12,
+    "mirror-backed": 1,
+    "degraded": 0,
+    "metadata-only": 3,
+    "total": 222
+  },
+  "providers": [
+    {
+      "provider": "alos_dem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "alos_fnf",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "arctic_dem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "argentina_soil",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "aster_gdem",
+      "tier": "credentialed",
+      "health_status": "auth_gated",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "australia_dea_lc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "australia_dem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "australia_frac_cover",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "australia_water_obs",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "austria_tirol_dem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "belgium_aquifer",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "belgium_flanders_dem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "belgium_groundwater",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "belgium_hydrostrat",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "belgium_lithology",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "belgium_soil",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "belgium_wallonia_dem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "biodiversity",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "brazil_biomes",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "brazil_soil",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "canada_aafc_crops",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "canada_fgp_lc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "canada_geology",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "canada_hrdem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "canopy_height",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "chloris_biomass",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "colombia_lc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "cop_dem_90",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "copernicus_dem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "corine_lc",
+      "tier": "credentialed",
+      "health_status": "auth_gated",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "croatia_dem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "croatia_lc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "czech_dem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "czech_dem_rest",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "dea_africa_cropland",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "dea_africa_dem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "dea_africa_fc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "dea_africa_lc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "dea_africa_mangroves",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "dea_africa_ndvi",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "dea_africa_water",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "denmark_dem",
+      "tier": "credentialed",
+      "health_status": "auth_gated",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "denmark_terrain",
+      "tier": "credentialed",
+      "health_status": "auth_gated",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "dynamic_world",
+      "tier": "credentialed",
+      "health_status": "auth_gated",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "eea_forest_type",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "eea_grassland",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "eea_imperv_density",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "eea_imperviousness",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "eea_leaf_type",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "eea_leaf_type_change",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "eea_small_woody",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "eea_tree_cover",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "eea_tree_cover_change",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "eea_water_wetness",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "esa_cci_lc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "esa_worldcover",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "esri_lulc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "estonia_geology",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "estonia_lc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "ethiopia_lc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "etopo_2022",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "finland_catchments",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "finland_dem",
+      "tier": "credentialed",
+      "health_status": "auth_gated",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "finland_forest_height",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "finland_lc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "finland_site_type",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "finland_soil",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "france_dem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "france_lc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "france_lithology",
+      "tier": "metadata-only",
+      "health_status": "unverified",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "france_soil",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "gebco",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "germany_air_capacity",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "germany_bb_dem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "germany_cropland_oc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "germany_dgm200",
+      "tier": "credentialed",
+      "health_status": "auth_gated",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "germany_erosion_water",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "germany_field_capacity",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "germany_gw_recharge",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "germany_hamburg_dem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "germany_hessen_dem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "germany_humus",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "germany_lc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "germany_mv_dem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "germany_nrw_dgm1",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "germany_soil",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "germany_soil_quality",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "germany_soil_retention",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "germany_soil_texture",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "germany_soil_water",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "germany_thuringia_dem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "germany_wind_erosion",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "ghsl",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "glhymps",
+      "tier": "mirror-backed",
+      "health_status": "degraded",
+      "protocol": "mirror",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "gnatsgo",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "greece_geology",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "hansen_forest",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "hgb_biomass",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "hrea",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "hydrobasins",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "hydrolakes",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "hydrorivers",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "india_lulc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "india_soil",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "io_lulc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "io_lulc_9class",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "ireland_aquifer",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "ireland_bedrock",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "ireland_catchments",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "ireland_corine",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "ireland_flood",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "ireland_gravel_aquifer",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "ireland_groundwater",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "ireland_gw_vulnerability",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "ireland_lakes",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "ireland_peatland",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "ireland_soil",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "ireland_soil_wetdry",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "ireland_subsoil",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "isric_soilgrids",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "japan_gsi",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "jrc_gsw",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "lithuania_dem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "lithuania_soil",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "luxembourg_dem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "mapbiomas_amazonia",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "mapbiomas_bolivia",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "mapbiomas_brazil",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "mapbiomas_chaco",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "mapbiomas_colombia",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "mapbiomas_indonesia",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "mapbiomas_pampa",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "mapbiomas_paraguay",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "mapbiomas_peru",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "mapbiomas_uruguay",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "mapbiomas_venezuela",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "merit_dem",
+      "tier": "credentialed",
+      "health_status": "auth_gated",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "merit_hydro",
+      "tier": "credentialed",
+      "health_status": "auth_gated",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "mexico_lc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "mexico_soil",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "mobi",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "modis_lc",
+      "tier": "credentialed",
+      "health_status": "auth_gated",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "modis_snow",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "ms_buildings",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "mtbs",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "nasadem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "netherlands_ahn",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "netherlands_crops",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "netherlands_dsm",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "netherlands_natura2000",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "netherlands_soil",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "nigeria_lc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "nlcd",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "nlcd_change_index",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "nlcd_impervious",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "noaa_ccap",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "norway_ar5",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "norway_dem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "norway_forest",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "norway_geology",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "norway_landslide",
+      "tier": "metadata-only",
+      "health_status": "unverified",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "norway_tree_species",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "norway_tree_volume",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "norway_vegetation",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "nrcan_lc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "openlandmap",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "opentopography",
+      "tier": "credentialed",
+      "health_status": "auth_gated",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "permafrost",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "peru_lc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "polaris",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "portugal_geology",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "portugal_lc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "ramsar_wetlands",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "rema",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "scotland_lc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "slovenia_dem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "slovenia_lc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "slovenia_soil",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "soilgrids_derived",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "spain_clay_minerals",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "spain_hydro",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "spain_hydrogeology",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "spain_land_use",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "spain_lithology",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "spain_mdt",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "spain_quaternary",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "ssurgo",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "ssurgo_hsg",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "rest",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "sweden_lc",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "sweden_soil",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "swiss_dem",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "swiss_erosion_flow",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "swiss_glacier",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "swiss_groundwater",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "swiss_lakes",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "swiss_permafrost",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "swiss_rivers",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "swiss_slope_30",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "swiss_soil_depth",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "swiss_stream_order",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "swiss_surface_runoff",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "swiss_water_connect",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "tandem_x",
+      "tier": "credentialed",
+      "health_status": "auth_gated",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "terraclimate",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "opendap",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "uk_agri_land_class",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "uk_bgs_geology",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "uk_drinking_water",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "uk_flood_defences",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "uk_groundwater_bodies",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "uk_historic_flood",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "uk_lidar",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "uk_soilscapes",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "uk_source_protection",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "us_ned_slope",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "usda_cdl",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "usgs_3dep",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "usgs_gap",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "usgs_geology",
+      "tier": "metadata-only",
+      "health_status": "unverified",
+      "protocol": "wfs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "usgs_karst",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "usgs_lcmap",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "stac_cog",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "usgs_nhd",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    },
+    {
+      "provider": "usgs_wbd",
+      "tier": "verified",
+      "health_status": "healthy",
+      "protocol": "wcs",
+      "evidence": "health/baseline.json"
+    }
+  ]
+}

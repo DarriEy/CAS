@@ -12,9 +12,10 @@ cas --version
 | Command | Purpose |
 | --- | --- |
 | `cas extract` | Extract attribute values for a geometry from one or more datasets |
-| `cas providers` | List registered provider slugs |
+| `cas providers` | List registered provider slugs (`--support` adds evidence tiers) |
 | `cas datasets` | List available datasets (optionally `-p <provider>`) |
 | `cas export-inventory` | Regenerate `inventory/providers.yaml` from the live registry |
+| `cas export-support` | Regenerate `inventory/support.json` from the health baseline |
 | `cas verify` | Fast endpoint-reachability check for all providers (~20s) |
 | `cas health` | End-to-end extraction health check (real `extract()` per provider) |
 | `cas health-compare` | Compare a current health snapshot against a baseline |
@@ -60,3 +61,14 @@ cas health-compare health/baseline.json snap.json
 
 See [Architecture](architecture.md) for how the health sweep derives a
 coverage-aware test polygon per provider.
+
+## Provider support evidence
+
+```bash
+cas providers --support
+cas export-support
+```
+
+These commands distinguish `verified`, `credentialed`, `mirror-backed`,
+`degraded`, and `metadata-only` providers. See
+[Provider support levels](support.md) for the exact evidence contract.

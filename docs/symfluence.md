@@ -2,7 +2,7 @@
 
 CAS ships a [SYMFLUENCE](https://github.com/DarriEy/SYMFLUENCE) integration
 (`cas.integrations.symfluence`) that lets SYMFLUENCE source **per-HRU zonal
-attributes** from any CAS dataset — 228+ providers behind one config key.
+attributes** from any CAS dataset — 222 providers behind one config key.
 
 It plugs into SYMFLUENCE at four coexisting seams — the first three deliver
 per-HRU **statistics**, the fourth delivers **vector geometry** via the curated
@@ -15,8 +15,9 @@ mirror:
 | **Tertiary: attribute backend** | `symfluence.plugins` → `register()` (`CommunityAttributeBackend` under `R.attribute_backends['community']`) | Per-HRU `HRU_STATS_V1` CSV + acquisition manifest in `data/attributes/cas/`, ingested by the model-ready `AttributesNetCDFBuilder` as a `cas` group |
 | Quaternary: mirror acquisition | `symfluence.plugins` → `register()` (`CASMirrorAcquirer` under `CAS_WOKAM`/`CAS_HYDROLAKES`/`CAS_GLHYMPS`) | Domain-clipped vector GeoPackages — the [curated-mirror](mirror.md) replacement for SYMFLUENCE's native WOKAM/HydroLAKES/GLHYMPS bulk downloads |
 
-The **attribute backend** is the contract-0.3.0 protocol tier — the same
-backend pattern as the CFS forcing backend and the CSFS observation backend.
+The **attribute backend** targets contract 0.5.0 — including source-licence,
+attribution, and noncommercial posture — and follows the same backend pattern
+as the CFS forcing backend and the CSFS observation backend.
 Under `DATA_ACCESS: community`, SYMFLUENCE's attribute pipeline selects it
 *first* (parity-gated; attribute parity is **tolerance-based**, not
 bit-identical, since zonal stats depend on resampling/masking/grid alignment),

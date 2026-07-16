@@ -42,6 +42,7 @@ nav:
   - CLI: cli.md
   - SYMFLUENCE Plugin: symfluence.md
   - Provider Catalog: catalog.md
+  - Provider Support Levels: support.md
   - Architecture: architecture.md
   - SDK Reference: reference.md
 

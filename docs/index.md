@@ -28,7 +28,7 @@ maintaining their own extraction code.
 
 ## Why CAS?
 
-- **228 active providers** across 38 countries — global flagships plus deep
+- **222 active providers** across 38 countries — global flagships plus deep
   national coverage, all behind one consistent interface.
 - **Passthrough, not storage** — no stale local copies; every request reflects
   the live upstream.

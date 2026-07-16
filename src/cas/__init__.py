@@ -76,7 +76,7 @@ from cas.mirror.importer import mirror_import, mirror_import_sync
 from cas.mirror.models import MirrorFetchResult, MirrorImportResult, MirrorSubsetResult
 from cas.mirror.query import mirror_subset, mirror_subset_sync
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 __all__ = [
     "__version__",

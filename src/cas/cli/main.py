@@ -114,9 +114,19 @@ def extract(geometry, datasets, start, end, aggregation, output):
 
 
 @cli.command()
-def providers():
+@click.option("--support", "show_support", is_flag=True, help="Show evidence-backed support tiers")
+@click.option("--baseline", default="health/baseline.json", help="Health baseline used with --support")
+def providers(show_support, baseline):
     """List registered providers."""
     from cas.core.registry import discover, list_providers
+
+    if show_support:
+        from cas.monitor.support import build_support_report
+
+        report = build_support_report(baseline)
+        for provider in report["providers"]:
+            click.echo(f"  {provider['provider']:38s} {provider['tier']}")
+        return
 
     discover()
     for slug in list_providers():
@@ -149,6 +159,22 @@ def datasets(provider):
                 click.echo(f"\n{slug}: ERROR — {e}", err=True)
 
     asyncio.run(_run())
+
+
+@cli.command(name="export-support")
+@click.option("--baseline", default="health/baseline.json", help="Committed health baseline")
+@click.option("--output", "-o", default="inventory/support.json", help="Output JSON path")
+def export_support(baseline, output):
+    """Publish evidence-backed provider support tiers."""
+    from pathlib import Path
+
+    from cas.monitor.support import build_support_report
+
+    report = build_support_report(baseline)
+    target = Path(output)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(report, indent=2) + "\n")
+    click.echo(f"Wrote {report['summary']['total']} provider tiers to {target}")
 
 
 @cli.command(name="export-inventory")
