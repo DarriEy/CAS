@@ -9,6 +9,7 @@ This avoids duplicating the same WCS GetCoverage / WMS GetMap logic across 20+ f
 from __future__ import annotations
 
 import asyncio
+import ssl
 import time
 from dataclasses import dataclass, field
 
@@ -83,6 +84,18 @@ class NationalDatasetConfig:
     # Optional mapping of RGB(A) tuples to categorical integer values.
     # Used for connectors that only provide pre-rendered symbology images.
     color_map: dict[tuple[int, int, int], int] | None = None
+    tls_verify: bool = True
+    tls_ca_bundle: str = ""
+    allow_insecure_tls: bool = False
+
+
+def _tls_verify(cfg: NationalDatasetConfig) -> bool | ssl.SSLContext:
+    """Build the narrowly scoped httpx TLS setting for one provider."""
+    if cfg.tls_ca_bundle:
+        return ssl.create_default_context(cafile=cfg.tls_ca_bundle)
+    if not cfg.tls_verify and not cfg.allow_insecure_tls:
+        raise ValueError(f"{cfg.slug}: disabling TLS verification requires allow_insecure_tls=True")
+    return cfg.tls_verify
 
 
 _RETRYABLE_STATUS = (500, 502, 503, 504)
@@ -308,7 +321,7 @@ class NationalWCSConnector(BaseConnector):
             async with httpx.AsyncClient(
                 timeout=60,
                 follow_redirects=True,
-                verify=False,
+                verify=_tls_verify(cfg),
                 headers={
                     "User-Agent": "Mozilla/5.0 (CAS/0.1) AppleWebKit/537.36",
                     "Referer": cfg.wcs_url,
