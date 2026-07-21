@@ -25,7 +25,7 @@ Two materialization shapes share one engine:
   or tar.gz member extraction.
 
 Concurrency (design §1, decision 2 — non-deferrable): materialization takes
-an **exclusive fcntl lock** on ``<dataset dir>/.lock`` and downloads to
+an **exclusive OS file lock** on ``<dataset dir>/.lock`` and downloads to
 ``*.part`` temp files that are checksummed and atomically renamed. A second
 process (or thread — each acquires its own file description) arriving
 mid-download blocks on the lock, then finds the manifest and returns without
@@ -50,16 +50,23 @@ never written to manifests or logs.
 
 from __future__ import annotations
 
-import fcntl
+import errno
 import fnmatch
 import hashlib
 import json
 import os
 import shutil
 import tarfile
+import time
 import zipfile
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
+
+if os.name == "nt":
+    import msvcrt
+else:
+    import fcntl
 
 import httpx
 import structlog
@@ -95,6 +102,46 @@ _DOWNLOAD_TIMEOUT = httpx.Timeout(connect=30.0, read=600.0, write=600.0, pool=30
 _CHUNK = 1 << 20  # 1 MiB
 
 NOTICE_ROLE = "license_notice"
+
+
+@contextmanager
+def _exclusive_file_lock(path: Path, *, timeout_s: float = 30.0):
+    """Hold a blocking, cross-process lock using the host OS primitive."""
+    with open(path, "a+b") as lock_file:
+        if os.name == "nt":
+            if lock_file.seek(0, os.SEEK_END) == 0:
+                lock_file.write(b"\0")
+                lock_file.flush()
+            lock_file.seek(0)
+            deadline = time.monotonic() + timeout_s
+            while True:
+                try:
+                    msvcrt.locking(  # type: ignore[attr-defined]
+                        lock_file.fileno(), msvcrt.LK_NBLCK, 1,  # type: ignore[attr-defined]
+                    )
+                    break
+                except OSError as exc:
+                    winerror = getattr(exc, "winerror", None)
+                    contended = winerror in {33, 36} or (
+                        winerror is None and exc.errno in {errno.EACCES, errno.EAGAIN}
+                    )
+                    if not contended:
+                        raise
+                    if time.monotonic() >= deadline:
+                        raise TimeoutError(f"Timed out waiting for mirror lock {path}") from exc
+                    time.sleep(0.05)
+        else:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            if os.name == "nt":
+                lock_file.seek(0)
+                msvcrt.locking(  # type: ignore[attr-defined]
+                    lock_file.fileno(), msvcrt.LK_UNLCK, 1,  # type: ignore[attr-defined]
+                )
+            else:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
 
 
 # ── Layout helpers ──────────────────────────────────────────────────
@@ -328,16 +375,11 @@ def ensure_materialized(
     ack = _resolve_acknowledgment(ds, settings, licenses_accepted, ack_via)
     ddir = _writable_dataset_dir(ds, settings)
 
-    lock_path = ddir / ".lock"
-    with open(lock_path, "w") as lock_file:
-        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
-        try:
-            # A concurrent materializer may have finished while we waited.
-            if is_materialized(ds, settings):
-                return query_layer_path(ds, settings)
-            return _materialize_global_locked(ds, settings, ddir, ack, local_archives)
-        finally:
-            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+    with _exclusive_file_lock(ddir / ".lock"):
+        # A concurrent materializer may have finished while we waited.
+        if is_materialized(ds, settings):
+            return query_layer_path(ds, settings)
+        return _materialize_global_locked(ds, settings, ddir, ack, local_archives)
 
 
 def _materialize_global_locked(
@@ -506,9 +548,7 @@ def ensure_units_materialized(
     ack = _resolve_acknowledgment(ds, settings, licenses_accepted, ack_via)
     ddir = _writable_dataset_dir(ds, settings)
 
-    lock_path = ddir / ".lock"
-    with open(lock_path, "w") as lock_file:
-        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+    with _exclusive_file_lock(ddir / ".lock"):
         try:
             for unit in missing:
                 # A concurrent materializer may have landed this unit.
@@ -516,7 +556,6 @@ def ensure_units_materialized(
                     continue
                 _materialize_unit_locked(ds, unit, settings, ddir, ack, local_archives)
         finally:
-            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
             _rebuild_index(settings)
     return {u: unit_paths(ds, u, settings) for u in wanted}
 

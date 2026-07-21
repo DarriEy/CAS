@@ -7,9 +7,12 @@ Hermetic: tiny synthetic shapefile zips served via respx."""
 
 from __future__ import annotations
 
+import errno
 import json
+import os
 import stat
 import threading
+from unittest.mock import MagicMock
 
 import httpx
 import pytest
@@ -224,18 +227,17 @@ class TestConcurrency:
 
 
 class TestReadOnlyRoot:
-    def test_unmaterialized_in_readonly_root_is_actionable(self, mirror_root):
+    def test_unmaterialized_in_readonly_root_is_actionable(self, mirror_root, monkeypatch):
         mirror_root.mkdir(parents=True, exist_ok=True)
-        mirror_root.chmod(stat.S_IRUSR | stat.S_IXUSR)
-        try:
-            with registered(make_fake_dataset(slug="roveg")) as ds:
-                with pytest.raises(MirrorWriteError) as exc:
-                    ensure_materialized(ds)
-                msg = str(exc.value)
-                assert "cas mirror sync roveg==1.0" in msg
-                assert "administrator" in msg
-        finally:
-            mirror_root.chmod(stat.S_IRWXU)
+        # chmod does not make a directory non-writable on Windows. Patch the
+        # platform permission probe so this exercises the OS decision on all hosts.
+        monkeypatch.setattr("cas.mirror.store.os.access", lambda path, mode: False)
+        with registered(make_fake_dataset(slug="roveg")) as ds:
+            with pytest.raises(MirrorWriteError) as exc:
+                ensure_materialized(ds)
+            msg = str(exc.value)
+            assert "cas mirror sync roveg==1.0" in msg
+            assert "administrator" in msg
 
     @respx.mock
     def test_materialized_then_readonly_reads_proceed(self, mirror_root, fake_zip):
@@ -314,12 +316,64 @@ class TestStatusAndRemove:
                 assert not is_materialized(ds)
                 assert not list(dataset_dir(ds).glob("*.part"))
 
+    def test_download_can_recover_after_transient_failure(self, mirror_root, fake_zip):
+        """A failed acquisition must leave the dataset retryable, not poisoned."""
+        with registered(make_fake_dataset()) as ds:
+            with respx.mock:
+                respx.get(FAKE_URL).mock(return_value=httpx.Response(503))
+                with pytest.raises(httpx.HTTPStatusError):
+                    ensure_materialized(ds)
 
-def test_os_supports_flock():
-    """The locking design assumes fcntl.flock; fail loudly where absent."""
-    import fcntl
+            with respx.mock:
+                respx.get(FAKE_URL).mock(return_value=httpx.Response(200, content=fake_zip))
+                path = ensure_materialized(ds)
 
-    assert hasattr(fcntl, "LOCK_EX") and hasattr(fcntl, "LOCK_UN")
+            assert path.is_file()
+            assert is_materialized(ds)
+            assert not list(dataset_dir(ds).glob("*.part"))
+
+
+def test_exclusive_file_lock_creates_lock_file(tmp_path):
+    from cas.mirror.store import _exclusive_file_lock
+
+    path = tmp_path / ".lock"
+    with _exclusive_file_lock(path):
+        assert path.is_file()
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows locking behavior")
+def test_windows_lock_reraises_permanent_error(tmp_path, monkeypatch):
+    from cas.mirror import store
+
+    permanent = OSError(5, "invalid handle")
+    monkeypatch.setattr(store.msvcrt, "locking", MagicMock(side_effect=permanent))
+    with pytest.raises(OSError, match="invalid handle"), store._exclusive_file_lock(tmp_path / ".lock"):
+        pass
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows locking behavior")
+def test_windows_lock_contention_has_timeout(tmp_path, monkeypatch):
+    from cas.mirror import store
+
+    contended = OSError(errno.EACCES, "lock held")
+    monkeypatch.setattr(store.msvcrt, "locking", MagicMock(side_effect=contended))
+    with (
+        pytest.raises(TimeoutError, match="Timed out waiting"),
+        store._exclusive_file_lock(tmp_path / ".lock", timeout_s=0),
+    ):
+        pass
+
+
+def test_locking_backend_matches_host_os():
+    import os
+
+    from cas.mirror import store
+
+    if os.name == "nt":
+        assert hasattr(store.msvcrt, "LK_LOCK") and hasattr(store.msvcrt, "LK_UNLCK")
+        assert not hasattr(store, "fcntl")
+    else:
+        assert hasattr(store.fcntl, "LOCK_EX") and hasattr(store.fcntl, "LOCK_UN")
 
 
 def test_disk_bytes_helper(tmp_path):

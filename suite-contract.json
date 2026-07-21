@@ -1,0 +1,37 @@
+{
+  "contract_version": "1.1.0",
+  "contract_scope": "native_public_api",
+  "service": "cas",
+  "domain": "geospatial_attributes",
+  "canonical_output": "attributes",
+  "timestamps": "UTC",
+  "interval_semantics": "request_dependent",
+  "provenance_fields": [
+    "provider",
+    "provenance"
+  ],
+  "quality_statuses": [
+    "good",
+    "suspect",
+    "partial",
+    "missing",
+    "degraded",
+    "estimated"
+  ],
+  "quality_scope": "attribute_results_only",
+  "error_categories": [
+    "configuration",
+    "authentication",
+    "rate_limit",
+    "upstream",
+    "data",
+    "dependency"
+  ],
+  "cli_exit_codes": {
+    "success": 0,
+    "usage_error": 2,
+    "upstream_error": 1,
+    "internal_error": 1
+  },
+  "symfluence_entrypoint": "cas.integrations.symfluence:register"
+}

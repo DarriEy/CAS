@@ -10,6 +10,7 @@ parallel (~20 s total) and treats 401/403 as "alive" (auth-gated).
 from __future__ import annotations
 
 import asyncio
+import ssl
 import time
 from dataclasses import dataclass
 
@@ -178,6 +179,8 @@ async def check_all_reachability(
     concurrency: int = 20,
     timeout_s: float = 20.0,
     recheck_failures: bool = True,
+    tls_verify: bool | ssl.SSLContext = True,
+    allow_insecure_tls: bool = False,
 ) -> list[ReachabilityResult]:
     """Check reachability for all (or selected) providers in parallel.
 
@@ -188,8 +191,15 @@ async def check_all_reachability(
     concurrent load often clears when retried alone — the same rationale as
     the health sweep's serial recheck — so this strips out load-induced false
     failures while a genuinely down endpoint stays failed.
+
+    TLS certificates are verified by default. Callers needing a private CA
+    should pass an ``ssl.SSLContext`` created with that CA. Disabling
+    verification additionally requires ``allow_insecure_tls=True``.
     """
     discover()
+
+    if tls_verify is False and not allow_insecure_tls:
+        raise ValueError("tls_verify=False requires allow_insecure_tls=True")
 
     if slugs is None:
         slugs = list_providers()
@@ -207,7 +217,7 @@ async def check_all_reachability(
     async with httpx.AsyncClient(
         timeout=httpx.Timeout(timeout_s, connect=10.0),
         headers={"User-Agent": "CAS/0.1 (reachability check)"},
-        verify=False,
+        verify=tls_verify,
     ) as client:
         tasks = []
         for url, url_slugs in url_to_slugs.items():
@@ -224,7 +234,7 @@ async def check_all_reachability(
         async with httpx.AsyncClient(
             timeout=httpx.Timeout(timeout_s, connect=10.0),
             headers={"User-Agent": "CAS/0.1 (reachability check)"},
-            verify=False,
+            verify=tls_verify,
         ) as client:
             for i, r in enumerate(url_results):
                 if r.reachable or r.skipped:

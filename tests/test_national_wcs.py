@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import numpy as np
 import pytest
 
-from cas.connectors.national_wcs import NationalWCSConnector
+from cas.connectors.national_wcs import NationalDatasetConfig, NationalWCSConnector, _tls_verify
 from cas.core.models import Geometry
 from cas.core.registry import discover, get_connector, list_providers
 
@@ -54,24 +54,58 @@ class TestNationalWCSFactory:
                 assert cfg.resolution_m > 0, f"{slug}: invalid resolution"
                 assert cfg.bbox is not None, f"{slug}: no bbox"
 
-    def test_country_coverage(self):
-        """Verify we have providers for key countries."""
-        providers = list_providers()
-        countries = {
-            "norway": ["norway_dem", "norway_ar5", "norway_geology"],
-            "germany": ["germany_dgm200", "germany_nrw_dgm1", "germany_soil"],
-            "switzerland": ["swiss_dem", "swiss_groundwater", "swiss_stream_order"],
-            "ireland": ["ireland_soil", "ireland_aquifer", "ireland_catchments"],
-            "uk": ["uk_lidar", "uk_bgs_geology"],
-            "finland": ["finland_dem", "finland_soil", "finland_lc"],
-            "netherlands": ["netherlands_ahn", "netherlands_soil"],
-            "spain": ["spain_mdt", "spain_lithology", "spain_hydro"],
-            "denmark": ["denmark_dem", "denmark_terrain"],
-            "australia": ["australia_dem", "australia_dea_lc"],
-        }
-        for country, expected in countries.items():
-            for slug in expected:
-                assert slug in providers, f"Missing {slug} for {country}"
+    def test_all_national_connectors_verify_tls_by_default(self):
+        for slug in list_providers():
+            cls = get_connector(slug)
+            if issubclass(cls, NationalWCSConnector) and cls is not NationalWCSConnector:
+                assert cls._config.tls_verify is True, f"{slug}: TLS verification explicitly disabled"
+
+
+def test_tls_verify_uses_custom_ca_bundle(monkeypatch):
+    sentinel = object()
+    create_context = MagicMock(return_value=sentinel)
+    monkeypatch.setattr("cas.connectors.national_wcs.ssl.create_default_context", create_context)
+    cfg = NationalDatasetConfig(
+        slug="test", display_name="Test", wcs_url="https://example.test/wcs",
+        coverage_id="test", variable=MagicMock(), resolution_m=1,
+        bbox=MagicMock(), tls_ca_bundle="/private/provider-ca.pem",
+    )
+    assert _tls_verify(cfg) is sentinel
+    create_context.assert_called_once_with(cafile="/private/provider-ca.pem")
+
+
+def test_country_coverage():
+    """Verify we have providers for key countries."""
+    discover()
+    providers = list_providers()
+    countries = {
+        "norway": ["norway_dem", "norway_ar5", "norway_geology"],
+        "germany": ["germany_dgm200", "germany_nrw_dgm1", "germany_soil"],
+        "switzerland": ["swiss_dem", "swiss_groundwater", "swiss_stream_order"],
+        "ireland": ["ireland_soil", "ireland_aquifer", "ireland_catchments"],
+        "uk": ["uk_lidar", "uk_bgs_geology"],
+        "finland": ["finland_dem", "finland_soil", "finland_lc"],
+        "netherlands": ["netherlands_ahn", "netherlands_soil"],
+        "spain": ["spain_mdt", "spain_lithology", "spain_hydro"],
+        "denmark": ["denmark_dem", "denmark_terrain"],
+        "australia": ["australia_dem", "australia_dea_lc"],
+    }
+    for country, expected in countries.items():
+        for slug in expected:
+            assert slug in providers, f"Missing {slug} for {country}"
+
+
+def test_tls_disable_requires_explicit_acknowledgement():
+    cfg = NationalDatasetConfig(
+        slug="test", display_name="Test", wcs_url="https://example.test/wcs",
+        coverage_id="test", variable=MagicMock(), resolution_m=1,
+        bbox=MagicMock(), tls_verify=False,
+    )
+    with pytest.raises(ValueError, match="allow_insecure_tls=True"):
+        _tls_verify(cfg)
+
+    cfg.allow_insecure_tls = True
+    assert _tls_verify(cfg) is False
 
 
 class TestNationalWCSExtract:

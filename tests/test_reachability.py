@@ -6,6 +6,8 @@ from __future__ import annotations
 
 import asyncio
 
+import pytest
+
 from cas.monitor import reachability as rb
 from cas.monitor.reachability import ReachabilityResult, check_all_reachability
 
@@ -67,3 +69,47 @@ def test_genuine_failure_stays_failed(monkeypatch):
     results = asyncio.run(check_all_reachability())
     assert [r.reachable for r in results] == [False]
     assert calls["n"] == 2  # tried twice, still down
+
+
+def test_reachability_verifies_tls_by_default(monkeypatch):
+    _patch_single_provider(monkeypatch)
+    fake, _ = _stateful_check(reachable_after=0)
+    monkeypatch.setattr(rb, "check_reachability", fake)
+    clients = []
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            clients.append(kwargs)
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *_args):
+            return None
+
+    monkeypatch.setattr(rb.httpx, "AsyncClient", FakeClient)
+    asyncio.run(check_all_reachability())
+    assert clients[0]["verify"] is True
+
+
+def test_reachability_allows_explicit_scoped_tls_override(monkeypatch):
+    _patch_single_provider(monkeypatch)
+    fake, _ = _stateful_check(reachable_after=0)
+    monkeypatch.setattr(rb, "check_reachability", fake)
+    clients = []
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            clients.append(kwargs)
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *_args):
+            return None
+
+    monkeypatch.setattr(rb.httpx, "AsyncClient", FakeClient)
+    asyncio.run(check_all_reachability(tls_verify=False, allow_insecure_tls=True))
+    assert clients[0]["verify"] is False
+
+
+def test_reachability_rejects_unacknowledged_insecure_tls(monkeypatch):
+    _patch_single_provider(monkeypatch)
+    with pytest.raises(ValueError, match="allow_insecure_tls=True"):
+        asyncio.run(check_all_reachability(tls_verify=False))
