@@ -684,9 +684,13 @@ class FranceSoilConnector(NationalWCSConnector):
     _config = NationalDatasetConfig(
         slug="france_soil", display_name="France Soil (GIS Sol / INRAE RMQS)",
         wcs_url="https://geodata.inrae.fr/geoserver/gissol_rmqs/wms",
-        coverage_id="gissol_rmqs:rmqs_teneur_pedo",
-        variable=Variable(name="soil_properties", units="various", data_type=DataType.CONTINUOUS,
-                          description="French soil monitoring network (pH, SOC, trace elements)"),
+        # INRAE dropped the combined rmqs_teneur_pedo layer (2026-08) in favor
+        # of per-property teneur_* layers; surface pH is the representative one.
+        # (Beware: capabilities also list per-layer *style* names like
+        # ph_eau_surf — the real layer names carry the teneur_ prefix.)
+        coverage_id="gissol_rmqs:teneur_ph_eau_surf",
+        variable=Variable(name="soil_ph", units="pH", data_type=DataType.CONTINUOUS,
+                          description="French soil monitoring network (RMQS) — pH in water, surface horizon"),
         resolution_m=1000, category="soil",
         bbox=BoundingBox(min_lon=-5.2, min_lat=41.3, max_lon=9.6, max_lat=51.1),
         license="Open (INRAE)", citation="INRAE / GIS Sol, RMQS",

@@ -13,6 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   wheels (1.3.0 forces a source build that fails under modern setuptools);
   `pytest-asyncio>=0.23.5` for pytest 8 collection compatibility.
 
+### Fixed
+
+- **`permafrost`** — UZH's GeoServer dropped WCS 1.0.0 support; the
+  connector now requests WCS 2.0.1 with the `cryogis__Permafrost-Global-PFI`
+  coverage id (double-underscore workspace separator). Down since 2026-08-02.
+- **`france_soil`** — INRAE retired the combined `rmqs_teneur_pedo` layer in
+  favor of per-property `teneur_*` layers; the connector now serves surface
+  pH (`teneur_ph_eau_surf`), and its variable is renamed
+  `soil_properties` → `soil_ph` (units `pH`) to say what the layer actually
+  is. Down since 2026-08-02.
+
 ## [0.4.0] — 2026-07-16
 
 ### Added

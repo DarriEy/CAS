@@ -539,7 +539,11 @@ class PermafrostConnector(NationalWCSConnector):
         slug="permafrost",
         display_name="Global Permafrost Zonation Index 1km (U Zurich)",
         wcs_url="https://geoserver.geo.uzh.ch/cryogis/wms",
-        coverage_id="cryogis:Permafrost-Global-PFI",
+        # UZH's GeoServer dropped WCS 1.0.0 ("Could not understand
+        # version:1.0.0", 2026-08); WCS 2.0.1 names coverages with a
+        # double-underscore workspace separator.
+        coverage_id="cryogis__Permafrost-Global-PFI",
+        protocol_version="2.0.1",
         variable=Variable(
             name="permafrost_index",
             units="index",
