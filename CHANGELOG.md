@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `rasterio` floor raised to 1.3.4, the first release with Python 3.11
+  wheels (1.3.0 forces a source build that fails under modern setuptools);
+  `pytest-asyncio>=0.23.5` for pytest 8 collection compatibility.
+
 ## [0.4.0] — 2026-07-16
 
 ### Added
