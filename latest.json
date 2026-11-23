@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-11-22T14:31:33.493929+00:00",
+  "generated_at": "2026-11-23T18:13:15.444103+00:00",
   "summary": {
-    "healthy": 179,
-    "degraded": 2,
+    "healthy": 168,
+    "degraded": 3,
     "auth_gated": 12,
-    "down": 29,
+    "down": 39,
     "unknown": 0,
     "total": 222
   },
@@ -12,7 +12,7 @@
     {
       "provider": "alos_dem",
       "status": "healthy",
-      "response_time_ms": 2098,
+      "response_time_ms": 1854,
       "datasets_available": 1,
       "test_value": 434.02391975308643,
       "error": null
@@ -20,7 +20,7 @@
     {
       "provider": "alos_fnf",
       "status": "healthy",
-      "response_time_ms": 2946,
+      "response_time_ms": 2603,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -28,18 +28,18 @@
     {
       "provider": "arctic_dem",
       "status": "healthy",
-      "response_time_ms": 5282,
+      "response_time_ms": 5115,
       "datasets_available": 1,
       "test_value": 58.483524322509766,
       "error": null
     },
     {
       "provider": "argentina_soil",
-      "status": "down",
-      "response_time_ms": 108358,
-      "datasets_available": 0,
-      "test_value": null,
-      "error": "[argentina_soil] WCS request failed: "
+      "status": "healthy",
+      "response_time_ms": 11469,
+      "datasets_available": 1,
+      "test_value": 0.0,
+      "error": null
     },
     {
       "provider": "aster_gdem",
@@ -52,7 +52,7 @@
     {
       "provider": "australia_dea_lc",
       "status": "healthy",
-      "response_time_ms": 7722,
+      "response_time_ms": 7283,
       "datasets_available": 1,
       "test_value": 0.0029,
       "error": null
@@ -60,7 +60,7 @@
     {
       "provider": "australia_dem",
       "status": "healthy",
-      "response_time_ms": 14692,
+      "response_time_ms": 7145,
       "datasets_available": 1,
       "test_value": 218.78826904296875,
       "error": null
@@ -68,7 +68,7 @@
     {
       "provider": "australia_frac_cover",
       "status": "healthy",
-      "response_time_ms": 5632,
+      "response_time_ms": 5421,
       "datasets_available": 1,
       "test_value": 69.06340057636888,
       "error": null
@@ -76,7 +76,7 @@
     {
       "provider": "australia_water_obs",
       "status": "healthy",
-      "response_time_ms": 4717,
+      "response_time_ms": 3212,
       "datasets_available": 1,
       "test_value": 0.028637470677495003,
       "error": null
@@ -84,7 +84,7 @@
     {
       "provider": "austria_tirol_dem",
       "status": "healthy",
-      "response_time_ms": 5865,
+      "response_time_ms": 7130,
       "datasets_available": 1,
       "test_value": 37.302311435523116,
       "error": null
@@ -92,7 +92,7 @@
     {
       "provider": "belgium_aquifer",
       "status": "healthy",
-      "response_time_ms": 5971,
+      "response_time_ms": 7151,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -100,15 +100,15 @@
     {
       "provider": "belgium_flanders_dem",
       "status": "healthy",
-      "response_time_ms": 5129,
+      "response_time_ms": 4919,
       "datasets_available": 1,
-      "test_value": 190.84940373560343,
+      "test_value": 191.0,
       "error": null
     },
     {
       "provider": "belgium_groundwater",
       "status": "healthy",
-      "response_time_ms": 5682,
+      "response_time_ms": 5550,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -116,7 +116,7 @@
     {
       "provider": "belgium_hydrostrat",
       "status": "healthy",
-      "response_time_ms": 3272,
+      "response_time_ms": 8197,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -124,7 +124,7 @@
     {
       "provider": "belgium_lithology",
       "status": "healthy",
-      "response_time_ms": 8667,
+      "response_time_ms": 7148,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -132,7 +132,7 @@
     {
       "provider": "belgium_soil",
       "status": "healthy",
-      "response_time_ms": 6158,
+      "response_time_ms": 1699,
       "datasets_available": 1,
       "test_value": 0.0053,
       "error": null
@@ -140,7 +140,7 @@
     {
       "provider": "belgium_wallonia_dem",
       "status": "healthy",
-      "response_time_ms": 809,
+      "response_time_ms": 785,
       "datasets_available": 1,
       "test_value": 32.021036,
       "error": null
@@ -148,23 +148,23 @@
     {
       "provider": "biodiversity",
       "status": "healthy",
-      "response_time_ms": 1869,
+      "response_time_ms": 1642,
       "datasets_available": 1,
       "test_value": 0.8716685175895691,
       "error": null
     },
     {
       "provider": "brazil_biomes",
-      "status": "healthy",
-      "response_time_ms": 3326,
+      "status": "degraded",
+      "response_time_ms": 29058,
       "datasets_available": 1,
-      "test_value": 1.0,
-      "error": null
+      "test_value": null,
+      "error": "Test extraction returned no data"
     },
     {
       "provider": "brazil_soil",
       "status": "healthy",
-      "response_time_ms": 8790,
+      "response_time_ms": 8472,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -172,7 +172,7 @@
     {
       "provider": "canada_aafc_crops",
       "status": "healthy",
-      "response_time_ms": 4286,
+      "response_time_ms": 4212,
       "datasets_available": 1,
       "test_value": 0.0073,
       "error": null
@@ -180,7 +180,7 @@
     {
       "provider": "canada_fgp_lc",
       "status": "healthy",
-      "response_time_ms": 1675,
+      "response_time_ms": 1562,
       "datasets_available": 1,
       "test_value": 0.009,
       "error": null
@@ -188,7 +188,7 @@
     {
       "provider": "canada_geology",
       "status": "healthy",
-      "response_time_ms": 7352,
+      "response_time_ms": 2604,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -196,7 +196,7 @@
     {
       "provider": "canada_hrdem",
       "status": "healthy",
-      "response_time_ms": 2674,
+      "response_time_ms": 2575,
       "datasets_available": 1,
       "test_value": 1034.58251953125,
       "error": null
@@ -204,7 +204,7 @@
     {
       "provider": "canopy_height",
       "status": "healthy",
-      "response_time_ms": 1283,
+      "response_time_ms": 1320,
       "datasets_available": 1,
       "test_value": 4.706041666666667,
       "error": null
@@ -212,23 +212,23 @@
     {
       "provider": "chloris_biomass",
       "status": "healthy",
-      "response_time_ms": 4920,
+      "response_time_ms": 2729,
       "datasets_available": 2,
       "test_value": 9839.285714285714,
       "error": null
     },
     {
       "provider": "colombia_lc",
-      "status": "healthy",
-      "response_time_ms": 6253,
-      "datasets_available": 1,
-      "test_value": 0.2051,
-      "error": null
+      "status": "down",
+      "response_time_ms": 60013,
+      "datasets_available": 0,
+      "test_value": null,
+      "error": "[colombia_lc] WCS request failed: "
     },
     {
       "provider": "cop_dem_90",
       "status": "healthy",
-      "response_time_ms": 3265,
+      "response_time_ms": 4626,
       "datasets_available": 1,
       "test_value": 432.40216064453125,
       "error": null
@@ -236,7 +236,7 @@
     {
       "provider": "copernicus_dem",
       "status": "healthy",
-      "response_time_ms": 730,
+      "response_time_ms": 2521,
       "datasets_available": 1,
       "test_value": 432.2395935058594,
       "error": null
@@ -252,7 +252,7 @@
     {
       "provider": "croatia_dem",
       "status": "healthy",
-      "response_time_ms": 4045,
+      "response_time_ms": 4103,
       "datasets_available": 1,
       "test_value": 255.0,
       "error": null
@@ -260,7 +260,7 @@
     {
       "provider": "croatia_lc",
       "status": "healthy",
-      "response_time_ms": 1904,
+      "response_time_ms": 3530,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -268,7 +268,7 @@
     {
       "provider": "czech_dem",
       "status": "healthy",
-      "response_time_ms": 1854,
+      "response_time_ms": 3686,
       "datasets_available": 1,
       "test_value": 288.36822509765625,
       "error": null
@@ -276,7 +276,7 @@
     {
       "provider": "czech_dem_rest",
       "status": "healthy",
-      "response_time_ms": 1930,
+      "response_time_ms": 3735,
       "datasets_available": 1,
       "test_value": 288.36822509765625,
       "error": null
@@ -284,7 +284,7 @@
     {
       "provider": "dea_africa_cropland",
       "status": "healthy",
-      "response_time_ms": 6012,
+      "response_time_ms": 1540,
       "datasets_available": 1,
       "test_value": 0.5422,
       "error": null
@@ -292,7 +292,7 @@
     {
       "provider": "dea_africa_dem",
       "status": "healthy",
-      "response_time_ms": 6716,
+      "response_time_ms": 1047,
       "datasets_available": 1,
       "test_value": 12.216482162475586,
       "error": null
@@ -300,7 +300,7 @@
     {
       "provider": "dea_africa_fc",
       "status": "healthy",
-      "response_time_ms": 5233,
+      "response_time_ms": 1036,
       "datasets_available": 1,
       "test_value": 40.009454545454545,
       "error": null
@@ -308,7 +308,7 @@
     {
       "provider": "dea_africa_lc",
       "status": "healthy",
-      "response_time_ms": 7167,
+      "response_time_ms": 1005,
       "datasets_available": 1,
       "test_value": 0.2826,
       "error": null
@@ -316,7 +316,7 @@
     {
       "provider": "dea_africa_mangroves",
       "status": "healthy",
-      "response_time_ms": 5043,
+      "response_time_ms": 409,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -324,7 +324,7 @@
     {
       "provider": "dea_africa_ndvi",
       "status": "healthy",
-      "response_time_ms": 11603,
+      "response_time_ms": 982,
       "datasets_available": 1,
       "test_value": 0.6821978688240051,
       "error": null
@@ -332,7 +332,7 @@
     {
       "provider": "dea_africa_water",
       "status": "healthy",
-      "response_time_ms": 31907,
+      "response_time_ms": 484,
       "datasets_available": 1,
       "test_value": 0.9154182076454163,
       "error": null
@@ -363,88 +363,88 @@
     },
     {
       "provider": "eea_forest_type",
-      "status": "healthy",
-      "response_time_ms": 1938,
-      "datasets_available": 1,
-      "test_value": 0.3514,
-      "error": null
+      "status": "down",
+      "response_time_ms": 60016,
+      "datasets_available": 0,
+      "test_value": null,
+      "error": "[eea_forest_type] ImageServer request failed: "
     },
     {
       "provider": "eea_grassland",
-      "status": "healthy",
-      "response_time_ms": 2122,
-      "datasets_available": 1,
-      "test_value": 0.7374,
-      "error": null
+      "status": "down",
+      "response_time_ms": 60011,
+      "datasets_available": 0,
+      "test_value": null,
+      "error": "[eea_grassland] ImageServer request failed: "
     },
     {
       "provider": "eea_imperv_density",
-      "status": "healthy",
-      "response_time_ms": 1156,
-      "datasets_available": 1,
-      "test_value": 0.0,
-      "error": null
+      "status": "down",
+      "response_time_ms": 60034,
+      "datasets_available": 0,
+      "test_value": null,
+      "error": "[eea_imperv_density] ImageServer request failed: "
     },
     {
       "provider": "eea_imperviousness",
-      "status": "healthy",
-      "response_time_ms": 1358,
-      "datasets_available": 1,
-      "test_value": 0.0,
-      "error": null
+      "status": "down",
+      "response_time_ms": 60023,
+      "datasets_available": 0,
+      "test_value": null,
+      "error": "[eea_imperviousness] ImageServer request failed: "
     },
     {
       "provider": "eea_leaf_type",
-      "status": "healthy",
-      "response_time_ms": 1116,
-      "datasets_available": 1,
-      "test_value": 0.3558,
-      "error": null
+      "status": "down",
+      "response_time_ms": 60027,
+      "datasets_available": 0,
+      "test_value": null,
+      "error": "[eea_leaf_type] ImageServer request failed: "
     },
     {
       "provider": "eea_leaf_type_change",
-      "status": "healthy",
-      "response_time_ms": 2043,
-      "datasets_available": 1,
-      "test_value": 0.3486,
-      "error": null
+      "status": "down",
+      "response_time_ms": 60117,
+      "datasets_available": 0,
+      "test_value": null,
+      "error": "[eea_leaf_type_change] ImageServer request failed: "
     },
     {
       "provider": "eea_small_woody",
-      "status": "healthy",
-      "response_time_ms": 3328,
-      "datasets_available": 1,
-      "test_value": 9.329816,
-      "error": null
+      "status": "down",
+      "response_time_ms": 60039,
+      "datasets_available": 0,
+      "test_value": null,
+      "error": "[eea_small_woody] ImageServer request failed: "
     },
     {
       "provider": "eea_tree_cover",
-      "status": "healthy",
-      "response_time_ms": 3229,
-      "datasets_available": 1,
-      "test_value": 42.80102,
-      "error": null
+      "status": "down",
+      "response_time_ms": 60022,
+      "datasets_available": 0,
+      "test_value": null,
+      "error": "[eea_tree_cover] ImageServer request failed: "
     },
     {
       "provider": "eea_tree_cover_change",
-      "status": "healthy",
-      "response_time_ms": 1747,
-      "datasets_available": 1,
-      "test_value": 0.3486,
-      "error": null
+      "status": "down",
+      "response_time_ms": 60029,
+      "datasets_available": 0,
+      "test_value": null,
+      "error": "[eea_tree_cover_change] ImageServer request failed: "
     },
     {
       "provider": "eea_water_wetness",
-      "status": "healthy",
-      "response_time_ms": 1335,
-      "datasets_available": 1,
-      "test_value": 1.0,
-      "error": null
+      "status": "down",
+      "response_time_ms": 60014,
+      "datasets_available": 0,
+      "test_value": null,
+      "error": "[eea_water_wetness] ImageServer request failed: "
     },
     {
       "provider": "esa_cci_lc",
       "status": "healthy",
-      "response_time_ms": 1112,
+      "response_time_ms": 1193,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -452,7 +452,7 @@
     {
       "provider": "esa_worldcover",
       "status": "healthy",
-      "response_time_ms": 1929,
+      "response_time_ms": 921,
       "datasets_available": 1,
       "test_value": 0.0236,
       "error": null
@@ -460,7 +460,7 @@
     {
       "provider": "esri_lulc",
       "status": "healthy",
-      "response_time_ms": 1679,
+      "response_time_ms": 812,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -468,7 +468,7 @@
     {
       "provider": "estonia_geology",
       "status": "healthy",
-      "response_time_ms": 4124,
+      "response_time_ms": 2632,
       "datasets_available": 1,
       "test_value": 0.0004,
       "error": null
@@ -476,7 +476,7 @@
     {
       "provider": "estonia_lc",
       "status": "healthy",
-      "response_time_ms": 2246,
+      "response_time_ms": 2305,
       "datasets_available": 1,
       "test_value": 0.0,
       "error": null
@@ -484,7 +484,7 @@
     {
       "provider": "ethiopia_lc",
       "status": "healthy",
-      "response_time_ms": 22584,
+      "response_time_ms": 1052,
       "datasets_available": 1,
       "test_value": 0.194,
       "error": null
@@ -492,7 +492,7 @@
     {
       "provider": "etopo_2022",
       "status": "healthy",
-      "response_time_ms": 802,
+      "response_time_ms": 732,
       "datasets_available": 1,
       "test_value": 162.9076,
       "error": null
@@ -500,7 +500,7 @@
     {
       "provider": "finland_catchments",
       "status": "healthy",
-      "response_time_ms": 2373,
+      "response_time_ms": 2172,
       "datasets_available": 1,
       "test_value": 0.0001,
       "error": null
@@ -516,7 +516,7 @@
     {
       "provider": "finland_forest_height",
       "status": "healthy",
-      "response_time_ms": 1441,
+      "response_time_ms": 1405,
       "datasets_available": 1,
       "test_value": 8.342512,
       "error": null
@@ -524,7 +524,7 @@
     {
       "provider": "finland_lc",
       "status": "healthy",
-      "response_time_ms": 2578,
+      "response_time_ms": 2630,
       "datasets_available": 1,
       "test_value": 0.0672,
       "error": null
@@ -532,7 +532,7 @@
     {
       "provider": "finland_site_type",
       "status": "healthy",
-      "response_time_ms": 1578,
+      "response_time_ms": 971,
       "datasets_available": 1,
       "test_value": 0.0216,
       "error": null
@@ -540,7 +540,7 @@
     {
       "provider": "finland_soil",
       "status": "healthy",
-      "response_time_ms": 741,
+      "response_time_ms": 731,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -548,7 +548,7 @@
     {
       "provider": "france_dem",
       "status": "healthy",
-      "response_time_ms": 113541,
+      "response_time_ms": 86062,
       "datasets_available": 1,
       "test_value": -99999.0,
       "error": null
@@ -556,7 +556,7 @@
     {
       "provider": "france_lc",
       "status": "healthy",
-      "response_time_ms": 1742,
+      "response_time_ms": 1506,
       "datasets_available": 1,
       "test_value": 0.0318,
       "error": null
@@ -564,15 +564,15 @@
     {
       "provider": "france_lithology",
       "status": "down",
-      "response_time_ms": 984,
+      "response_time_ms": 1422,
       "datasets_available": 0,
       "test_value": null,
-      "error": "'/vsimem/b9f80e94-124c-4b36-b207-9c5da612313d/b9f80e94-124c-4b36-b207-9c5da612313d.tif' not recognized as being in a supported file format."
+      "error": "'/vsimem/9f8ebe03-9bf3-402e-a0e9-8f7191906e17/9f8ebe03-9bf3-402e-a0e9-8f7191906e17.tif' not recognized as being in a supported file format."
     },
     {
       "provider": "france_soil",
       "status": "healthy",
-      "response_time_ms": 1454,
+      "response_time_ms": 1778,
       "datasets_available": 1,
       "test_value": 255.0,
       "error": null
@@ -580,7 +580,7 @@
     {
       "provider": "gebco",
       "status": "healthy",
-      "response_time_ms": 1031,
+      "response_time_ms": 989,
       "datasets_available": 1,
       "test_value": 255.0,
       "error": null
@@ -588,7 +588,7 @@
     {
       "provider": "germany_air_capacity",
       "status": "down",
-      "response_time_ms": 2289,
+      "response_time_ms": 2241,
       "datasets_available": 0,
       "test_value": null,
       "error": "[germany_air_capacity] WCS request failed: All connection attempts failed"
@@ -596,7 +596,7 @@
     {
       "provider": "germany_bb_dem",
       "status": "healthy",
-      "response_time_ms": 2607,
+      "response_time_ms": 1871,
       "datasets_available": 1,
       "test_value": 43.781219482421875,
       "error": null
@@ -604,7 +604,7 @@
     {
       "provider": "germany_cropland_oc",
       "status": "down",
-      "response_time_ms": 2254,
+      "response_time_ms": 2396,
       "datasets_available": 0,
       "test_value": null,
       "error": "[germany_cropland_oc] WCS request failed: All connection attempts failed"
@@ -620,7 +620,7 @@
     {
       "provider": "germany_erosion_water",
       "status": "down",
-      "response_time_ms": 2183,
+      "response_time_ms": 1952,
       "datasets_available": 0,
       "test_value": null,
       "error": "[germany_erosion_water] WCS request failed: All connection attempts failed"
@@ -628,7 +628,7 @@
     {
       "provider": "germany_field_capacity",
       "status": "down",
-      "response_time_ms": 2320,
+      "response_time_ms": 2415,
       "datasets_available": 0,
       "test_value": null,
       "error": "[germany_field_capacity] WCS request failed: All connection attempts failed"
@@ -636,7 +636,7 @@
     {
       "provider": "germany_gw_recharge",
       "status": "down",
-      "response_time_ms": 2041,
+      "response_time_ms": 2017,
       "datasets_available": 0,
       "test_value": null,
       "error": "[germany_gw_recharge] WCS request failed: All connection attempts failed"
@@ -644,7 +644,7 @@
     {
       "provider": "germany_hamburg_dem",
       "status": "healthy",
-      "response_time_ms": 1776,
+      "response_time_ms": 1694,
       "datasets_available": 1,
       "test_value": 216.86612,
       "error": null
@@ -652,7 +652,7 @@
     {
       "provider": "germany_hessen_dem",
       "status": "healthy",
-      "response_time_ms": 1725,
+      "response_time_ms": 1936,
       "datasets_available": 1,
       "test_value": 123.41273368436308,
       "error": null
@@ -660,7 +660,7 @@
     {
       "provider": "germany_humus",
       "status": "down",
-      "response_time_ms": 2180,
+      "response_time_ms": 1902,
       "datasets_available": 0,
       "test_value": null,
       "error": "[germany_humus] WCS request failed: All connection attempts failed"
@@ -668,15 +668,15 @@
     {
       "provider": "germany_lc",
       "status": "healthy",
-      "response_time_ms": 34357,
+      "response_time_ms": 22701,
       "datasets_available": 1,
-      "test_value": 0.1593,
+      "test_value": 0.1598,
       "error": null
     },
     {
       "provider": "germany_mv_dem",
       "status": "healthy",
-      "response_time_ms": 1737,
+      "response_time_ms": 1569,
       "datasets_available": 1,
       "test_value": 48.093101501464844,
       "error": null
@@ -684,7 +684,7 @@
     {
       "provider": "germany_nrw_dgm1",
       "status": "healthy",
-      "response_time_ms": 4257,
+      "response_time_ms": 1608,
       "datasets_available": 1,
       "test_value": 159.59747314453125,
       "error": null
@@ -692,7 +692,7 @@
     {
       "provider": "germany_soil",
       "status": "down",
-      "response_time_ms": 2193,
+      "response_time_ms": 2184,
       "datasets_available": 0,
       "test_value": null,
       "error": "[germany_soil] WCS request failed: All connection attempts failed"
@@ -700,7 +700,7 @@
     {
       "provider": "germany_soil_quality",
       "status": "down",
-      "response_time_ms": 2000,
+      "response_time_ms": 1901,
       "datasets_available": 0,
       "test_value": null,
       "error": "[germany_soil_quality] WCS request failed: All connection attempts failed"
@@ -708,7 +708,7 @@
     {
       "provider": "germany_soil_retention",
       "status": "down",
-      "response_time_ms": 6338,
+      "response_time_ms": 2118,
       "datasets_available": 0,
       "test_value": null,
       "error": "[germany_soil_retention] WCS request failed: All connection attempts failed"
@@ -716,7 +716,7 @@
     {
       "provider": "germany_soil_texture",
       "status": "down",
-      "response_time_ms": 8291,
+      "response_time_ms": 2008,
       "datasets_available": 0,
       "test_value": null,
       "error": "[germany_soil_texture] WCS request failed: All connection attempts failed"
@@ -724,7 +724,7 @@
     {
       "provider": "germany_soil_water",
       "status": "down",
-      "response_time_ms": 19614,
+      "response_time_ms": 2006,
       "datasets_available": 0,
       "test_value": null,
       "error": "[germany_soil_water] WCS request failed: All connection attempts failed"
@@ -732,7 +732,7 @@
     {
       "provider": "germany_thuringia_dem",
       "status": "healthy",
-      "response_time_ms": 8529,
+      "response_time_ms": 1785,
       "datasets_available": 1,
       "test_value": 255.0,
       "error": null
@@ -740,7 +740,7 @@
     {
       "provider": "germany_wind_erosion",
       "status": "down",
-      "response_time_ms": 18375,
+      "response_time_ms": 4768,
       "datasets_available": 0,
       "test_value": null,
       "error": "[germany_wind_erosion] WCS request failed: All connection attempts failed"
@@ -748,7 +748,7 @@
     {
       "provider": "ghsl",
       "status": "healthy",
-      "response_time_ms": 2693,
+      "response_time_ms": 2742,
       "datasets_available": 2,
       "test_value": 2284.2083333333335,
       "error": null
@@ -764,7 +764,7 @@
     {
       "provider": "gnatsgo",
       "status": "healthy",
-      "response_time_ms": 1996,
+      "response_time_ms": 1703,
       "datasets_available": 9,
       "test_value": 9.268871307373047,
       "error": null
@@ -772,7 +772,7 @@
     {
       "provider": "greece_geology",
       "status": "down",
-      "response_time_ms": 60012,
+      "response_time_ms": 69893,
       "datasets_available": 0,
       "test_value": null,
       "error": "[greece_geology] WCS request failed: "
@@ -780,7 +780,7 @@
     {
       "provider": "hansen_forest",
       "status": "healthy",
-      "response_time_ms": 929,
+      "response_time_ms": 1082,
       "datasets_available": 3,
       "test_value": 2.98,
       "error": null
@@ -788,7 +788,7 @@
     {
       "provider": "hgb_biomass",
       "status": "healthy",
-      "response_time_ms": 2348,
+      "response_time_ms": 1994,
       "datasets_available": 2,
       "test_value": 33.97222222222222,
       "error": null
@@ -796,7 +796,7 @@
     {
       "provider": "hrea",
       "status": "healthy",
-      "response_time_ms": 3478,
+      "response_time_ms": 1590,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -804,7 +804,7 @@
     {
       "provider": "hydrobasins",
       "status": "healthy",
-      "response_time_ms": 333,
+      "response_time_ms": 336,
       "datasets_available": 1,
       "test_value": 1781338.5195,
       "error": null
@@ -812,7 +812,7 @@
     {
       "provider": "hydrolakes",
       "status": "healthy",
-      "response_time_ms": 1610,
+      "response_time_ms": 959,
       "datasets_available": 1,
       "test_value": 200.5,
       "error": null
@@ -820,7 +820,7 @@
     {
       "provider": "hydrorivers",
       "status": "healthy",
-      "response_time_ms": 1162,
+      "response_time_ms": 685,
       "datasets_available": 1,
       "test_value": 29613.148,
       "error": null
@@ -828,15 +828,15 @@
     {
       "provider": "india_lulc",
       "status": "healthy",
-      "response_time_ms": 78457,
+      "response_time_ms": 27402,
       "datasets_available": 1,
-      "test_value": 1.0,
+      "test_value": 0.0002,
       "error": null
     },
     {
       "provider": "india_soil",
       "status": "healthy",
-      "response_time_ms": 18217,
+      "response_time_ms": 4099,
       "datasets_available": 1,
       "test_value": 0.0014,
       "error": null
@@ -844,7 +844,7 @@
     {
       "provider": "io_lulc",
       "status": "healthy",
-      "response_time_ms": 15466,
+      "response_time_ms": 1453,
       "datasets_available": 1,
       "test_value": 0.0007,
       "error": null
@@ -852,7 +852,7 @@
     {
       "provider": "io_lulc_9class",
       "status": "healthy",
-      "response_time_ms": 15817,
+      "response_time_ms": 884,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -860,7 +860,7 @@
     {
       "provider": "ireland_aquifer",
       "status": "healthy",
-      "response_time_ms": 1249,
+      "response_time_ms": 1064,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -868,7 +868,7 @@
     {
       "provider": "ireland_bedrock",
       "status": "healthy",
-      "response_time_ms": 871,
+      "response_time_ms": 786,
       "datasets_available": 1,
       "test_value": 0.0,
       "error": null
@@ -876,7 +876,7 @@
     {
       "provider": "ireland_catchments",
       "status": "healthy",
-      "response_time_ms": 3252,
+      "response_time_ms": 2150,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -884,7 +884,7 @@
     {
       "provider": "ireland_corine",
       "status": "healthy",
-      "response_time_ms": 1563,
+      "response_time_ms": 1414,
       "datasets_available": 1,
       "test_value": 0.6864,
       "error": null
@@ -892,7 +892,7 @@
     {
       "provider": "ireland_flood",
       "status": "down",
-      "response_time_ms": 595,
+      "response_time_ms": 564,
       "datasets_available": 0,
       "test_value": null,
       "error": "[ireland_flood] WCS error: <?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><!DOCTYPE ServiceExceptionReport SYSTEM \"https://gis.epa.ie/geoserver/schemas/wms/1.1.1/WMS_exception_1_1_1.dtd\"> <Serv"
@@ -900,7 +900,7 @@
     {
       "provider": "ireland_gravel_aquifer",
       "status": "healthy",
-      "response_time_ms": 743,
+      "response_time_ms": 696,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -908,7 +908,7 @@
     {
       "provider": "ireland_groundwater",
       "status": "healthy",
-      "response_time_ms": 812,
+      "response_time_ms": 2706,
       "datasets_available": 1,
       "test_value": 0.0,
       "error": null
@@ -916,7 +916,7 @@
     {
       "provider": "ireland_gw_vulnerability",
       "status": "healthy",
-      "response_time_ms": 729,
+      "response_time_ms": 685,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -924,7 +924,7 @@
     {
       "provider": "ireland_lakes",
       "status": "healthy",
-      "response_time_ms": 3513,
+      "response_time_ms": 697,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -932,7 +932,7 @@
     {
       "provider": "ireland_peatland",
       "status": "healthy",
-      "response_time_ms": 3425,
+      "response_time_ms": 712,
       "datasets_available": 1,
       "test_value": 0.0064,
       "error": null
@@ -940,7 +940,7 @@
     {
       "provider": "ireland_soil",
       "status": "healthy",
-      "response_time_ms": 1850,
+      "response_time_ms": 700,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -948,7 +948,7 @@
     {
       "provider": "ireland_soil_wetdry",
       "status": "healthy",
-      "response_time_ms": 2004,
+      "response_time_ms": 1110,
       "datasets_available": 1,
       "test_value": 0.0172,
       "error": null
@@ -956,7 +956,7 @@
     {
       "provider": "ireland_subsoil",
       "status": "healthy",
-      "response_time_ms": 2605,
+      "response_time_ms": 1009,
       "datasets_available": 1,
       "test_value": 0.0341,
       "error": null
@@ -964,7 +964,7 @@
     {
       "provider": "isric_soilgrids",
       "status": "healthy",
-      "response_time_ms": 6089,
+      "response_time_ms": 15351,
       "datasets_available": 78,
       "test_value": 369.44444444444446,
       "error": null
@@ -972,7 +972,7 @@
     {
       "provider": "japan_gsi",
       "status": "healthy",
-      "response_time_ms": 3471,
+      "response_time_ms": 798,
       "datasets_available": 1,
       "test_value": 938.6206429730356,
       "error": null
@@ -980,7 +980,7 @@
     {
       "provider": "jrc_gsw",
       "status": "healthy",
-      "response_time_ms": 3280,
+      "response_time_ms": 3137,
       "datasets_available": 5,
       "test_value": 98.4625,
       "error": null
@@ -988,7 +988,7 @@
     {
       "provider": "lithuania_dem",
       "status": "healthy",
-      "response_time_ms": 2270,
+      "response_time_ms": 1706,
       "datasets_available": 1,
       "test_value": 255.0,
       "error": null
@@ -996,7 +996,7 @@
     {
       "provider": "lithuania_soil",
       "status": "healthy",
-      "response_time_ms": 2104,
+      "response_time_ms": 2133,
       "datasets_available": 1,
       "test_value": 0.0016,
       "error": null
@@ -1004,7 +1004,7 @@
     {
       "provider": "luxembourg_dem",
       "status": "healthy",
-      "response_time_ms": 2226,
+      "response_time_ms": 2109,
       "datasets_available": 1,
       "test_value": 30.519028346589607,
       "error": null
@@ -1012,7 +1012,7 @@
     {
       "provider": "mapbiomas_amazonia",
       "status": "down",
-      "response_time_ms": 123,
+      "response_time_ms": 104,
       "datasets_available": 0,
       "test_value": null,
       "error": "[mapbiomas_amazonia] COG read failed: HTTP response code: 403"
@@ -1020,7 +1020,7 @@
     {
       "provider": "mapbiomas_bolivia",
       "status": "down",
-      "response_time_ms": 118,
+      "response_time_ms": 103,
       "datasets_available": 0,
       "test_value": null,
       "error": "[mapbiomas_bolivia] COG read failed: HTTP response code: 403"
@@ -1028,7 +1028,7 @@
     {
       "provider": "mapbiomas_brazil",
       "status": "down",
-      "response_time_ms": 98,
+      "response_time_ms": 97,
       "datasets_available": 0,
       "test_value": null,
       "error": "[mapbiomas_brazil] COG read failed: HTTP response code: 403"
@@ -1036,7 +1036,7 @@
     {
       "provider": "mapbiomas_chaco",
       "status": "down",
-      "response_time_ms": 88,
+      "response_time_ms": 82,
       "datasets_available": 0,
       "test_value": null,
       "error": "[mapbiomas_chaco] COG read failed: HTTP response code: 403"
@@ -1044,7 +1044,7 @@
     {
       "provider": "mapbiomas_colombia",
       "status": "down",
-      "response_time_ms": 104,
+      "response_time_ms": 90,
       "datasets_available": 0,
       "test_value": null,
       "error": "[mapbiomas_colombia] COG read failed: HTTP response code: 403"
@@ -1052,7 +1052,7 @@
     {
       "provider": "mapbiomas_indonesia",
       "status": "down",
-      "response_time_ms": 95,
+      "response_time_ms": 83,
       "datasets_available": 0,
       "test_value": null,
       "error": "[mapbiomas_indonesia] COG read failed: HTTP response code: 403"
@@ -1060,7 +1060,7 @@
     {
       "provider": "mapbiomas_pampa",
       "status": "down",
-      "response_time_ms": 89,
+      "response_time_ms": 74,
       "datasets_available": 0,
       "test_value": null,
       "error": "[mapbiomas_pampa] COG read failed: HTTP response code: 403"
@@ -1068,7 +1068,7 @@
     {
       "provider": "mapbiomas_paraguay",
       "status": "down",
-      "response_time_ms": 101,
+      "response_time_ms": 76,
       "datasets_available": 0,
       "test_value": null,
       "error": "[mapbiomas_paraguay] COG read failed: HTTP response code: 403"
@@ -1076,7 +1076,7 @@
     {
       "provider": "mapbiomas_peru",
       "status": "down",
-      "response_time_ms": 99,
+      "response_time_ms": 77,
       "datasets_available": 0,
       "test_value": null,
       "error": "[mapbiomas_peru] COG read failed: HTTP response code: 403"
@@ -1084,7 +1084,7 @@
     {
       "provider": "mapbiomas_uruguay",
       "status": "down",
-      "response_time_ms": 75,
+      "response_time_ms": 84,
       "datasets_available": 0,
       "test_value": null,
       "error": "[mapbiomas_uruguay] COG read failed: HTTP response code: 403"
@@ -1092,7 +1092,7 @@
     {
       "provider": "mapbiomas_venezuela",
       "status": "down",
-      "response_time_ms": 95,
+      "response_time_ms": 91,
       "datasets_available": 0,
       "test_value": null,
       "error": "[mapbiomas_venezuela] COG read failed: HTTP response code: 403"
@@ -1116,7 +1116,7 @@
     {
       "provider": "mexico_lc",
       "status": "healthy",
-      "response_time_ms": 3544,
+      "response_time_ms": 1179,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -1124,7 +1124,7 @@
     {
       "provider": "mexico_soil",
       "status": "healthy",
-      "response_time_ms": 25918,
+      "response_time_ms": 17154,
       "datasets_available": 1,
       "test_value": 0.0007,
       "error": null
@@ -1132,7 +1132,7 @@
     {
       "provider": "mobi",
       "status": "healthy",
-      "response_time_ms": 1332,
+      "response_time_ms": 1225,
       "datasets_available": 2,
       "test_value": 3.186924004694447e-05,
       "error": null
@@ -1140,7 +1140,7 @@
     {
       "provider": "modis_lc",
       "status": "auth_gated",
-      "response_time_ms": 6,
+      "response_time_ms": 5,
       "datasets_available": 0,
       "test_value": null,
       "error": "auth-gated: [modis_lc] Registration required. Register at: https://urs.earthdata.nasa.gov/users/new\nFree NASA Earthdata login required.\n1. Register at: https://urs.earthdat"
@@ -1148,7 +1148,7 @@
     {
       "provider": "modis_snow",
       "status": "healthy",
-      "response_time_ms": 2379,
+      "response_time_ms": 2126,
       "datasets_available": 1,
       "test_value": 25.0,
       "error": null
@@ -1156,7 +1156,7 @@
     {
       "provider": "ms_buildings",
       "status": "healthy",
-      "response_time_ms": 1464,
+      "response_time_ms": 1157,
       "datasets_available": 1,
       "test_value": 129554779.0,
       "error": null
@@ -1164,7 +1164,7 @@
     {
       "provider": "mtbs",
       "status": "healthy",
-      "response_time_ms": 2082,
+      "response_time_ms": 2211,
       "datasets_available": 1,
       "test_value": 0.0944,
       "error": null
@@ -1172,7 +1172,7 @@
     {
       "provider": "nasadem",
       "status": "healthy",
-      "response_time_ms": 2998,
+      "response_time_ms": 3259,
       "datasets_available": 1,
       "test_value": 432.0787037037037,
       "error": null
@@ -1180,7 +1180,7 @@
     {
       "provider": "netherlands_ahn",
       "status": "healthy",
-      "response_time_ms": 4906,
+      "response_time_ms": 3387,
       "datasets_available": 1,
       "test_value": 15.758295059204102,
       "error": null
@@ -1188,7 +1188,7 @@
     {
       "provider": "netherlands_crops",
       "status": "healthy",
-      "response_time_ms": 595,
+      "response_time_ms": 2082,
       "datasets_available": 1,
       "test_value": 0.0411,
       "error": null
@@ -1196,7 +1196,7 @@
     {
       "provider": "netherlands_dsm",
       "status": "healthy",
-      "response_time_ms": 4983,
+      "response_time_ms": 2236,
       "datasets_available": 1,
       "test_value": 21.084693908691406,
       "error": null
@@ -1204,7 +1204,7 @@
     {
       "provider": "netherlands_natura2000",
       "status": "healthy",
-      "response_time_ms": 1274,
+      "response_time_ms": 477,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -1212,7 +1212,7 @@
     {
       "provider": "netherlands_soil",
       "status": "healthy",
-      "response_time_ms": 530,
+      "response_time_ms": 502,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -1220,7 +1220,7 @@
     {
       "provider": "nigeria_lc",
       "status": "healthy",
-      "response_time_ms": 22436,
+      "response_time_ms": 1379,
       "datasets_available": 1,
       "test_value": 0.3672,
       "error": null
@@ -1228,7 +1228,7 @@
     {
       "provider": "nlcd",
       "status": "healthy",
-      "response_time_ms": 1698,
+      "response_time_ms": 1354,
       "datasets_available": 1,
       "test_value": 0.0061,
       "error": null
@@ -1236,7 +1236,7 @@
     {
       "provider": "nlcd_change_index",
       "status": "healthy",
-      "response_time_ms": 660,
+      "response_time_ms": 665,
       "datasets_available": 1,
       "test_value": 0.9702,
       "error": null
@@ -1244,7 +1244,7 @@
     {
       "provider": "nlcd_impervious",
       "status": "healthy",
-      "response_time_ms": 1297,
+      "response_time_ms": 1315,
       "datasets_available": 1,
       "test_value": 92.653608,
       "error": null
@@ -1252,7 +1252,7 @@
     {
       "provider": "noaa_ccap",
       "status": "healthy",
-      "response_time_ms": 1232,
+      "response_time_ms": 1417,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -1260,7 +1260,7 @@
     {
       "provider": "norway_ar5",
       "status": "healthy",
-      "response_time_ms": 2456,
+      "response_time_ms": 2618,
       "datasets_available": 1,
       "test_value": 0.0012,
       "error": null
@@ -1268,7 +1268,7 @@
     {
       "provider": "norway_dem",
       "status": "healthy",
-      "response_time_ms": 801,
+      "response_time_ms": 1462,
       "datasets_available": 1,
       "test_value": 161.24377627417223,
       "error": null
@@ -1276,7 +1276,7 @@
     {
       "provider": "norway_forest",
       "status": "healthy",
-      "response_time_ms": 1292,
+      "response_time_ms": 1076,
       "datasets_available": 1,
       "test_value": 251.850868,
       "error": null
@@ -1284,7 +1284,7 @@
     {
       "provider": "norway_geology",
       "status": "healthy",
-      "response_time_ms": 3108,
+      "response_time_ms": 1700,
       "datasets_available": 1,
       "test_value": 0.0,
       "error": null
@@ -1292,7 +1292,7 @@
     {
       "provider": "norway_landslide",
       "status": "down",
-      "response_time_ms": 2510,
+      "response_time_ms": 1297,
       "datasets_available": 0,
       "test_value": null,
       "error": "[norway_landslide] WCS returned 404"
@@ -1300,7 +1300,7 @@
     {
       "provider": "norway_tree_species",
       "status": "healthy",
-      "response_time_ms": 2337,
+      "response_time_ms": 2395,
       "datasets_available": 1,
       "test_value": 0.0113,
       "error": null
@@ -1308,7 +1308,7 @@
     {
       "provider": "norway_tree_volume",
       "status": "healthy",
-      "response_time_ms": 2294,
+      "response_time_ms": 2190,
       "datasets_available": 1,
       "test_value": 253.475368,
       "error": null
@@ -1316,7 +1316,7 @@
     {
       "provider": "norway_vegetation",
       "status": "healthy",
-      "response_time_ms": 14359,
+      "response_time_ms": 1763,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -1324,7 +1324,7 @@
     {
       "provider": "nrcan_lc",
       "status": "healthy",
-      "response_time_ms": 1504,
+      "response_time_ms": 1416,
       "datasets_available": 1,
       "test_value": 0.0011,
       "error": null
@@ -1332,7 +1332,7 @@
     {
       "provider": "openlandmap",
       "status": "healthy",
-      "response_time_ms": 1205,
+      "response_time_ms": 1199,
       "datasets_available": 7,
       "test_value": 13.63888888888889,
       "error": null
@@ -1340,7 +1340,7 @@
     {
       "provider": "opentopography",
       "status": "auth_gated",
-      "response_time_ms": 6,
+      "response_time_ms": 5,
       "datasets_available": 0,
       "test_value": null,
       "error": "auth-gated: [opentopography] Registration required. Register at: https://portal.opentopography.org/\nFree API key required. Register at OpenTopography, then:\n  export CAS_OP"
@@ -1348,7 +1348,7 @@
     {
       "provider": "permafrost",
       "status": "healthy",
-      "response_time_ms": 1198,
+      "response_time_ms": 1211,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -1356,7 +1356,7 @@
     {
       "provider": "peru_lc",
       "status": "down",
-      "response_time_ms": 608,
+      "response_time_ms": 780,
       "datasets_available": 0,
       "test_value": null,
       "error": "[peru_lc] WCS returned 403"
@@ -1364,7 +1364,7 @@
     {
       "provider": "polaris",
       "status": "healthy",
-      "response_time_ms": 919,
+      "response_time_ms": 751,
       "datasets_available": 78,
       "test_value": 23.462013244628906,
       "error": null
@@ -1372,7 +1372,7 @@
     {
       "provider": "portugal_geology",
       "status": "healthy",
-      "response_time_ms": 616,
+      "response_time_ms": 742,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -1380,7 +1380,7 @@
     {
       "provider": "portugal_lc",
       "status": "healthy",
-      "response_time_ms": 3324,
+      "response_time_ms": 3345,
       "datasets_available": 1,
       "test_value": 0.0005,
       "error": null
@@ -1388,7 +1388,7 @@
     {
       "provider": "ramsar_wetlands",
       "status": "healthy",
-      "response_time_ms": 2883,
+      "response_time_ms": 13280,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -1396,7 +1396,7 @@
     {
       "provider": "rema",
       "status": "healthy",
-      "response_time_ms": 2380,
+      "response_time_ms": 2404,
       "datasets_available": 1,
       "test_value": 59.840370178222656,
       "error": null
@@ -1404,7 +1404,7 @@
     {
       "provider": "scotland_lc",
       "status": "healthy",
-      "response_time_ms": 13694,
+      "response_time_ms": 2874,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -1412,7 +1412,7 @@
     {
       "provider": "slovenia_dem",
       "status": "healthy",
-      "response_time_ms": 14865,
+      "response_time_ms": 13135,
       "datasets_available": 1,
       "test_value": 94.74132,
       "error": null
@@ -1420,7 +1420,7 @@
     {
       "provider": "slovenia_lc",
       "status": "healthy",
-      "response_time_ms": 11816,
+      "response_time_ms": 10778,
       "datasets_available": 1,
       "test_value": 0.0,
       "error": null
@@ -1428,7 +1428,7 @@
     {
       "provider": "slovenia_soil",
       "status": "healthy",
-      "response_time_ms": 11424,
+      "response_time_ms": 10829,
       "datasets_available": 1,
       "test_value": 0.0,
       "error": null
@@ -1436,7 +1436,7 @@
     {
       "provider": "soilgrids_derived",
       "status": "healthy",
-      "response_time_ms": 10879,
+      "response_time_ms": 10291,
       "datasets_available": 2,
       "test_value": 80.96666666666667,
       "error": null
@@ -1444,7 +1444,7 @@
     {
       "provider": "spain_clay_minerals",
       "status": "healthy",
-      "response_time_ms": 453,
+      "response_time_ms": 429,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -1452,7 +1452,7 @@
     {
       "provider": "spain_hydro",
       "status": "healthy",
-      "response_time_ms": 1084,
+      "response_time_ms": 1029,
       "datasets_available": 1,
       "test_value": 0.0018,
       "error": null
@@ -1460,7 +1460,7 @@
     {
       "provider": "spain_hydrogeology",
       "status": "healthy",
-      "response_time_ms": 512,
+      "response_time_ms": 523,
       "datasets_available": 1,
       "test_value": 0.0003,
       "error": null
@@ -1468,7 +1468,7 @@
     {
       "provider": "spain_land_use",
       "status": "healthy",
-      "response_time_ms": 2147,
+      "response_time_ms": 2137,
       "datasets_available": 1,
       "test_value": 0.0108,
       "error": null
@@ -1476,7 +1476,7 @@
     {
       "provider": "spain_lithology",
       "status": "healthy",
-      "response_time_ms": 386,
+      "response_time_ms": 368,
       "datasets_available": 1,
       "test_value": 0.4578,
       "error": null
@@ -1484,7 +1484,7 @@
     {
       "provider": "spain_mdt",
       "status": "healthy",
-      "response_time_ms": 684,
+      "response_time_ms": 638,
       "datasets_available": 1,
       "test_value": 589.8415307199091,
       "error": null
@@ -1492,7 +1492,7 @@
     {
       "provider": "spain_quaternary",
       "status": "healthy",
-      "response_time_ms": 794,
+      "response_time_ms": 676,
       "datasets_available": 1,
       "test_value": 0.2659,
       "error": null
@@ -1500,7 +1500,7 @@
     {
       "provider": "ssurgo",
       "status": "healthy",
-      "response_time_ms": 504,
+      "response_time_ms": 278,
       "datasets_available": 9,
       "test_value": 32.5769230769231,
       "error": null
@@ -1508,7 +1508,7 @@
     {
       "provider": "ssurgo_hsg",
       "status": "healthy",
-      "response_time_ms": 382,
+      "response_time_ms": 200,
       "datasets_available": 1,
       "test_value": 0.5933,
       "error": null
@@ -1516,7 +1516,7 @@
     {
       "provider": "sweden_lc",
       "status": "healthy",
-      "response_time_ms": 1628,
+      "response_time_ms": 1318,
       "datasets_available": 1,
       "test_value": 0.0169,
       "error": null
@@ -1524,7 +1524,7 @@
     {
       "provider": "sweden_soil",
       "status": "healthy",
-      "response_time_ms": 814,
+      "response_time_ms": 926,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -1532,7 +1532,7 @@
     {
       "provider": "swiss_dem",
       "status": "healthy",
-      "response_time_ms": 4059,
+      "response_time_ms": 3529,
       "datasets_available": 1,
       "test_value": 1697.9813232421875,
       "error": null
@@ -1540,7 +1540,7 @@
     {
       "provider": "swiss_erosion_flow",
       "status": "healthy",
-      "response_time_ms": 3974,
+      "response_time_ms": 3112,
       "datasets_available": 1,
       "test_value": 0.0033,
       "error": null
@@ -1548,7 +1548,7 @@
     {
       "provider": "swiss_glacier",
       "status": "healthy",
-      "response_time_ms": 1058,
+      "response_time_ms": 402,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -1556,7 +1556,7 @@
     {
       "provider": "swiss_groundwater",
       "status": "healthy",
-      "response_time_ms": 2652,
+      "response_time_ms": 2849,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -1564,7 +1564,7 @@
     {
       "provider": "swiss_lakes",
       "status": "healthy",
-      "response_time_ms": 5203,
+      "response_time_ms": 349,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -1572,7 +1572,7 @@
     {
       "provider": "swiss_permafrost",
       "status": "healthy",
-      "response_time_ms": 5211,
+      "response_time_ms": 297,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -1580,7 +1580,7 @@
     {
       "provider": "swiss_rivers",
       "status": "healthy",
-      "response_time_ms": 439,
+      "response_time_ms": 536,
       "datasets_available": 1,
       "test_value": 0.0034,
       "error": null
@@ -1588,7 +1588,7 @@
     {
       "provider": "swiss_slope_30",
       "status": "healthy",
-      "response_time_ms": 673,
+      "response_time_ms": 4736,
       "datasets_available": 1,
       "test_value": 0.0811,
       "error": null
@@ -1596,7 +1596,7 @@
     {
       "provider": "swiss_soil_depth",
       "status": "healthy",
-      "response_time_ms": 861,
+      "response_time_ms": 4980,
       "datasets_available": 1,
       "test_value": 0.5562,
       "error": null
@@ -1604,7 +1604,7 @@
     {
       "provider": "swiss_stream_order",
       "status": "healthy",
-      "response_time_ms": 285,
+      "response_time_ms": 365,
       "datasets_available": 1,
       "test_value": 254.744644,
       "error": null
@@ -1612,7 +1612,7 @@
     {
       "provider": "swiss_surface_runoff",
       "status": "healthy",
-      "response_time_ms": 3651,
+      "response_time_ms": 1240,
       "datasets_available": 1,
       "test_value": 0.0042,
       "error": null
@@ -1620,7 +1620,7 @@
     {
       "provider": "swiss_water_connect",
       "status": "healthy",
-      "response_time_ms": 1497,
+      "response_time_ms": 1027,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -1636,7 +1636,7 @@
     {
       "provider": "terraclimate",
       "status": "healthy",
-      "response_time_ms": 4779,
+      "response_time_ms": 4201,
       "datasets_available": 11,
       "test_value": 59.750000953674316,
       "error": null
@@ -1644,7 +1644,7 @@
     {
       "provider": "uk_agri_land_class",
       "status": "healthy",
-      "response_time_ms": 1269,
+      "response_time_ms": 1586,
       "datasets_available": 1,
       "test_value": 0.3619,
       "error": null
@@ -1652,7 +1652,7 @@
     {
       "provider": "uk_bgs_geology",
       "status": "healthy",
-      "response_time_ms": 718,
+      "response_time_ms": 685,
       "datasets_available": 1,
       "test_value": 0.0003,
       "error": null
@@ -1660,7 +1660,7 @@
     {
       "provider": "uk_drinking_water",
       "status": "healthy",
-      "response_time_ms": 1258,
+      "response_time_ms": 1208,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -1668,7 +1668,7 @@
     {
       "provider": "uk_flood_defences",
       "status": "healthy",
-      "response_time_ms": 6029,
+      "response_time_ms": 1090,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -1676,7 +1676,7 @@
     {
       "provider": "uk_groundwater_bodies",
       "status": "healthy",
-      "response_time_ms": 5636,
+      "response_time_ms": 1624,
       "datasets_available": 1,
       "test_value": 0.0002,
       "error": null
@@ -1684,7 +1684,7 @@
     {
       "provider": "uk_historic_flood",
       "status": "healthy",
-      "response_time_ms": 8175,
+      "response_time_ms": 1202,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -1692,7 +1692,7 @@
     {
       "provider": "uk_lidar",
       "status": "healthy",
-      "response_time_ms": 8878,
+      "response_time_ms": 1700,
       "datasets_available": 1,
       "test_value": 115.936996,
       "error": null
@@ -1700,7 +1700,7 @@
     {
       "provider": "uk_soilscapes",
       "status": "healthy",
-      "response_time_ms": 673,
+      "response_time_ms": 621,
       "datasets_available": 1,
       "test_value": 0.9524,
       "error": null
@@ -1708,7 +1708,7 @@
     {
       "provider": "uk_source_protection",
       "status": "healthy",
-      "response_time_ms": 1126,
+      "response_time_ms": 1050,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -1716,7 +1716,7 @@
     {
       "provider": "us_ned_slope",
       "status": "healthy",
-      "response_time_ms": 12778,
+      "response_time_ms": 24174,
       "datasets_available": 1,
       "test_value": 432.4369201660156,
       "error": null
@@ -1724,7 +1724,7 @@
     {
       "provider": "usda_cdl",
       "status": "healthy",
-      "response_time_ms": 1462,
+      "response_time_ms": 1258,
       "datasets_available": 1,
       "test_value": 0.0073,
       "error": null
@@ -1732,7 +1732,7 @@
     {
       "provider": "usgs_3dep",
       "status": "healthy",
-      "response_time_ms": 3034,
+      "response_time_ms": 3051,
       "datasets_available": 1,
       "test_value": 432.6322021484375,
       "error": null
@@ -1740,7 +1740,7 @@
     {
       "provider": "usgs_gap",
       "status": "healthy",
-      "response_time_ms": 4100,
+      "response_time_ms": 4252,
       "datasets_available": 1,
       "test_value": 0.0172,
       "error": null
@@ -1748,7 +1748,7 @@
     {
       "provider": "usgs_geology",
       "status": "healthy",
-      "response_time_ms": 437,
+      "response_time_ms": 2330,
       "datasets_available": 1,
       "test_value": 0.646,
       "error": null
@@ -1756,7 +1756,7 @@
     {
       "provider": "usgs_karst",
       "status": "healthy",
-      "response_time_ms": 9440,
+      "response_time_ms": 855,
       "datasets_available": 1,
       "test_value": 1.0,
       "error": null
@@ -1764,7 +1764,7 @@
     {
       "provider": "usgs_lcmap",
       "status": "healthy",
-      "response_time_ms": 9379,
+      "response_time_ms": 1545,
       "datasets_available": 1,
       "test_value": 0.0036,
       "error": null
@@ -1772,7 +1772,7 @@
     {
       "provider": "usgs_nhd",
       "status": "healthy",
-      "response_time_ms": 8998,
+      "response_time_ms": 409,
       "datasets_available": 1,
       "test_value": 0.0051,
       "error": null
@@ -1780,7 +1780,7 @@
     {
       "provider": "usgs_wbd",
       "status": "degraded",
-      "response_time_ms": 8998,
+      "response_time_ms": 2617,
       "datasets_available": 1,
       "test_value": null,
       "error": "Test extraction returned no data"
